@@ -30,8 +30,14 @@ body {
 
 button,
 a,
+input,
 textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid #e5a84b;
+  outline-offset: 3px;
 }
 
 ::selection {

@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ui-prototype-001 | モックデータによる初期 UI プロトタイプ | Codex | レビュー待ち | `ui/ui-prototype-001` | `src/app/`、`src/components/`、`src/lib/mock-data.ts`、関連 docs | 2026-08-10 | 作成予定 | DB・認証・外部サービス・保存処理なし |
+| ui-interaction-prototype-001 | 保存を伴わない UI 操作プロトタイプ | Codex | レビュー待ち | `ui/ui-interaction-prototype-001` | `src/app/`、`src/components/`、関連 docs | 2026-08-10 | #4 | ブラウザ内の一時状態のみ。通信・保存なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| ui-prototype-001 | 完了 | Codex | `ui/ui-prototype-001` / #3 | 2026-08-10 | main へマージ済み |
 | fill-initial-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | main へマージ済み |
 | initial-project-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | 初期文書の配置修正を含めて main へマージ済み |
 | 記入例 | 完了 / 中止 | 名前 | `feature/example` / #123 | YYYY-MM-DD | 短い結果または中止理由 |

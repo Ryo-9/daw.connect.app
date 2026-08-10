@@ -71,12 +71,20 @@ export default async function BandDetailPage({
             <button
               type="button"
               disabled
+              aria-describedby="member-invite-note"
+              title="未実装：招待は送信されません"
               className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-bold text-white/65"
             >
               メンバーを招待
             </button>
           </div>
         </div>
+        <p
+          id="member-invite-note"
+          className="relative mt-4 max-w-xl text-[11px] leading-5 text-white/65 lg:ml-auto lg:text-right"
+        >
+          メンバー招待は未実装です。入力・送信・保存は行われません。
+        </p>
       </section>
 
       <section className="mt-5 grid gap-3 sm:grid-cols-3" aria-label="バンド概要">
