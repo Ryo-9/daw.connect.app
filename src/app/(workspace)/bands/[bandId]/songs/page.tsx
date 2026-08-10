@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SongCard } from "@/components/song-card";
+import { SongFilterPanel } from "@/components/song-filter-panel";
 import { bands, getBand, getBandSongs } from "@/lib/mock-data";
 
 export function generateStaticParams() {
@@ -40,48 +40,18 @@ export default async function BandSongsPage({
         <button
           type="button"
           disabled
+          aria-describedby="song-create-note"
           className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-full border border-[#d9d8d1] bg-white px-5 text-sm font-bold text-[#9a9f9c]"
-          title="UIプロトタイプでは作成できません"
+          title="未実装：楽曲は作成・保存されません"
         >
           ＋ 楽曲を作成
         </button>
       </header>
 
-      <div className="mt-7 flex gap-2 overflow-x-auto pb-2" aria-label="状態フィルターの見た目">
-        {[
-          `すべて ${bandSongs.length}`,
-          `制作中 ${bandSongs.filter((song) => song.status === "制作中").length}`,
-          `確認待ち ${bandSongs.filter((song) => song.status === "確認待ち").length}`,
-          `アイデア ${bandSongs.filter((song) => song.status === "アイデア").length}`,
-        ].map((filter, index) => (
-          <span
-            key={filter}
-            className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${
-              index === 0
-                ? "border-[#173f31] bg-[#173f31] text-white"
-                : "border-[#deded7] bg-white text-[#66716b]"
-            }`}
-          >
-            {filter}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {bandSongs.map((song) => (
-          <SongCard key={song.id} song={song} />
-        ))}
-      </div>
-
-      <section className="mt-6 rounded-[22px] border border-dashed border-[#cfd4ce] bg-white/55 p-5 text-center">
-        <p className="text-xs leading-6 text-[#78827c]">
-          検索・絞り込み・楽曲作成は見た目のみです。モックデータは
-          <code className="mx-1 rounded bg-[#ecebe5] px-1.5 py-0.5 text-[#445249]">
-            src/lib/mock-data.ts
-          </code>
-          から表示しています。
-        </p>
-      </section>
+      <SongFilterPanel songs={bandSongs} />
+      <p id="song-create-note" className="sr-only">
+        楽曲作成は未実装です。このプロトタイプではデータを保存できません。
+      </p>
     </div>
   );
 }

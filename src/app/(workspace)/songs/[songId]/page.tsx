@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  MockCommentComposer,
+  TaskChecklist,
+} from "@/components/song-detail-interactions";
+import {
   MemberAvatar,
   ProgressBar,
   SongStatusBadge,
-  TaskStatusBadge,
 } from "@/components/ui";
 import {
+  currentUser,
   getBand,
   getMember,
   getSong,
   getSongComments,
   getSongFiles,
   getSongTasks,
+  members,
   songs,
 } from "@/lib/mock-data";
 
@@ -149,11 +154,16 @@ export default async function SongDetailPage({
               <button
                 type="button"
                 disabled
+                aria-describedby="memo-edit-note"
+                title="未実装：メモは編集・保存できません"
                 className="cursor-not-allowed rounded-full border border-[#deded7] px-3 py-2 text-[11px] font-bold text-[#999f9b]"
               >
                 編集
               </button>
             </div>
+            <p id="memo-edit-note" className="mt-3 text-[11px] leading-5 text-[#8a928d]">
+              編集は未実装です。この画面では保存されているメモの見た目だけを確認できます。
+            </p>
 
             <div className="mt-6 space-y-6">
               {[
@@ -176,59 +186,7 @@ export default async function SongDetailPage({
             id="tasks"
             className="scroll-mt-32 rounded-[26px] border border-[#e3e2db] bg-white p-5 shadow-[0_10px_30px_rgba(38,49,42,0.035)] sm:p-7"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">
-                  Part tasks
-                </p>
-                <h2 className="mt-2 text-xl font-bold tracking-[-0.03em]">パート別TODO</h2>
-              </div>
-              <span className="rounded-full bg-[#f3f1eb] px-3 py-1.5 text-xs font-bold text-[#68736d]">
-                {tasks.filter((task) => task.status !== "完了").length}件 未完了
-              </span>
-            </div>
-            <div className="mt-5 divide-y divide-[#eceae4]">
-              {tasks.map((task) => {
-                const assignee = getMember(task.assigneeId);
-                if (!assignee) return null;
-                return (
-                  <article
-                    key={task.id}
-                    className="flex flex-col gap-3 py-4 first:pt-0 sm:flex-row sm:items-center"
-                  >
-                    <span
-                      className={`h-4 w-4 shrink-0 rounded-full border-2 ${
-                        task.status === "完了"
-                          ? "border-[#7390b4] bg-[#7390b4]"
-                          : "border-[#bdc7c1]"
-                      }`}
-                      aria-hidden
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={`text-sm font-bold ${
-                          task.status === "完了"
-                            ? "text-[#949b97] line-through"
-                            : "text-[#28372f]"
-                        }`}
-                      >
-                        {task.title}
-                      </p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <MemberAvatar member={assignee} size="sm" />
-                        <span className="text-[11px] text-[#818a85]">
-                          {assignee.name} ・ {task.part}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 pl-7 sm:pl-0">
-                      <TaskStatusBadge status={task.status} />
-                      <span className="text-xs font-bold text-[#ae702f]">{task.dueDate}</span>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+            <TaskChecklist tasks={tasks} members={members} />
           </section>
         </div>
 
@@ -273,27 +231,7 @@ export default async function SongDetailPage({
               })}
             </div>
 
-            <div className="mt-6 rounded-2xl border border-[#e4e3dc] bg-[#faf9f6] p-3">
-              <label htmlFor="mock-comment" className="sr-only">
-                コメントを追加
-              </label>
-              <textarea
-                id="mock-comment"
-                disabled
-                placeholder="コメントを追加（プロトタイプでは送信されません）"
-                className="min-h-20 w-full resize-none bg-transparent p-1 text-xs text-[#7c8580] outline-none placeholder:text-[#a4aaa6]"
-              />
-              <div className="mt-2 flex items-center justify-between border-t border-[#e7e6e0] pt-3">
-                <span className="text-[10px] text-[#949b97]">00:00 を追加</span>
-                <button
-                  type="button"
-                  disabled
-                  className="cursor-not-allowed rounded-full bg-[#dfe4e0] px-3 py-1.5 text-[10px] font-bold text-[#8a938e]"
-                >
-                  送信
-                </button>
-              </div>
-            </div>
+            <MockCommentComposer currentUser={currentUser} />
           </section>
 
           <section
@@ -338,8 +276,16 @@ export default async function SongDetailPage({
             </div>
 
             <div className="mt-4 rounded-2xl border border-dashed border-[#cdd3ce] bg-[#faf9f6] p-5 text-center">
-              <p className="text-xs font-bold text-[#58655e]">ファイルをここに追加</p>
-              <p className="mt-1 text-[10px] leading-5 text-[#8a928d]">
+              <button
+                type="button"
+                disabled
+                aria-describedby="file-upload-note"
+                title="未実装：ファイルは選択・アップロードできません"
+                className="min-h-11 cursor-not-allowed rounded-full border border-[#d7dcd7] bg-white px-4 text-xs font-bold text-[#89918c]"
+              >
+                ＋ ファイルを追加
+              </button>
+              <p id="file-upload-note" className="mt-2 text-[10px] leading-5 text-[#8a928d]">
                 アップロード・保存・ダウンロードは未実装です
               </p>
             </div>

@@ -22,8 +22,9 @@ export default function BandsPage() {
         <button
           type="button"
           disabled
+          aria-describedby="band-create-note"
           className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-full border border-[#d9d8d1] bg-white px-5 text-sm font-bold text-[#9a9f9c]"
-          title="UIプロトタイプでは作成できません"
+          title="未実装：バンドは作成・保存されません"
         >
           ＋ バンドを作成
         </button>
@@ -103,7 +104,7 @@ export default function BandsPage() {
 
       <section className="mt-6 rounded-[24px] border border-dashed border-[#cfd4ce] bg-white/55 p-6 text-center sm:p-8">
         <p className="text-sm font-bold">新しいバンドワークスペース</p>
-        <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-[#78827c]">
+        <p id="band-create-note" className="mx-auto mt-2 max-w-xl text-xs leading-6 text-[#78827c]">
           作成フォーム、招待、権限設定は今後の専用タスクで実装します。この画面では導線のみ確認できます。
         </p>
       </section>
