@@ -16,13 +16,14 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| fill-initial-docs | 初期ドキュメントの内容確認・補完 | 未記入 | レビュー待ち | `docs/initial-project-docs` | `README.md`、`AGENTS.md`、指定された `docs/*.md` | 2026-08-10 | 未作成 | 既存の初期文書ブランチ上で配置を修正。実装なし |
+| ui-prototype-001 | モックデータによる初期 UI プロトタイプ | Codex | レビュー待ち | `ui/ui-prototype-001` | `src/app/`、`src/components/`、`src/lib/mock-data.ts`、関連 docs | 2026-08-10 | 作成予定 | DB・認証・外部サービス・保存処理なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
-| initial-project-docs | 引き継ぎ | 未記入 | `docs/initial-project-docs` / 未作成 | 2026-08-10 | 文書が `docs/docs/` に配置されていたため、fill-initial-docs で正規位置へ補完 |
+| fill-initial-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | main へマージ済み |
+| initial-project-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | 初期文書の配置修正を含めて main へマージ済み |
 | 記入例 | 完了 / 中止 | 名前 | `feature/example` / #123 | YYYY-MM-DD | 短い結果または中止理由 |
 
 ## 新規行テンプレート

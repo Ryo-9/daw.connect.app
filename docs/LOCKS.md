@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-002 | fill-initial-docs | 未記入 | `README.md`、`AGENTS.md`、指定された `docs/*.md` | `docs/initial-project-docs` | 2026-08-10 | PR マージまたは作業中止 | 既存ブランチ上の文書補完。実装領域は対象外 |
+| LOCK-003 | ui-prototype-001 | Codex | `src/app/`、`src/components/`、`src/lib/mock-data.ts`、関連 docs | `ui/ui-prototype-001` | 2026-08-10 | PR マージまたは作業中止 | UI とモックデータのみ |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-002 | fill-initial-docs | 未記入 | `README.md`、`AGENTS.md`、`docs/` | 2026-08-10 | 完了・PR #2 |
 | LOCK-001 | initial-project-docs | 未記入 | `README.md`、`AGENTS.md`、`docs/` | 2026-08-10 | fill-initial-docs へ引き継ぎ。PR 未作成 |
 | 記入例 | TASK-ID | 名前 | `src/example/` | YYYY-MM-DD | 完了 #123 / 中止 |
 
