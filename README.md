@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DAW Connect App
 
-## Getting Started
+DAW Connect App は、DAW（Digital Audio Workstation）の外側で、バンドや音楽制作チームの共同制作を支援する Web アプリです。楽曲に関するメモ、コメント、TODO、共有ファイルなど、制作中に散らばりやすい情報をバンド単位で整理します。
 
-First, run the development server:
+## 開発目的
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- チャットや複数のストレージに分散した制作情報を一か所にまとめる
+- 「誰が・どの曲の・何を対応するか」を分かりやすくする
+- 音源の特定時点に対するフィードバックを共有しやすくする
+- 初心者 2 人でも、GPT/Codex と GitHub を使って安全に開発できる進め方を確立する
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## MVP で作る範囲
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- バンド単位のワークスペース
+- 楽曲の一覧・詳細管理
+- 楽曲ごとのメモ
+- 通常コメントとタイムスタンプコメント
+- パート別 TODO
+- MIDI / 音源ファイル共有に向けた画面と設計の準備
+- 楽曲バージョン管理に向けた画面と設計の準備
+- スマートフォンでも確認しやすいレスポンシブ UI
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+「準備」とした機能は、MVP 初期ではモックデータや UI のみとなる場合があります。保存方式や外部サービスは、別タスクで安全性と費用を確認してから決定します。
 
-## Learn More
+## MVP ではまだ作らない範囲
 
-To learn more about Next.js, take a look at the following resources:
+- DAW 本体との直接連携
+- リアルタイム共同編集
+- AI による作曲・編曲・演奏支援
+- 本番用の DB とデータ移行
+- 本番用の認証、招待、細かな権限管理
+- 本番 AWS 構築と本番 S3 アップロード
+- Stripe、課金、サブスクリプション
+- 本番デプロイと正式公開
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 現在の状態
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+現在は Phase 0（環境構築・開発準備）です。このリポジトリにはまず開発方針と仕様書を整備します。アプリ本体のセットアップと実装は、承認された別タスクで行います。
 
-## Deploy on Vercel
+## 開発体制
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- 最初は ChatGPT Plus を利用する 2 人で開発する
+- GitHub リポジトリは涼さんのアカウントで管理し、友人は自分の GitHub アカウントで参加する
+- GitHub アカウントやパスワードを共有せず、変更はブランチと PR を通す
+- 一方が PR を作成し、もう一方がレビューすることを基本とする
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ローカル起動手順
+
+Next.js プロジェクトのセットアップ後は、次の手順を想定しています。現時点で `package.json` がない場合は、まだ起動できません。
+
+1. Node.js の採用バージョンをプロジェクトの指定に合わせる
+2. リポジトリを取得する
+3. プロジェクトのフォルダで `npm install` を実行する
+4. `.env.example` がある場合は `.env.local` にコピーし、必要な値を設定する
+5. `npm run dev` を実行する
+6. ブラウザで `http://localhost:3000` を開く
+
+秘密情報を含む `.env.local` は GitHub に追加しないでください。詳しくは [docs/SECURITY.md](docs/SECURITY.md) を確認してください。
+
+## 開発ルール
+
+- `main` へ直接 push / commit しない
+- 1 タスクにつき、1 ブランチ、1 Pull Request（PR）で進める
+- 作業前に `docs/ACTIVE_TASKS.md` と `docs/LOCKS.md` を確認・更新する
+- タスクで指定された範囲だけを変更する
+- 仕様外の改善案は実装せず、PR の未対応事項または `docs/TASK_QUEUE.md` に提案として残す
+- DB、認証、権限、AWS、S3、Stripe、課金は、明示的に承認された専用タスクでのみ扱う
+- API キー、パスワード、トークンなどの秘密情報をコードやドキュメントに書かない
+- 変更後に `npm run lint` と `npm run build` を実行する
+
+Codex が従う詳細ルールは [AGENTS.md](AGENTS.md) にあります。
+
+## ブランチ運用
+
+ブランチ名は、目的が分かる短い名前にします。
+
+- 機能追加: `feature/<task-name>`
+- バグ修正: `fix/<task-name>`
+- ドキュメント: `docs/<task-name>`
+- 保守作業: `chore/<task-name>`
+
+基本の流れは「最新の `main` を確認 → 作業ブランチを作成 → 変更と確認 → PR 作成」です。複数タスクを同じブランチに混ぜません。
+
+## PR 運用
+
+- PR のマージ先は `main` にする
+- 原則として Draft PR から始め、準備ができたらレビュー依頼する
+- 作成者以外の 1 人が内容と画面を確認してからマージする
+- PR 本文に「変更内容」「確認方法」「未対応事項」「リスク」を必ず書く
+- lint / build の結果を記載する。実行できなかった場合は理由を書く
+- 大きな PR にせず、レビューできる大きさに分ける
+- 会話だけで決まった重要な仕様は `docs/DECISION_LOG.md` に残す
+
+## Codex を使うときの注意
+
+- 依頼にはタスク ID、目的、変更してよいファイル、変更してはいけないファイル、完了条件を書く
+- 作業開始時に現在のブランチと差分を確認させる
+- 「ついでの改善」をさせず、必要なら別タスクとして提案させる
+- Codex が生成した内容をそのまま信用せず、差分と実行結果を人が確認する
+- DB、認証、クラウド、課金、権限、秘密情報に関する提案は、その場で実装させず二人で確認する
+- 不明なコマンド、削除、依存パッケージ追加、外部サービス操作は、目的と影響を理解してから許可する
+- 一つのタスクを複数の Codex セッションで同時に編集しない
+
+## 初心者向けの作業手順
+
+1. `docs/TASK_QUEUE.md` から小さなタスクを一つ選ぶ
+2. 二人で目的と完了条件を確認する
+3. `docs/ACTIVE_TASKS.md` に担当者、ブランチ、対象ファイルを記入する
+4. `docs/LOCKS.md` に同時編集を避けたい範囲を記入する
+5. 最新の `main` からタスク用ブランチを作る
+6. Codex に変更可能範囲と禁止範囲を明記して依頼する
+7. Codex が作った差分をファイルごとに読む
+8. `npm run lint` と `npm run build` を実行し、必要なら画面も確認する
+9. PR を作り、変更内容・確認方法・未対応事項・リスクを書く
+10. もう一人がレビューし、問題がなければ `main` にマージする
+11. `ACTIVE_TASKS` と `LOCKS` を更新し、重要な判断を `DECISION_LOG` に残す
+
+## 関連ドキュメント
+
+- [プロダクト仕様](docs/PRODUCT_SPEC.md)
+- [ロードマップ](docs/ROADMAP.md)
+- [画面一覧](docs/SCREEN_LIST.md)
+- [ユーザーフロー](docs/USER_FLOW.md)
+- [タスク候補](docs/TASK_QUEUE.md)
+- [アーキテクチャ](docs/ARCHITECTURE.md)
+- [セキュリティ方針](docs/SECURITY.md)
+- [リリースチェックリスト](docs/RELEASE_CHECKLIST.md)
