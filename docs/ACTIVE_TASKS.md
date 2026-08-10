@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ui-interaction-prototype-001 | 保存を伴わない UI 操作プロトタイプ | Codex | レビュー待ち | `ui/ui-interaction-prototype-001` | `src/app/`、`src/components/`、関連 docs | 2026-08-10 | 作成予定 | ブラウザ内の一時状態のみ。通信・保存なし |
+| ui-interaction-prototype-001 | 保存を伴わない UI 操作プロトタイプ | Codex | レビュー待ち | `ui/ui-interaction-prototype-001` | `src/app/`、`src/components/`、関連 docs | 2026-08-10 | #4 | ブラウザ内の一時状態のみ。通信・保存なし |
 
 ## 完了・中止履歴
 
