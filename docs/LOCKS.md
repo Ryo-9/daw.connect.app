@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-007 | BRIDGE-006 | Codex | `.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md` | `ci/bridge-006-pr-quality-checks` | 2026-09-03 | PR マージまたは作業中止 | 最小 PR CI と関連文書のみ。package、テスト、アプリコードは変更しない |
+| LOCK-008 | BRIDGE-008 | Codex | `package.json`、`package-lock.json`、`vitest.config.mts`、`vitest.setup.ts`、`playwright.config.ts`、`tests/`、`.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | `test/bridge-008-ui-automation` | 2026-09-03 | PR マージまたは作業中止 | Level 1のComponent testとChromium smokeのみ。アプリUI・DB・認証・AWSは変更しない |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-007 | BRIDGE-006 | Codex | `.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md` | 2026-09-03 | 完了・PR #7。GitHub Actions成功とmainへのマージを確認して解除 |
 | LOCK-006 | BRIDGE-005 | Codex | `docs/TESTING.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-03 | 完了・PR #6。main へのマージを確認して解除 |
 | LOCK-005 | BRIDGE-009 | Codex | `README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-02 | 完了・PR #5。main へのマージを確認して解除 |
 | LOCK-004 | ui-interaction-prototype-001 | Codex | `src/app/`、`src/components/`、関連 docs | 2026-09-02 | 友人確認済み。PR #4 は main へマージ済みのため解除 |

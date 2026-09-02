@@ -14,9 +14,9 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint and build
+    name: Quality checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -35,5 +35,14 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Run component tests
+        run: npm run test:run
+
       - name: Build
         run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Chromium smoke tests
+        run: npm run test:e2e
