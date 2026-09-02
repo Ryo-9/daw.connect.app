@@ -4,7 +4,7 @@
 
 この文書は、DAW Connect App の自動テストをどこから始め、DB・認証導入後や一般公開前にどう拡張するかを定めます。目的はテスト数やカバレッジ率を増やすことではなく、壊れやすい重要な振る舞いを少ないテストで守り、2 人と Codex が PR を安全に判断できるようにすることです。
 
-2026-09-03 時点ではテストツール、テストコード、CI は未導入です。この文書で構成と優先順位だけを決め、依存追加、設定、テスト実装、GitHub Actions は BRIDGE-008 と BRIDGE-006 の専用 PR で扱います。
+2026-09-03 時点ではテストツールとテストコードは未導入です。BRIDGE-006 では main 向け Pull Request の基本 CI として `npm ci`、lint、build だけを追加し、テストの依存追加、設定、実装は BRIDGE-008 の専用 PR で扱います。
 
 ## 現在のテスト対象
 
@@ -106,13 +106,13 @@ API、Server Actions、DB、認証・認可、ファイル保存を採用した�
 
 ### BRIDGE-006 導入直後
 
-テストツールがまだない段階では、GitHub Actions で次を必須にします。
+テストツールがまだない段階では、`.github/workflows/ci.yml` の `PR Quality Checks` を main 向け Pull Request で実行します。CI の Node.js は `24` を使用します。Next.js `16.3.0` の要件である Node.js `>=20.9.0` を満たし、導入時点で公式 LTS の安定 major だからです。ローカル開発全体の標準 version と更新方針は別途決定します。
 
 1. `npm ci`
 2. `npm run lint`
 3. `npm run build`
 
-CI では標準の `npm run build` を使用します。Codex 実行環境固有の Turbopack `EPERM` 回避で使う `npm run build -- --webpack` を、CI の既定へ無条件に持ち込みません。
+workflow は `contents: read` だけを許可し、`actions/checkout@v7` と `actions/setup-node@v7`、npm cache を使用します。CI では標準の `npm run build` を使用します。Codex 実行環境固有の Turbopack `EPERM` 回避で使う `npm run build -- --webpack` を、CI の既定へ無条件に持ち込みません。
 
 ### BRIDGE-008 完了後
 
@@ -136,10 +136,10 @@ CI では標準の `npm run build` を使用します。Codex 実行環境固有
 
 ## BRIDGE-006 への引き継ぎ
 
-- GitHub Actions は最初に `npm ci`、lint、build だけを導入する
-- Node.js の CI バージョンを明示し、ローカルの要件と一致させる
+- GitHub Actions は `.github/workflows/ci.yml` で `npm ci`、lint、build だけを実行する
+- Node.js `24` と npm cache を使用する
 - workflow へ秘密情報や本番接続を追加しない
-- timeout と同一ブランチの古い実行キャンセルを設定する
+- 15 分の timeout と同一 PR の古い実行キャンセルを設定する
 - BRIDGE-008 後に Unit / Component と Chromium smoke E2E を必須チェックへ追加する
 - full browser matrix は定期または手動 workflow として分離する
 
@@ -168,3 +168,4 @@ CI では標準の `npm run build` を使用します。Codex 実行環境固有
 - [Testing Library Guiding Principles](https://testing-library.com/docs/guiding-principles/)
 - [Playwright: Web server](https://playwright.dev/docs/test-webserver)
 - [Playwright: Continuous Integration](https://playwright.dev/docs/ci)
+- [Node.js Releases](https://nodejs.org/en/about/previous-releases)
