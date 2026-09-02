@@ -75,9 +75,9 @@
 
 ## 自動テスト
 
-初期テスト構成として、Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を推奨します。async Server Components で構成された動的ページや 404 は直接の Component test ではなく、Playwright で確認します。
+初期テスト構成として、Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を使用しています。async Server Components で構成された動的ページや 404 は直接の Component test ではなく、Playwright で確認します。
 
-テスト方針はBRIDGE-005 / PR #6、基本CIはBRIDGE-006 / PR #7でmainへマージ済みです。BRIDGE-008ではClient ComponentsをVitest / React Testing Library、async Server Components・動的ルート・404・主要導線をPlaywrightで確認します。PR CIは `npm ci`、lint、Component test、標準build、Chromium smoke E2Eを実行します。対象と実行タイミングの詳細は [TESTING.md](TESTING.md) に記載します。
+テスト方針はBRIDGE-005 / PR #6、基本CIはBRIDGE-006 / PR #7、Level 1自動テストはBRIDGE-008 / PR #8でmainへマージ済みです。Client ComponentsをVitest / React Testing Library、async Server Components・動的ルート・404・主要導線をPlaywrightで確認します。PR CIは `npm ci`、lint、Component test、標準build、Chromium smoke E2Eを実行します。対象と実行タイミングの詳細は [TESTING.md](TESTING.md) に記載します。
 
 ## 将来的な DB 候補
 

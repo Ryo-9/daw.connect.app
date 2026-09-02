@@ -95,7 +95,7 @@
 - 検討した選択肢: Jest + React Testing Library は既存資産がなく Vitest と役割が重複するため見送る。Cypress は Playwright と役割が重複し、初期の設定と学習対象が増えるため見送る。
 - 導入段階: Level 1 は mock UI の主要 Client Component と Chromium smoke E2E、Level 2 は API / Server Actions・DB・認証認可・ファイル保存、Level 3 は本番相当・権限境界・障害・主要ブラウザ・レスポンシブ・アクセシビリティを対象とする。
 - CI: BRIDGE-006 では最初に `npm ci`、lint、build を必須化する。BRIDGE-008 のテスト導入後に Vitest の 1 回実行と Playwright Chromium smoke E2E を PR 必須チェックへ追加する。全ブラウザや full suite は毎回の PR では実行しない。
-- 実装状況: BRIDGE-008で提案どおりの構成を導入し、Component testとChromium smoke E2Eをレビュー可能な状態にした。これは実装事実の記録であり、プロジェクトメンバー2人の承認を意味しない。
+- 実装状況: BRIDGE-008 / PR #8で提案どおりの構成を導入し、Component testとChromium smoke E2Eをmainへマージした。これは実装事実の記録であり、プロジェクトメンバー2人の承認を意味しない。
 - 影響: BRIDGE-006、BRIDGE-008、将来の DB・認証・ファイル保存タスク。
 - リスク: E2E を増やしすぎると実行時間と flaky failure が増えるため、PR ごとは Chromium の主要導線に限定する。カバレッジ率は初期の merge 条件にしない。
 - 未決事項: DEC-006の正式承認、Level 2 / 3の具体的な設定、将来のcoverage基準。

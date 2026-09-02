@@ -4,7 +4,7 @@
 
 この文書は、DAW Connect App の自動テストをどこから始め、DB・認証導入後や一般公開前にどう拡張するかを定めます。目的はテスト数やカバレッジ率を増やすことではなく、壊れやすい重要な振る舞いを少ないテストで守り、2 人と Codex が PR を安全に判断できるようにすることです。
 
-2026-09-03 時点で、BRIDGE-006 / PR #7の基本CIはmainへマージ済みです。BRIDGE-008ではVitest / React Testing LibraryによるComponent testと、PlaywrightによるChromium smoke E2Eを導入します。API、DB、認証・認可、ファイル保存を対象にするLevel 2以降は未実装です。
+2026-09-03 時点で、BRIDGE-006 / PR #7の基本CIと、BRIDGE-008 / PR #8のVitest / React Testing LibraryによるComponent test、PlaywrightによるChromium smoke E2Eはmainへマージ済みです。API、DB、認証・認可、ファイル保存を対象にするLevel 2以降は未実装です。
 
 ## 現在のテスト対象
 
@@ -14,7 +14,7 @@
 - Client Components: 楽曲検索、ステータス絞り込み、0 件状態、TODO 完了切り替え、コメント一時追加
 - Server Components: 主要ページ、動的ルート、モックデータの表示、存在しない ID の 404 判定
 - 永続化: なし。検索条件、TODO、追加コメントはリロードで初期状態へ戻る
-- 未実装: API / Server Actions、DB、認証・認可、ファイル保存、自動テスト、CI
+- 未実装: API / Server Actions、DB、認証・認可、ファイル保存、Level 2 / 3の自動テスト
 
 ## 推奨構成
 
@@ -30,7 +30,7 @@ Next.js の公式ガイドは、Vitest と React Testing Library を Unit testin
 
 ## 導入構成とコマンド
 
-BRIDGE-008で導入する直接依存は次のとおりです。正確な解決versionは `package-lock.json` を基準にします。
+BRIDGE-008 / PR #8で導入した直接依存は次のとおりです。正確な解決versionは `package-lock.json` を基準にします。
 
 - Vitest `4.1.11`
 - React Testing Library `16.3.3`、DOM Testing Library `10.4.1`
@@ -63,7 +63,7 @@ mock UI の現在に合わせ、速い Component test と少数の E2E smoke tes
 
 ### Unit / Component test
 
-BRIDGE-008で次を実装します。
+BRIDGE-008 / PR #8で次を実装しました。
 
 1. `SongFilterPanel`
    - 初期状態ですべての楽曲と件数を表示する

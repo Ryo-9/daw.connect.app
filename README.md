@@ -39,7 +39,7 @@ DAW Connect App は、DAW（Digital Audio Workstation）の外側で、バンド
 
 現在確認できる主な画面は、トップ、ダッシュボード、バンド一覧・詳細、バンド内の楽曲一覧、楽曲詳細です。楽曲検索、ステータス絞り込み、検索結果 0 件の表示、コメントの一時追加、TODO 完了状態の一時切り替えも試せます。
 
-表示データはすべて `src/lib/mock-data.ts` のモックです。コメントや TODO の変更はブラウザ内の一時状態だけで、リロードすると消えます。DB、API / Server Actions、認証・認可、AWS / S3、課金、本番デプロイ、自動テスト、CI は未実装です。
+表示データはすべて `src/lib/mock-data.ts` のモックです。コメントや TODO の変更はブラウザ内の一時状態だけで、リロードすると消えます。Vitest / React Testing LibraryのComponent testとPlaywrightのChromium smoke E2Eを導入し、Pull RequestではGitHub Actionsの`Quality checks`を実行します。DB、API / Server Actions、認証・認可、AWS / S3、課金、本番デプロイは未実装です。
 
 ## 開発体制
 
