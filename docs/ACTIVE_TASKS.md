@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| BRIDGE-002 | main ブランチ保護 | Codex | 作業中 | `chore/bridge-002-main-protection` | GitHub repository ruleset、`README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/BRANCH_PROTECTION.md` | 2026-09-03 | 未作成 | main保護を設定し、PR #8マージ後の文書状態を同期。アプリコードは変更しない |
+| BRIDGE-002 | main ブランチ保護 | Codex | レビュー待ち | `chore/bridge-002-main-protection` | GitHub repository ruleset、`README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/BRANCH_PROTECTION.md` | 2026-09-03 | #9 | main保護を設定し、PR #8マージ後の文書状態を同期。アプリコードは変更しない |
 
 ## 完了・中止履歴
 
