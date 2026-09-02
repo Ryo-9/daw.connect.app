@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-004 | ui-interaction-prototype-001 | Codex | `src/app/`、`src/components/`、関連 docs | `ui/ui-interaction-prototype-001` | 2026-08-10 | PR マージまたは作業中止 | 非永続の UI 状態のみ |
+| LOCK-005 | BRIDGE-009 | Codex | `README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | `docs/bridge-009-project-state-sync` | 2026-09-02 | PR マージまたは作業中止 | ドキュメント同期のみ。コード変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-004 | ui-interaction-prototype-001 | Codex | `src/app/`、`src/components/`、関連 docs | 2026-09-02 | 友人確認済み。PR #4 は main へマージ済みのため解除 |
 | LOCK-003 | ui-prototype-001 | Codex | `src/app/`、`src/components/`、`src/lib/mock-data.ts`、関連 docs | 2026-08-10 | 完了・PR #3 |
 | LOCK-002 | fill-initial-docs | 未記入 | `README.md`、`AGENTS.md`、`docs/` | 2026-08-10 | 完了・PR #2 |
 | LOCK-001 | initial-project-docs | 未記入 | `README.md`、`AGENTS.md`、`docs/` | 2026-08-10 | fill-initial-docs へ引き継ぎ。PR 未作成 |

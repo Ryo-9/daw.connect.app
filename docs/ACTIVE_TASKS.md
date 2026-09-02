@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ui-interaction-prototype-001 | 保存を伴わない UI 操作プロトタイプ | Codex | レビュー待ち | `ui/ui-interaction-prototype-001` | `src/app/`、`src/components/`、関連 docs | 2026-08-10 | #4 | ブラウザ内の一時状態のみ。通信・保存なし |
+| BRIDGE-009 | 現在実装とプロジェクト文書の同期 | Codex | レビュー待ち | `docs/bridge-009-project-state-sync` | `README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-02 | 本PR | コード変更なし。実装済み・未実装・作業履歴を同期する |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| ui-interaction-prototype-001 | 完了 | Codex | `ui/ui-interaction-prototype-001` / #4 | 2026-08-10 | 非永続の検索・絞り込み、コメント一時追加、TODO 切り替えを main へマージ済み |
 | ui-prototype-001 | 完了 | Codex | `ui/ui-prototype-001` / #3 | 2026-08-10 | main へマージ済み |
 | fill-initial-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | main へマージ済み |
 | initial-project-docs | 完了 | 未記入 | `docs/initial-project-docs` / #2 | 2026-08-10 | 初期文書の配置修正を含めて main へマージ済み |
