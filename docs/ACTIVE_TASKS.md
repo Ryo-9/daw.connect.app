@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| BRIDGE-006 | PR 基本品質チェック CI の導入 | Codex | レビュー待ち | `ci/bridge-006-pr-quality-checks` | `.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md` | 2026-09-03 | 本PR | main 向け PR で `npm ci`、lint、build を実行する。自動テストは含めない |
+| BRIDGE-008 | 主要 UI の自動テスト追加 | Codex | レビュー待ち | `test/bridge-008-ui-automation` | `package.json`、`package-lock.json`、テスト設定、`tests/`、`.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-03 | 本PR | Vitest / React Testing Library と Chromium Playwright smokeを最小構成で追加 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| BRIDGE-006 | 完了 | Codex | `ci/bridge-006-pr-quality-checks` / #7 | 2026-09-03 | main 向け PR の `npm ci`、lint、build CIを追加し、GitHub Actions成功後にmainへマージ済み |
 | BRIDGE-005 | 完了 | Codex | `docs/bridge-005-testing-strategy` / #6 | 2026-09-03 | 初期テスト方針を定義し、main へマージ済み。テストツールは未導入 |
 | BRIDGE-009 | 完了 | Codex | `docs/bridge-009-project-state-sync` / #5 | 2026-09-02 | 現在実装とプロジェクト文書を同期し、main へマージ済み |
 | ui-interaction-prototype-001 | 完了 | Codex | `ui/ui-interaction-prototype-001` / #4 | 2026-08-10 | 非永続の検索・絞り込み、コメント一時追加、TODO 切り替えを main へマージ済み |

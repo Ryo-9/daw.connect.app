@@ -4,7 +4,7 @@
 
 この文書は、DAW Connect App の自動テストをどこから始め、DB・認証導入後や一般公開前にどう拡張するかを定めます。目的はテスト数やカバレッジ率を増やすことではなく、壊れやすい重要な振る舞いを少ないテストで守り、2 人と Codex が PR を安全に判断できるようにすることです。
 
-2026-09-03 時点ではテストツールとテストコードは未導入です。BRIDGE-006 では main 向け Pull Request の基本 CI として `npm ci`、lint、build だけを追加し、テストの依存追加、設定、実装は BRIDGE-008 の専用 PR で扱います。
+2026-09-03 時点で、BRIDGE-006 / PR #7の基本CIはmainへマージ済みです。BRIDGE-008ではVitest / React Testing LibraryによるComponent testと、PlaywrightによるChromium smoke E2Eを導入します。API、DB、認証・認可、ファイル保存を対象にするLevel 2以降は未実装です。
 
 ## 現在のテスト対象
 
@@ -28,6 +28,23 @@ Jest + React Testing Library も候補ですが、既存テスト資産がない
 
 Next.js の公式ガイドは、Vitest と React Testing Library を Unit testing に併用できる一方、async Server Components は E2E で確認することを推奨しています。現在の動的ページは async Server Components のため、この境界を守ります。
 
+## 導入構成とコマンド
+
+BRIDGE-008で導入する直接依存は次のとおりです。正確な解決versionは `package-lock.json` を基準にします。
+
+- Vitest `4.1.11`
+- React Testing Library `16.3.3`、DOM Testing Library `10.4.1`
+- jest-dom `7.0.1`、user-event `14.6.7`
+- jsdom `30.0.1`
+- Vite React plugin `6.1.1`（path aliasはVite 8の標準機能で解決）
+- Playwright Test `1.62.1`
+
+実行コマンド:
+
+- `npm test`: Component testのwatch実行
+- `npm run test:run`: Component testを1回実行（CI用）
+- `npm run test:e2e`: production buildを起動してChromium smoke E2Eを実行。事前にbuildとChromiumの導入が必要
+
 ## テストを書く原則
 
 - 利用者から見える振る舞いを、role、label、表示名、URL で確認する
@@ -46,7 +63,7 @@ mock UI の現在に合わせ、速い Component test と少数の E2E smoke tes
 
 ### Unit / Component test
 
-BRIDGE-008 で最初に実装する順序です。
+BRIDGE-008で次を実装します。
 
 1. `SongFilterPanel`
    - 初期状態ですべての楽曲と件数を表示する
@@ -114,14 +131,15 @@ API、Server Actions、DB、認証・認可、ファイル保存を採用した�
 
 workflow は `contents: read` だけを許可し、`actions/checkout@v7` と `actions/setup-node@v7`、npm cache を使用します。CI では標準の `npm run build` を使用します。Codex 実行環境固有の Turbopack `EPERM` 回避で使う `npm run build -- --webpack` を、CI の既定へ無条件に持ち込みません。
 
-### BRIDGE-008 完了後
+### BRIDGE-008 導入後
 
-次を PR の必須チェックへ追加します。実際の script 名は BRIDGE-008 で `package.json` に追加し、README とこの文書へ反映します。
+次をPRの必須チェックへ追加します。
 
-4. Vitest の Unit / Component test を watch なしで 1 回実行する
-5. production build を起動し、Playwright の Chromium smoke test を実行する
+4. `npm run test:run`でComponent testをwatchなしで1回実行する
+5. `npx playwright install --with-deps chromium`でChromiumだけを準備する
+6. `npm run test:e2e`でproduction buildに対するChromium smoke testを実行する
 
-最初は 1 つの分かりやすい CI job で順番に実行し、所要時間が問題になった場合だけ job 分割やキャッシュを検討します。ブラウザは E2E の直前に Chromium だけを準備し、失敗時は Playwright trace とスクリーンショットを artifact として残します。
+1つのCI jobで、install、lint、Component test、build、Chromium導入、E2Eの順に実行します。所要時間が問題になった場合だけjob分割を検討します。Playwrightの出力は `.next/playwright-results` に置き、artifact uploadはまだ行いません。
 
 ## 毎回実行しない重い確認
 
@@ -134,24 +152,23 @@ workflow は `contents: read` だけを許可し、`actions/checkout@v7` と `ac
 - 大量データ、長時間、並行操作、性能、負荷の確認
 - Level 2 の DB・認証・ファイルを含む full integration suite
 
-## BRIDGE-006 への引き継ぎ
+## 現在のPR CI
 
-- GitHub Actions は `.github/workflows/ci.yml` で `npm ci`、lint、build だけを実行する
+- GitHub Actionsは `.github/workflows/ci.yml` の `PR Quality Checks` で実行する
 - Node.js `24` と npm cache を使用する
 - workflow へ秘密情報や本番接続を追加しない
-- 15 分の timeout と同一 PR の古い実行キャンセルを設定する
-- BRIDGE-008 後に Unit / Component と Chromium smoke E2E を必須チェックへ追加する
+- 20 分の timeout と同一 PR の古い実行キャンセルを設定する
+- `npm ci`、lint、Component test、build、Chromium smoke E2Eを順に実行する
 - full browser matrix は定期または手動 workflow として分離する
 
-## BRIDGE-008 への引き継ぎ
+## BRIDGE-008 の実装範囲
 
-- 導入時点で Next.js `16.3.x`、React `19.2.x`、採用 Node.js と互換性のある版を公式資料から確認する
-- Vitest、React Testing Library、jsdom、利用者操作用 helper を 1 つの専用 PR で追加する
-- Playwright と Chromium を同じ専用 PR で追加し、最小 smoke test だけを作る
-- 最初の Component test は `SongFilterPanel`、次に `TaskChecklist`、`MockCommentComposer` の順にする
-- 最初の E2E は主要画面遷移、404、非永続状態のリロード確認に限定する
+- Component testは `SongFilterPanel`、`TaskChecklist`、`MockCommentComposer` を対象にする
+- E2Eは主要画面遷移、band/songの404、検索、TODO、コメント、非永続状態のリロード確認に限定する
+- async Server ComponentsをComponent testせず、動的ページと404はE2Eで確認する
+- Playwright projectはChromium 1種類だけにする
 - watch 用と CI の 1 回実行用 script を分ける
-- package と lockfile の差分、install script、ライセンス、実行時間をレビューする
+- Level 2 / 3、coverage threshold、visual regression、browser matrixは追加しない
 
 ## 見直し条件
 
