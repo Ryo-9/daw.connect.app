@@ -71,8 +71,8 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | --- | --- | --- | --- |
 | BRIDGE-000 | P0 | Git リポジトリとリモートの初期設定 | 涼さんの GitHub リポジトリへ安全に接続し、初期ブランチと共同作業者を確認する |
 | BRIDGE-001 | P0 | Next.js 開発環境の初期化 | 完了。Next.js / TypeScript / Tailwind CSS を初期化し、起動・lint・build を確認済み |
-| BRIDGE-002 | P0 | GitHub ブランチ保護 | 作業中。mainへのPRと`Quality checks`成功を必須化し、削除とforce pushを禁止する。詳細は [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) |
-| BRIDGE-003 | P0 | PR テンプレートの作成 | 変更内容、確認方法、未対応、リスクを必須欄にする |
+| BRIDGE-002 | P0 | GitHub ブランチ保護 | 完了（PR #9）。mainへのPRと`Quality checks`成功を必須化し、削除とforce pushを禁止。詳細は [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) |
+| BRIDGE-003 | P0 | PR テンプレートの作成 | 作業中。Task、変更、検証、安全性、競合、未対応とリスクを短いチェックリストにする |
 | BRIDGE-004 | P1 | モックデータと型の方針 | UI 用データの置き場所、命名、実 API への移行方法を決める |
 | BRIDGE-005 | P1 | テスト方針の作成 | 完了（PR #6）。`TESTING.md` で Vitest、React Testing Library、Playwright と Level 1〜3 の対象を整理し、Level 1の導入はPR #8で完了 |
 | BRIDGE-006 | P1 | CI で lint / build を実行 | 完了（PR #7）。main 向け PR ごとに `npm ci`、lint、標準 build を自動化済み |
@@ -87,6 +87,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| BRIDGE-002 | #9 | 2026-09-03 | mainへのPRと`Quality checks`を必須化し、削除とforce pushを禁止するrulesetを設定 |
 | BRIDGE-008 | #8 | 2026-09-03 | Level 1のComponent testとChromium smoke E2Eを導入し、PR CIへ追加 |
 | BRIDGE-006 | #7 | 2026-09-03 | main 向けPull Requestで `npm ci`、lint、標準buildを実行するGitHub Actionsを導入 |
 | BRIDGE-005 | #6 | 2026-09-03 | 初期自動テスト方針と Level 1〜3 の対象を定義。テストツールは未導入 |

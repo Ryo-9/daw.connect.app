@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-009 | BRIDGE-002 | Codex | GitHub repository ruleset、`README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/BRANCH_PROTECTION.md` | `chore/bridge-002-main-protection` | 2026-09-03 | PR マージまたは作業中止 | main保護とPR #8後の文書同期のみ。アプリコード・テスト・依存関係は変更しない |
+| LOCK-010 | BRIDGE-003 | Codex | `.github/pull_request_template.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | `docs/bridge-003-pr-template` | 2026-09-03 | PR マージまたは作業中止 | PRテンプレートとタスク管理文書のみ。CI・アプリコード・依存関係は変更しない |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-009 | BRIDGE-002 | Codex | GitHub repository ruleset、`README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/BRANCH_PROTECTION.md` | 2026-09-03 | 完了・PR #9。ruleset有効化、GitHub Actions成功、mainへのマージを確認して解除 |
 | LOCK-008 | BRIDGE-008 | Codex | `package.json`、`package-lock.json`、`vitest.config.mts`、`vitest.setup.ts`、`playwright.config.ts`、`tests/`、`.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-03 | 完了・PR #8。GitHub Actions成功とmainへのマージを確認して解除 |
 | LOCK-007 | BRIDGE-006 | Codex | `.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md` | 2026-09-03 | 完了・PR #7。GitHub Actions成功とmainへのマージを確認して解除 |
 | LOCK-006 | BRIDGE-005 | Codex | `docs/TESTING.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-03 | 完了・PR #6。main へのマージを確認して解除 |
