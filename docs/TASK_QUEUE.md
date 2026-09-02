@@ -12,7 +12,7 @@
 
 ## 現在の状態と次候補
 
-2026-09-03 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。BRIDGE-008ではLevel 1のComponent testとChromium smoke E2Eを追加し、CIへ組み込みます。
+2026-09-03 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。BRIDGE-002ではmainへのPRと`Quality checks`成功をGitHub rulesetで必須化します。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
@@ -71,13 +71,13 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | --- | --- | --- | --- |
 | BRIDGE-000 | P0 | Git リポジトリとリモートの初期設定 | 涼さんの GitHub リポジトリへ安全に接続し、初期ブランチと共同作業者を確認する |
 | BRIDGE-001 | P0 | Next.js 開発環境の初期化 | 完了。Next.js / TypeScript / Tailwind CSS を初期化し、起動・lint・build を確認済み |
-| BRIDGE-002 | P0 | GitHub ブランチ保護の設定手順 | main への直接 push 防止と PR レビューを有効化する |
+| BRIDGE-002 | P0 | GitHub ブランチ保護 | 作業中。mainへのPRと`Quality checks`成功を必須化し、削除とforce pushを禁止する。詳細は [BRANCH_PROTECTION.md](BRANCH_PROTECTION.md) |
 | BRIDGE-003 | P0 | PR テンプレートの作成 | 変更内容、確認方法、未対応、リスクを必須欄にする |
 | BRIDGE-004 | P1 | モックデータと型の方針 | UI 用データの置き場所、命名、実 API への移行方法を決める |
-| BRIDGE-005 | P1 | テスト方針の作成 | 完了（PR #6）。`TESTING.md` で Vitest、React Testing Library、Playwright と Level 1〜3 の対象を整理した。ツールは未導入 |
+| BRIDGE-005 | P1 | テスト方針の作成 | 完了（PR #6）。`TESTING.md` で Vitest、React Testing Library、Playwright と Level 1〜3 の対象を整理し、Level 1の導入はPR #8で完了 |
 | BRIDGE-006 | P1 | CI で lint / build を実行 | 完了（PR #7）。main 向け PR ごとに `npm ci`、lint、標準 build を自動化済み |
 | BRIDGE-007 | P1 | Issue / タスク記述テンプレート | Codex に渡せる変更範囲と完了条件を標準化する |
-| BRIDGE-008 | P1 | 主要 UI のテスト追加 | レビュー待ち。楽曲検索・絞り込み、TODO、コメントのComponent testと、主要導線・404・一時状態のChromium smoke E2Eを追加 |
+| BRIDGE-008 | P1 | 主要 UI のテスト追加 | 完了（PR #8）。楽曲検索・絞り込み、TODO、コメントのComponent testと、主要導線・404・一時状態のChromium smoke E2Eを追加 |
 | BRIDGE-009 | P1 | ドキュメント整合性レビュー | 完了（PR #5）。現在実装、マージ済み作業、未実装領域を文書へ同期済み |
 | BRIDGE-010 | P2 | アクセシビリティ確認手順 | 手動確認と自動検査の項目をチェックリスト化する |
 | BRIDGE-011 | P2 | エラー報告テンプレート | 再現手順、期待結果、実際結果、環境を揃える |
@@ -87,6 +87,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| BRIDGE-008 | #8 | 2026-09-03 | Level 1のComponent testとChromium smoke E2Eを導入し、PR CIへ追加 |
 | BRIDGE-006 | #7 | 2026-09-03 | main 向けPull Requestで `npm ci`、lint、標準buildを実行するGitHub Actionsを導入 |
 | BRIDGE-005 | #6 | 2026-09-03 | 初期自動テスト方針と Level 1〜3 の対象を定義。テストツールは未導入 |
 | BRIDGE-009 | #5 | 2026-09-02 | 現在実装と GitHub 上のマージ済み作業にプロジェクト文書を同期 |
