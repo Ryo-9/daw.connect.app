@@ -18,6 +18,7 @@
 | DEC-003 | 2026-08-10 | Next.js / React / TypeScript / Tailwind CSS / npm を現行フロントエンド構成とする | 承認済み | アーキテクチャ | - |
 | DEC-004 | 2026-08-10 | 最初の UI はモックデータと画面遷移に限定する | 承認済み | UI プロトタイプ | - |
 | DEC-005 | 2026-08-10 | UI 操作はブラウザ内の一時状態に限定する | 承認済み | UI 操作プロトタイプ | - |
+| DEC-006 | 2026-09-03 | 初期テストを Vitest / React Testing Library / Playwright で構成する | 提案中 | 自動テスト / CI | - |
 
 ---
 
@@ -52,7 +53,7 @@
 - 背景: Web アプリとレスポンシブ UI を少人数で開発する構成が必要。
 - 決定: 現行 UI プロトタイプでは Next.js `16.3.0`、React / React DOM `19.2.8`、TypeScript `^5`、Tailwind CSS `^4`、npm、App Router を使用する。
 - 採用理由: UI と Web アプリの構築を一つのプロジェクトで進めやすく、型によるミスの発見を期待できるため。PR #3 と #4 が main へマージされ、現行実装として確認できる。
-- 未決事項: テスト構成、永続データの取得方式、DB、認証、ストレージ、ホスティング先。これらを本決定の一部として採用済みとは扱わない。
+- 未決事項: テスト方針は DEC-006 で提案中。永続データの取得方式、DB、認証、ストレージ、ホスティング先は未決定であり、本決定の一部として採用済みとは扱わない。
 - 影響: 初期セットアップと Surface Lane のタスク。
 - 見直し条件: バージョン更新時、または要件に合わない制約が判明した場合。
 
@@ -81,6 +82,24 @@
 - 未決事項: 保存時の API、入力検証、投稿者権限、更新競合、エラー表示。
 - 見直し条件: データ・API・権限設計が承認され、保存処理を専用タスクで開始するとき。
 - 関連: `ui-interaction-prototype-001`
+
+## DEC-006: 初期テストを Vitest / React Testing Library / Playwright で構成する
+
+- 日付: 2026-09-03
+- ステータス: 提案中
+- 提案者: Codex（BRIDGE-005）
+- 承認者: 未承認。PR レビューでプロジェクトメンバー 2 人の合意を確認する
+- 背景: 2 人と Codex の並行開発で、現在の mock UI の主要操作と画面遷移を少ないテストで守り、PR の merge 判断を自動化する必要がある。
+- 決定案: Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を使用する。async Server Components、動的ルート、404 は E2E で確認する。
+- 採用理由: 現在の Next.js / React / TypeScript 構成と役割を分けやすく、速い Component test と少数の実ブラウザ smoke test を組み合わせられるため。最初から複数の test runner や E2E framework を併用せず、初心者が把握する設定を限定できる。
+- 検討した選択肢: Jest + React Testing Library は既存資産がなく Vitest と役割が重複するため見送る。Cypress は Playwright と役割が重複し、初期の設定と学習対象が増えるため見送る。
+- 導入段階: Level 1 は mock UI の主要 Client Component と Chromium smoke E2E、Level 2 は API / Server Actions・DB・認証認可・ファイル保存、Level 3 は本番相当・権限境界・障害・主要ブラウザ・レスポンシブ・アクセシビリティを対象とする。
+- CI: BRIDGE-006 では最初に `npm ci`、lint、build を必須化する。BRIDGE-008 のテスト導入後に Vitest の 1 回実行と Playwright Chromium smoke E2E を PR 必須チェックへ追加する。全ブラウザや full suite は毎回の PR では実行しない。
+- 影響: BRIDGE-006、BRIDGE-008、将来の DB・認証・ファイル保存タスク。
+- リスク: E2E を増やしすぎると実行時間と flaky failure が増えるため、PR ごとは Chromium の主要導線に限定する。カバレッジ率は初期の merge 条件にしない。
+- 未決事項: 導入時の正確な package version、Node.js の CI version、script 名、設定ファイル、テスト配置、将来の coverage 基準。
+- 見直し条件: DB・認証・ファイル保存の導入時、テストが PR の待ち時間の主因になった時、主要 version 更新時、一般公開準備時。
+- 関連: BRIDGE-005、BRIDGE-006、BRIDGE-008、[TESTING.md](TESTING.md)
 
 ---
 
