@@ -71,6 +71,12 @@
 - 本番ホスティング、監視、バックアップ
 - 自動テスト、CI
 
+## テスト方針（導入前）
+
+初期テスト構成として、Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を推奨します。async Server Components で構成された動的ページや 404 は直接の Component test ではなく、Playwright で確認します。
+
+この方針は BRIDGE-005 のレビュー対象です。テストパッケージ、設定、script、テストコード、CI はまだ存在せず、導入は BRIDGE-008、PR チェックの自動化は BRIDGE-006 の専用タスクで扱います。対象と実行タイミングの詳細は [TESTING.md](TESTING.md) に記載します。
+
 ## 将来的な DB 候補
 
 主なデータがバンド、メンバー、楽曲、コメント、TODO の関係を持つため、PostgreSQL を第一の比較対象とします。マネージド PostgreSQL、Supabase、Neon、AWS RDS などは候補であり、未採用です。
@@ -126,7 +132,7 @@ Auth.js、Clerk、Supabase Auth、Amazon Cognito などを比較候補としま�
 ## まだ確定していないこと
 
 - Node.js の標準運用バージョンと更新方針
-- テストツールとテスト範囲
+- テストツールの導入バージョン、設定、script、カバレッジ運用
 - DB 製品、ORM、スキーマ管理方法
 - 認証サービス、セッション方式、招待フロー
 - ロールと操作権限の詳細
