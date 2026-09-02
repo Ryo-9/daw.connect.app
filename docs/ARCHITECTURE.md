@@ -15,6 +15,7 @@
 - ESLint `^9` と `eslint-config-next` `16.3.0`
 - npm（`package-lock.json` を使用）
 - Next.js App Router（`src/app`）
+- GitHub Actions（main 向け Pull Request で Node.js `24`、`npm ci`、lint、build を実行）
 
 現在は `/`、`/dashboard`、`/bands`、`/bands/[bandId]`、`/bands/[bandId]/songs`、`/songs/[songId]` を実装しています。ページ表示は主に Server Components、検索・絞り込み・コメント一時追加・TODO 切り替えは Client Components で構成されています。データは `src/lib/mock-data.ts` の静的モックだけを使用し、通信や永続化は行いません。
 
@@ -69,13 +70,13 @@
 - AWS、S3、その他のクラウド構成
 - Stripe、課金、請求
 - 本番ホスティング、監視、バックアップ
-- 自動テスト、CI
+- 自動テスト
 
 ## テスト方針（導入前）
 
 初期テスト構成として、Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を推奨します。async Server Components で構成された動的ページや 404 は直接の Component test ではなく、Playwright で確認します。
 
-この方針は BRIDGE-005 のレビュー対象です。テストパッケージ、設定、script、テストコード、CI はまだ存在せず、導入は BRIDGE-008、PR チェックの自動化は BRIDGE-006 の専用タスクで扱います。対象と実行タイミングの詳細は [TESTING.md](TESTING.md) に記載します。
+テスト方針は BRIDGE-005 / PR #6 で main へマージ済みです。テストパッケージ、設定、script、テストコードはまだ存在せず、導入は BRIDGE-008 の専用タスクで扱います。BRIDGE-006 ではテストを含まない最小 CI として `npm ci`、lint、build を追加します。対象と実行タイミングの詳細は [TESTING.md](TESTING.md) に記載します。
 
 ## 将来的な DB 候補
 
@@ -131,7 +132,7 @@ Auth.js、Clerk、Supabase Auth、Amazon Cognito などを比較候補としま�
 
 ## まだ確定していないこと
 
-- Node.js の標準運用バージョンと更新方針
+- Node.js のローカル標準運用バージョンと更新方針（CI は `24`）
 - テストツールの導入バージョン、設定、script、カバレッジ運用
 - DB 製品、ORM、スキーマ管理方法
 - 認証サービス、セッション方式、招待フロー
