@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| BRIDGE-003 | PRテンプレートの作成 | Codex | 作業中 | `docs/bridge-003-pr-template` | `.github/pull_request_template.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | 2026-09-03 | 本PR | 初心者とCodexが変更・検証・安全性・競合・未対応を短く確認できるテンプレートを追加 |
+| SURFACE-015 | 主要画面のモバイル監査 | Codex | 作業中 | `audit/surface-015-mobile-ui` | `docs/MOBILE_AUDIT.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、ローカル一時スクリーンショット | 2026-09-03 | 本PR | 主要画面を複数viewportで自動計測・目視確認し、UIは変更せず問題と修正候補を記録 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| BRIDGE-003 | 完了 | Codex | `docs/bridge-003-pr-template` / #10 | 2026-09-03 | 標準PRテンプレートを追加し、GitHub Actions成功後にmainへマージ済み |
 | BRIDGE-002 | 完了 | Codex | `chore/bridge-002-main-protection` / #9 | 2026-09-03 | mainへのPRと`Quality checks`を必須化し、削除・force pushを禁止するrulesetを設定してmainへマージ済み |
 | BRIDGE-008 | 完了 | Codex | `test/bridge-008-ui-automation` / #8 | 2026-09-03 | Level 1のComponent testとChromium smoke E2Eを追加し、GitHub Actions成功後にmainへマージ済み |
 | BRIDGE-006 | 完了 | Codex | `ci/bridge-006-pr-quality-checks` / #7 | 2026-09-03 | main 向け PR の `npm ci`、lint、build CIを追加し、GitHub Actions成功後にmainへマージ済み |
