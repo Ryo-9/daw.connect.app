@@ -38,7 +38,7 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
   return (
     <>
       <section
-        className="mt-7 rounded-2xl border border-line bg-panel p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-5"
+        className="instrument-panel mt-7 rounded-xl border border-line bg-panel p-4 sm:p-5"
         aria-labelledby="song-filter-heading"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -68,7 +68,7 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="例：Afterglow"
-                className="min-h-12 w-full rounded-xl border border-line-strong bg-panel-muted py-3 pl-10 pr-4 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className="control-well min-h-12 w-full rounded-lg border border-line-strong bg-panel-muted py-3 pl-10 pr-4 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
             </div>
           </div>
@@ -95,7 +95,7 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
                     type="button"
                     aria-pressed={isActive}
                     onClick={() => setStatus(option)}
-                    className={`min-h-11 rounded-xl border px-4 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
+                    className={`hardware-key min-h-11 rounded-lg border px-4 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
                       isActive
                         ? "border-accent-strong bg-accent-strong text-white shadow-[0_8px_20px_rgba(102,87,232,0.24)]"
                         : "border-line-strong bg-panel-muted text-muted hover:border-accent/60 hover:text-ink"
@@ -119,7 +119,7 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
             <button
               type="button"
               onClick={resetFilters}
-              className="min-h-11 rounded-xl px-3 text-xs font-bold text-accent underline-offset-4 hover:bg-panel-raised hover:underline"
+              className="hardware-key min-h-11 rounded-lg px-3 text-xs font-bold text-accent underline-offset-4 hover:bg-panel-raised hover:underline"
             >
               条件をリセット
             </button>
@@ -135,7 +135,7 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
         </div>
       ) : (
         <section
-          className="mt-5 rounded-2xl border border-dashed border-line-strong bg-panel/70 px-5 py-12 text-center"
+          className="control-well mt-5 rounded-xl border border-dashed border-line-strong bg-panel/70 px-5 py-12 text-center"
           role="status"
         >
           <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-accent/25 bg-accent-strong/12 text-xl text-accent">
@@ -148,14 +148,14 @@ export function SongFilterPanel({ songs }: { songs: Song[] }) {
           <button
             type="button"
             onClick={resetFilters}
-            className="mt-5 min-h-11 rounded-xl bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(102,87,232,0.24)] hover:bg-accent-hover"
+            className="hardware-key mt-5 min-h-11 rounded-lg bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(102,87,232,0.24)] hover:bg-accent-hover"
           >
             すべての楽曲を表示
           </button>
         </section>
       )}
 
-      <section className="mt-6 rounded-2xl border border-dashed border-line bg-panel/55 p-5 text-center">
+      <section className="control-well mt-6 rounded-xl border border-dashed border-line bg-panel/55 p-5 text-center">
         <p className="text-xs leading-6 text-muted">
           検索と絞り込みはこの画面だけの一時状態です。楽曲作成とデータ保存は未実装です。
         </p>

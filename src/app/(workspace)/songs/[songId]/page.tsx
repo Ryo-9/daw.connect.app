@@ -91,7 +91,7 @@ export default async function SongDetailPage({
                 { label: "KEY", value: song.musicalKey },
                 { label: "LENGTH", value: song.duration },
               ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-white/10 bg-black/15 p-3 text-center sm:p-4">
+                <div key={item.label} className="control-well rounded-lg border border-white/10 bg-black/15 p-3 text-center sm:p-4">
                   <p className="font-mono text-[9px] font-bold tracking-[0.14em] text-subtle">
                     {item.label}
                   </p>
@@ -133,7 +133,7 @@ export default async function SongDetailPage({
           <a
             key={item.href}
             href={item.href}
-            className={`inline-flex min-h-11 shrink-0 items-center rounded-xl border px-2.5 py-2 text-xs font-bold transition sm:px-4 ${
+            className={`hardware-key inline-flex min-h-11 shrink-0 items-center rounded-lg border px-2.5 py-2 text-xs font-bold transition sm:px-4 ${
               index === 0
                 ? "border-accent-strong bg-accent-strong text-white shadow-[0_8px_20px_rgba(102,87,232,0.24)]"
                 : "border-line-strong bg-panel text-muted hover:border-accent/55 hover:text-ink"
@@ -148,7 +148,7 @@ export default async function SongDetailPage({
         <div className="space-y-5">
           <section
             id="memo"
-            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-7"
+            className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -162,7 +162,7 @@ export default async function SongDetailPage({
                 disabled
                 aria-describedby="memo-edit-note"
                 title="未実装：メモは編集・保存できません"
-                className="min-h-11 cursor-not-allowed rounded-xl border border-line-strong bg-panel-muted px-3 py-2 text-[11px] font-bold text-subtle"
+                className="hardware-key min-h-11 cursor-not-allowed rounded-lg border border-line-strong bg-panel-muted px-3 py-2 text-[11px] font-bold text-subtle"
               >
                 編集
               </button>
@@ -190,7 +190,7 @@ export default async function SongDetailPage({
 
           <section
             id="tasks"
-            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-7"
+            className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-7"
           >
             <TaskChecklist tasks={tasks} members={members} />
           </section>
@@ -199,7 +199,7 @@ export default async function SongDetailPage({
         <div className="space-y-5">
           <section
             id="comments"
-            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-6"
+            className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-6"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -242,7 +242,7 @@ export default async function SongDetailPage({
 
           <section
             id="files"
-            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-6"
+            className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-6"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -262,7 +262,7 @@ export default async function SongDetailPage({
                 return (
                   <article
                     key={file.id}
-                    className="rounded-xl border border-line bg-panel-muted p-4"
+                    className="control-well rounded-lg border border-line bg-panel-muted p-4"
                   >
                     <div className="flex items-start gap-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent-blue/20 bg-accent-blue/10 font-mono text-xs font-bold text-accent-blue">
@@ -281,13 +281,13 @@ export default async function SongDetailPage({
               })}
             </div>
 
-            <div className="mt-4 rounded-xl border border-dashed border-line-strong bg-panel-muted p-5 text-center">
+            <div className="control-well mt-4 rounded-lg border border-dashed border-line-strong bg-panel-muted p-5 text-center">
               <button
                 type="button"
                 disabled
                 aria-describedby="file-upload-note"
                 title="未実装：ファイルは選択・アップロードできません"
-                className="min-h-11 cursor-not-allowed rounded-xl border border-line-strong bg-panel px-4 text-xs font-bold text-subtle"
+                className="hardware-key min-h-11 cursor-not-allowed rounded-lg border border-line-strong bg-panel px-4 text-xs font-bold text-subtle"
               >
                 ＋ ファイルを追加
               </button>

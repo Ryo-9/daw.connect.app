@@ -71,7 +71,7 @@ export function TaskStatusBadge({ status }: { status: TaskStatus }) {
 export function ProgressBar({ value }: { value: number }) {
   return (
     <div
-      className="h-1.5 overflow-hidden rounded-full bg-panel-muted ring-1 ring-inset ring-line"
+      className="meter-track h-2 overflow-hidden bg-panel-muted"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
@@ -79,7 +79,7 @@ export function ProgressBar({ value }: { value: number }) {
       aria-label={`制作進捗 ${value}%`}
     >
       <div
-        className="h-full rounded-full bg-gradient-to-r from-accent-strong to-accent-blue shadow-[0_0_12px_rgba(90,155,255,0.4)]"
+        className="meter-fill h-full bg-gradient-to-r from-accent-strong to-accent-blue shadow-[0_0_12px_rgba(90,155,255,0.4)]"
         style={{ width: `${value}%` }}
       />
     </div>

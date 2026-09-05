@@ -47,11 +47,87 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+@layer components {
+  .mechanical-canvas {
+    background-color: var(--background);
+    background-image:
+      linear-gradient(rgba(122, 139, 176, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(122, 139, 176, 0.025) 1px, transparent 1px),
+      radial-gradient(circle at 78% -10%, rgba(91, 76, 219, 0.16), transparent 34rem),
+      radial-gradient(circle at 34% 120%, rgba(49, 116, 217, 0.1), transparent 38rem);
+    background-attachment: fixed;
+    background-size: 32px 32px, 32px 32px, auto, auto;
+  }
+
+  .equipment-rail {
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.28)),
+      repeating-linear-gradient(0deg, transparent 0 63px, rgba(115, 127, 154, 0.025) 63px 64px);
+    box-shadow: inset -1px 0 rgba(255, 255, 255, 0.025);
+  }
+
+  .instrument-panel {
+    position: relative;
+    background-image:
+      radial-gradient(circle at 9px 9px, rgba(138, 150, 180, 0.56) 0 1px, rgba(4, 6, 12, 0.9) 1.5px 2px, transparent 2.5px),
+      radial-gradient(circle at calc(100% - 9px) 9px, rgba(138, 150, 180, 0.56) 0 1px, rgba(4, 6, 12, 0.9) 1.5px 2px, transparent 2.5px),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 34%);
+    box-shadow:
+      inset 0 1px rgba(255, 255, 255, 0.045),
+      inset 0 -1px rgba(0, 0, 0, 0.38),
+      0 14px 34px rgba(0, 0, 0, 0.2);
+  }
+
+  .control-well {
+    box-shadow:
+      inset 0 2px 7px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.018),
+      0 1px rgba(255, 255, 255, 0.025);
+  }
+
+  .hardware-key {
+    box-shadow:
+      inset 0 1px rgba(255, 255, 255, 0.1),
+      inset 0 -2px rgba(0, 0, 0, 0.28),
+      0 4px 12px rgba(0, 0, 0, 0.18);
+  }
+
+  .meter-track {
+    position: relative;
+    border: 1px solid #252c43;
+    border-radius: 3px;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.5),
+      0 1px rgba(255, 255, 255, 0.035);
+  }
+
+  .meter-track::after {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0 11px,
+      rgba(7, 9, 20, 0.6) 11px 12px
+    );
+    content: "";
+    pointer-events: none;
+  }
+
+  .meter-fill {
+    border-radius: 2px;
+  }
+}
+
 button,
 a,
 input,
 textarea {
   -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a {
+  cursor: pointer;
 }
 
 :focus-visible {

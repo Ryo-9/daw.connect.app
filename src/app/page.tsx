@@ -13,8 +13,8 @@ export default function Home() {
   const featuredMembers = getBandMembers(featuredSong.bandId);
 
   return (
-    <div className="min-h-screen overflow-hidden bg-canvas text-ink">
-      <header className="relative z-20 border-b border-line bg-sidebar/90 backdrop-blur">
+    <div className="mechanical-canvas min-h-screen overflow-hidden text-ink">
+      <header className="equipment-rail relative z-20 border-b border-line bg-sidebar/90 backdrop-blur">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
           <BrandMark />
           <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ export default function Home() {
             </span>
             <Link
               href="/dashboard"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent-strong px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_28px_rgba(102,87,232,0.3)] transition hover:-translate-y-0.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+              className="hardware-key inline-flex min-h-11 items-center justify-center rounded-lg bg-accent-strong px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_28px_rgba(102,87,232,0.3)] transition hover:-translate-y-0.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
             >
               デモを見る
             </Link>
@@ -55,13 +55,13 @@ export default function Home() {
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/dashboard"
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl bg-accent-strong px-7 text-sm font-bold text-white shadow-[0_12px_30px_rgba(102,87,232,0.3)] transition hover:-translate-y-0.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
+                  className="hardware-key inline-flex min-h-12 items-center justify-center rounded-lg bg-accent-strong px-7 text-sm font-bold text-white shadow-[0_12px_30px_rgba(102,87,232,0.3)] transition hover:-translate-y-0.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas"
                 >
                   ダッシュボードを開く
                 </Link>
                 <Link
                   href="/bands"
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-line-strong bg-panel/70 px-7 text-sm font-bold text-ink transition hover:border-accent/60 hover:bg-panel-raised"
+                  className="hardware-key inline-flex min-h-12 items-center justify-center rounded-lg border border-line-strong bg-panel/70 px-7 text-sm font-bold text-ink transition hover:border-accent/60 hover:bg-panel-raised"
                 >
                   バンド一覧を見る
                 </Link>
@@ -79,7 +79,7 @@ export default function Home() {
             <div className="relative mx-auto w-full max-w-[620px]">
               <div className="absolute -left-6 top-12 hidden h-24 w-24 rounded-3xl bg-accent-strong/40 blur-sm lg:block" />
               <div className="absolute -right-8 bottom-8 hidden h-32 w-32 rounded-full border-[20px] border-accent-blue/18 lg:block" />
-              <div className="relative rounded-[26px] border border-line-strong bg-panel/92 p-4 shadow-[0_34px_90px_rgba(0,0,0,0.38)] backdrop-blur sm:p-6">
+              <div className="instrument-panel relative rounded-2xl border border-line-strong bg-panel/92 p-4 shadow-[0_34px_90px_rgba(0,0,0,0.38)] backdrop-blur sm:p-6">
                 <div className="flex items-center justify-between border-b border-line pb-5">
                   <div>
                     <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-subtle">
@@ -119,7 +119,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-line bg-panel-muted p-4">
+                  <div className="control-well rounded-lg border border-line bg-panel-muted p-4">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">
                       Today&apos;s task
                     </p>
@@ -131,7 +131,7 @@ export default function Home() {
                       <span className="font-mono font-bold text-accent-blue">8/12</span>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-line bg-panel-muted p-4">
+                  <div className="control-well rounded-lg border border-line bg-panel-muted p-4">
                     <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-subtle">
                       Latest comment
                     </p>
@@ -177,7 +177,7 @@ export default function Home() {
               ].map((feature) => (
                 <article
                   key={feature.number}
-                  className="rounded-2xl border border-line bg-panel p-6 shadow-[0_16px_38px_rgba(0,0,0,0.2)] sm:p-7"
+                  className="instrument-panel rounded-xl border border-line bg-panel p-6 sm:p-7"
                 >
                   <span className="font-mono text-xs font-bold text-accent-blue">{feature.number}</span>
                   <h3 className="mt-6 text-lg font-bold tracking-[-0.02em]">

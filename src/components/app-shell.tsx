@@ -12,8 +12,8 @@ const navigation = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-canvas text-ink">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[252px] border-r border-line bg-sidebar px-5 py-6 shadow-[18px_0_50px_rgba(0,0,0,0.18)] lg:flex lg:flex-col">
+    <div className="mechanical-canvas min-h-screen text-ink">
+      <aside className="equipment-rail fixed inset-y-0 left-0 z-30 hidden w-[252px] border-r border-line bg-sidebar px-5 py-6 shadow-[18px_0_50px_rgba(0,0,0,0.18)] lg:flex lg:flex-col">
         <div className="px-2">
           <BrandMark href="/dashboard" />
         </div>
@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted transition hover:bg-panel-raised hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="hardware-key flex min-h-11 items-center gap-3 rounded-lg border border-transparent px-3 text-sm font-semibold text-muted transition hover:border-line hover:bg-panel-raised hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-panel text-base text-accent-blue shadow-[0_6px_16px_rgba(0,0,0,0.24)]">
                 {item.icon}
@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <div className="mt-8 rounded-2xl border border-[#6657e8]/30 bg-gradient-to-br from-[#19192e] to-[#101522] p-4 text-white shadow-[0_18px_38px_rgba(0,0,0,0.28)]">
+        <div className="instrument-panel mt-8 rounded-xl border border-[#6657e8]/30 bg-gradient-to-br from-[#19192e] to-[#101522] p-4 text-white">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
             Current band
           </p>
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 border-b border-line bg-sidebar/95 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur lg:hidden">
+      <header className="equipment-rail sticky top-0 z-20 border-b border-line bg-sidebar/95 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur lg:hidden">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6">
           <BrandMark href="/dashboard" />
           <MemberAvatar member={currentUser} size="sm" />
@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-xl border border-line-strong bg-panel px-3.5 py-2 text-xs font-bold text-muted transition hover:border-accent/60 hover:text-ink"
+              className="hardware-key inline-flex min-h-11 shrink-0 items-center rounded-lg border border-line-strong bg-panel px-3.5 py-2 text-xs font-bold text-muted transition hover:border-accent/60 hover:text-ink"
             >
               {item.label}
             </Link>

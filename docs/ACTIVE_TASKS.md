@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| VISUAL-001 | StreamBand visual foundation | Codex | 作業中 | `visual/visual-001-streamband-foundation` | `src/app/**`、`src/components/**`、mock visual color、関連作業状態文書 | 2026-09-05 | 未作成 | 情報構造を保ち、濃紺base・紫/青accentのPC中心制作tool UIへ同期 |
+| VISUAL-002 | Mechanical DAW workspace refinement | Codex | 作業中 | `visual/visual-002-mechanical-daw-workspace` | `src/app/**`、`src/components/**`、関連作業状態文書 | 2026-09-05 | 未作成 | VISUAL-001を保ち、機械的なpanel、control、meterの質感を控えめに追加 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| VISUAL-001 | 完了 | Codex | `visual/visual-001-streamband-foundation` / #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映してmainへマージ済み |
 | SURFACE-015B | 完了 | Codex | `fix/surface-015b-song-detail-section-nav` / #14 | 2026-09-05 | 320pxで楽曲詳細section navigationの全項目を見切れなく表示し、領域内横scrollを解消 |
 | BRIDGE-004 | 完了 | Codex | `docs/bridge-004-project-context-ai-delegation` / #13 | 2026-09-05 | Project Context、AI / Codex委任方針、将来の限定的auto-merge候補を文書化してmainへマージ済み |
 | SURFACE-015A | 完了 | Codex | `fix/surface-015a-tap-targets` / #12 | 2026-09-05 | 主要リンクとnavigationのtap領域を44px目安へ調整し、4 viewportとCI成功後にmainへマージ済み |

@@ -72,7 +72,7 @@ export function TaskChecklist({
                 aria-label={`${task.title}を${isCompleted ? "未完了" : "完了"}にする`}
                 aria-describedby="mock-task-help"
                 onClick={() => toggleTask(task.id)}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
+                className={`hardware-key flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
                   isCompleted
                     ? "border-accent-blue/55 bg-accent-blue/12 text-accent-blue"
                     : "border-line-strong bg-panel-muted text-transparent hover:border-accent/60"
@@ -161,7 +161,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
       {temporaryComments.length > 0 && (
         <div className="mt-5 space-y-4" aria-label="今回追加したモックコメント">
           {temporaryComments.map((item) => (
-            <article key={item.id} className="flex gap-3 rounded-xl border border-accent/20 bg-accent-strong/8 p-3">
+            <article key={item.id} className="control-well flex gap-3 rounded-lg border border-accent/20 bg-accent-strong/8 p-3">
               <MemberAvatar member={currentUser} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -183,7 +183,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
       )}
 
       <form
-        className="mt-5 rounded-2xl border border-line bg-panel-muted p-3"
+        className="control-well mt-5 rounded-xl border border-line bg-panel-muted p-3"
         onSubmit={handleSubmit}
       >
         <label htmlFor="mock-comment" className="block text-xs font-bold text-muted">
@@ -199,7 +199,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
           maxLength={280}
           aria-describedby="mock-comment-help mock-comment-count"
           placeholder="修正したい箇所や感想を入力"
-          className="mt-2 min-h-24 w-full resize-y rounded-xl border border-line-strong bg-panel p-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
+          className="control-well mt-2 min-h-24 w-full resize-y rounded-lg border border-line-strong bg-panel p-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
         />
         <div className="mt-1 flex justify-end">
           <span id="mock-comment-count" className="font-mono text-[10px] text-subtle">
@@ -220,7 +220,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
               onChange={(event) => setTimestamp(event.target.value)}
               placeholder="例 01:24"
               aria-label="コメントのタイムスタンプ、任意"
-              className="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-panel px-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
+              className="control-well mt-2 min-h-11 w-full rounded-lg border border-line-strong bg-panel px-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
           <button
@@ -228,7 +228,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
             disabled={!canSubmit}
             aria-describedby="mock-comment-help mock-submit-reason"
             title={canSubmit ? "画面上だけに一時表示します" : "コメントを入力してください"}
-            className="min-h-11 w-full rounded-xl bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(102,87,232,0.22)] transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-subtle disabled:shadow-none sm:w-auto"
+            className="hardware-key min-h-11 w-full rounded-lg bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(102,87,232,0.22)] transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-subtle disabled:shadow-none sm:w-auto"
           >
             画面に追加
           </button>

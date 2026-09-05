@@ -23,7 +23,7 @@ export default function BandsPage() {
           type="button"
           disabled
           aria-describedby="band-create-note"
-          className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-xl border border-line-strong bg-panel px-5 text-sm font-bold text-subtle"
+          className="hardware-key inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg border border-line-strong bg-panel px-5 text-sm font-bold text-subtle"
           title="未実装：バンドは作成・保存されません"
         >
           ＋ バンドを作成
@@ -38,7 +38,7 @@ export default function BandsPage() {
           return (
             <article
               key={band.id}
-              className="group overflow-hidden rounded-2xl border border-line bg-panel shadow-[0_16px_38px_rgba(0,0,0,0.2)] transition hover:border-accent/45"
+              className="instrument-panel group overflow-hidden rounded-xl border border-line bg-panel transition hover:border-accent/45"
             >
               <div
                 className="relative h-28 overflow-hidden border-b border-white/10 p-5 sm:h-32 sm:p-6"
@@ -66,7 +66,7 @@ export default function BandsPage() {
                   </div>
                   <Link
                     href={`/bands/${band.id}`}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line-strong bg-panel-muted text-accent-blue transition group-hover:border-accent/50 group-hover:bg-accent-strong group-hover:text-white"
+                    className="hardware-key flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-panel-muted text-accent-blue transition group-hover:border-accent/50 group-hover:bg-accent-strong group-hover:text-white"
                     aria-label={`${band.name}を開く`}
                   >
                     →
@@ -91,7 +91,7 @@ export default function BandsPage() {
                     <Link
                       key={song.id}
                       href={`/songs/${song.id}`}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-line bg-panel-muted py-1.5 pl-3 pr-2 text-xs font-bold text-muted transition hover:border-accent/50 hover:text-ink"
+                      className="hardware-key inline-flex min-h-11 items-center gap-2 rounded-lg border border-line bg-panel-muted py-1.5 pl-3 pr-2 text-xs font-bold text-muted transition hover:border-accent/50 hover:text-ink"
                     >
                       {song.title}
                       <SongStatusBadge status={song.status} />
@@ -104,7 +104,7 @@ export default function BandsPage() {
         })}
       </div>
 
-      <section className="mt-6 rounded-2xl border border-dashed border-line-strong bg-panel/55 p-6 text-center sm:p-8">
+      <section className="control-well mt-6 rounded-xl border border-dashed border-line-strong bg-panel/55 p-6 text-center sm:p-8">
         <p className="text-sm font-bold">新しいバンドワークスペース</p>
         <p id="band-create-note" className="mx-auto mt-2 max-w-xl text-xs leading-6 text-muted">
           作成フォーム、招待、権限設定は今後の専用タスクで実装します。この画面では導線のみ確認できます。
