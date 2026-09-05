@@ -91,7 +91,10 @@ export default function DashboardPage() {
               </p>
               <h2 className="mt-2 text-xl font-bold tracking-[-0.03em]">進行中の楽曲</h2>
             </div>
-            <Link href="/bands" className="text-xs font-bold text-[#1f6f4a] hover:underline">
+            <Link
+              href="/bands"
+              className="inline-flex min-h-11 items-center text-xs font-bold text-[#1f6f4a] hover:underline"
+            >
               すべて見る →
             </Link>
           </div>

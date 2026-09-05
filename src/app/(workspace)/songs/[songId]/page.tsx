@@ -46,15 +46,21 @@ export default async function SongDetailPage({
         className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#87908b]"
         aria-label="パンくず"
       >
-        <Link href="/bands" className="hover:text-[#1f6f4a]">
+        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]">
           バンド
         </Link>
         <span>/</span>
-        <Link href={`/bands/${band.id}`} className="hover:text-[#1f6f4a]">
+        <Link
+          href={`/bands/${band.id}`}
+          className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]"
+        >
           {band.name}
         </Link>
         <span>/</span>
-        <Link href={`/bands/${band.id}/songs`} className="hover:text-[#1f6f4a]">
+        <Link
+          href={`/bands/${band.id}/songs`}
+          className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]"
+        >
           楽曲
         </Link>
         <span>/</span>
@@ -127,7 +133,7 @@ export default async function SongDetailPage({
           <a
             key={item.href}
             href={item.href}
-            className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-bold ${
               index === 0
                 ? "border-[#173f31] bg-[#173f31] text-white"
                 : "border-[#deded7] bg-white text-[#66716b]"
@@ -156,7 +162,7 @@ export default async function SongDetailPage({
                 disabled
                 aria-describedby="memo-edit-note"
                 title="未実装：メモは編集・保存できません"
-                className="cursor-not-allowed rounded-full border border-[#deded7] px-3 py-2 text-[11px] font-bold text-[#999f9b]"
+                className="min-h-11 cursor-not-allowed rounded-full border border-[#deded7] px-3 py-2 text-[11px] font-bold text-[#999f9b]"
               >
                 編集
               </button>

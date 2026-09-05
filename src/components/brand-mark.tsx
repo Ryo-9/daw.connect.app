@@ -9,7 +9,7 @@ export function BrandMark({ compact = false, href = "/" }: BrandMarkProps) {
   return (
     <Link
       href={href}
-      className="group inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-4"
+      className="group inline-flex min-h-11 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-4"
       aria-label="DAW Connect App トップ"
     >
       <span className="flex h-10 w-10 items-end justify-center gap-1 rounded-[14px] bg-[#173f31] px-2.5 py-2 shadow-[0_8px_24px_rgba(23,63,49,0.18)] transition-transform group-hover:-translate-y-0.5">

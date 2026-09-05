@@ -64,7 +64,7 @@ export default function BandsPage() {
                   </div>
                   <Link
                     href={`/bands/${band.id}`}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#e2e4de] bg-[#fafaf7] text-[#426052] transition group-hover:bg-[#173f31] group-hover:text-white"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#e2e4de] bg-[#fafaf7] text-[#426052] transition group-hover:bg-[#173f31] group-hover:text-white"
                     aria-label={`${band.name}を開く`}
                   >
                     →
@@ -89,7 +89,7 @@ export default function BandsPage() {
                     <Link
                       key={song.id}
                       href={`/songs/${song.id}`}
-                      className="inline-flex items-center gap-2 rounded-full border border-[#e4e3dc] bg-[#fbfaf7] py-1.5 pl-3 pr-2 text-xs font-bold text-[#435249] hover:border-[#bcd0c2]"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#e4e3dc] bg-[#fbfaf7] py-1.5 pl-3 pr-2 text-xs font-bold text-[#435249] hover:border-[#bcd0c2]"
                     >
                       {song.title}
                       <SongStatusBadge status={song.status} />
