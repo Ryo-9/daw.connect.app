@@ -19,6 +19,7 @@
 | DEC-004 | 2026-08-10 | 最初の UI はモックデータと画面遷移に限定する | 承認済み | UI プロトタイプ | - |
 | DEC-005 | 2026-08-10 | UI 操作はブラウザ内の一時状態に限定する | 承認済み | UI 操作プロトタイプ | - |
 | DEC-006 | 2026-09-03 | 初期テストを Vitest / React Testing Library / Playwright で構成する | 提案中 | 自動テスト / CI | - |
+| DEC-007 | 2026-09-05 | AI委任境界と限定的auto-merge条件を定める | 提案中 | 開発運用 / GitHub | - |
 
 ---
 
@@ -101,6 +102,22 @@
 - 未決事項: DEC-006の正式承認、Level 2 / 3の具体的な設定、将来のcoverage基準。
 - 見直し条件: DB・認証・ファイル保存の導入時、テストが PR の待ち時間の主因になった時、主要 version 更新時、一般公開準備時。
 - 関連: BRIDGE-005、BRIDGE-006、BRIDGE-008、[TESTING.md](TESTING.md)
+
+## DEC-007: AI委任境界と限定的auto-merge条件を定める
+
+- 日付: 2026-09-05
+- ステータス: 提案中
+- 提案者: Codex（BRIDGE-004）
+- 承認者: 未承認。PRレビューでプロジェクトメンバーの合意を確認する
+- 背景: 共通前提を毎回長いpromptへ複製せず、2人とCodexが同じ安全境界で小さなタスクを進められる状態が必要。将来的なauto-mergeも、branch protectionを弱めず、低risk変更に限定する必要がある。
+- 決定案: 人間がtaskの目的と範囲を決め、Codexへ調査、scope内の変更、検証、Draft PR作成までを委任する。高risk領域、外部変更、destructive action、仕様変更は人が判断する。auto-mergeは未導入のままとし、将来はhuman opt-in、allowlist、最新main、required checks成功、expected files / head確認を満たす小さな変更から段階導入する。
+- 採用理由: AIの作業速度を活かしつつ、権限やtask scopeの暗黙的な拡大、CI失敗merge、他者作業との衝突を防ぐため。
+- 現在の実装事実: mainはPR、最新mainとの整合、`Quality checks`成功が必須で、force pushと削除は禁止。required manual approvalは0。auto-merge用workflow、App、label運用は未実装。
+- 初期auto-merge対象外: app code、package、workflow、governance文書、security、DB、Auth、AWS、secret、deployment、test弱化、大きなdiff。
+- リスク: 条件が複雑すぎると運用されず、広すぎると意図しない変更がmergeされる。AIが自分でsafe labelを付けてmergeするとhuman opt-inにならない。
+- 未決事項: opt-in label、allowlist、diff上限、実装方式、監査log、緊急停止、正式な承認時期。
+- 見直し条件: dry-run開始時、teamや権限の変更時、DB / Auth / production導入時、AI関連incident発生時。
+- 関連: BRIDGE-004、[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)、[AI_DELEGATION.md](AI_DELEGATION.md)、[BRANCH_PROTECTION.md](BRANCH_PROTECTION.md)
 
 ---
 

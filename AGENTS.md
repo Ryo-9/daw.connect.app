@@ -23,6 +23,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## 作業開始前
 
 - 現在のブランチと未コミット差分を確認する。
+- `docs/PROJECT_CONTEXT.md` と `docs/AI_DELEGATION.md` を読み、プロダクト境界と委任範囲を確認する。
 - `docs/ACTIVE_TASKS.md` と `docs/LOCKS.md` を確認し、他の担当者と編集範囲が重ならないことを確認する。
 - タスク ID、変更可能範囲、禁止範囲、完了条件を確認する。
 - 不明点が結果を大きく変える場合は、推測で進めず質問する。

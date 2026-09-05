@@ -1,6 +1,6 @@
-# DAW Connect App
+# StreamBand / DAW Connect App
 
-DAW Connect App は、DAW（Digital Audio Workstation）の外側で、バンドや音楽制作チームの共同制作を支援する Web アプリです。楽曲に関するメモ、コメント、TODO、共有ファイルなど、制作中に散らばりやすい情報をバンド単位で整理します。
+StreamBand は、DAW（Digital Audio Workstation）の外側で、バンドや音楽制作チームの共同制作を支援する Web アプリです。楽曲に関するメモ、コメント、TODO、共有ファイルなど、制作中に散らばりやすい情報をバンド単位で整理します。repository、package、現行UIには旧称の`DAW Connect App`が残っており、一括renameは別タスクで扱います。
 
 ## 開発目的
 
@@ -121,6 +121,8 @@ Codex が従う詳細ルールは [AGENTS.md](AGENTS.md) にあります。
 
 ## 関連ドキュメント
 
+- [StreamBandの統合前提とUI方向性](docs/PROJECT_CONTEXT.md)
+- [AI / Codex委任と将来のauto-merge方針](docs/AI_DELEGATION.md)
 - [プロダクト仕様](docs/PRODUCT_SPEC.md)
 - [ロードマップ](docs/ROADMAP.md)
 - [画面一覧](docs/SCREEN_LIST.md)
