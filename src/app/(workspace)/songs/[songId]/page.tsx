@@ -43,45 +43,45 @@ export default async function SongDetailPage({
   return (
     <div>
       <nav
-        className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#87908b]"
+        className="flex flex-wrap items-center gap-2 text-xs font-semibold text-subtle"
         aria-label="パンくず"
       >
-        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]">
+        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-accent">
           バンド
         </Link>
         <span>/</span>
         <Link
           href={`/bands/${band.id}`}
-          className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]"
+          className="inline-flex min-h-11 items-center hover:text-accent"
         >
           {band.name}
         </Link>
         <span>/</span>
         <Link
           href={`/bands/${band.id}/songs`}
-          className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]"
+          className="inline-flex min-h-11 items-center hover:text-accent"
         >
           楽曲
         </Link>
         <span>/</span>
-        <span className="text-[#4d5a53]">{song.title}</span>
+        <span className="text-muted">{song.title}</span>
       </nav>
 
-      <section className="mt-5 overflow-hidden rounded-[30px] border border-[#dfe2dc] bg-white shadow-[0_18px_46px_rgba(38,49,42,0.06)]">
-        <div className="relative bg-[#173f31] p-6 text-white sm:p-8">
-          <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full border-[42px] border-white/5" />
+      <section className="mt-5 overflow-hidden rounded-[24px] border border-line-strong bg-panel shadow-[0_22px_58px_rgba(0,0,0,0.3)]">
+        <div className="relative border-b border-white/10 bg-gradient-to-br from-[#241f4a] via-[#171d37] to-[#0e172a] p-6 text-white sm:p-8">
+          <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full border-[42px] border-accent-blue/10" />
           <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <SongStatusBadge status={song.status} />
-                <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-[#c4d7cc]">
+                <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 font-mono text-[11px] font-bold text-muted">
                   {song.version}
                 </span>
               </div>
               <h1 className="mt-4 text-4xl font-bold tracking-[-0.055em] sm:text-5xl">
                 {song.title}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#c4d7cc]">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
                 {song.summary}
               </p>
             </div>
@@ -91,8 +91,8 @@ export default async function SongDetailPage({
                 { label: "KEY", value: song.musicalKey },
                 { label: "LENGTH", value: song.duration },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl bg-white/8 p-3 text-center sm:p-4">
-                  <p className="text-[9px] font-bold tracking-[0.14em] text-[#9fb9aa]">
+                <div key={item.label} className="rounded-xl border border-white/10 bg-black/15 p-3 text-center sm:p-4">
+                  <p className="font-mono text-[9px] font-bold tracking-[0.14em] text-subtle">
                     {item.label}
                   </p>
                   <p className="mt-2 text-sm font-bold text-white">{item.value}</p>
@@ -106,16 +106,16 @@ export default async function SongDetailPage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0 flex-1 sm:max-w-xl">
               <div className="mb-2 flex items-center justify-between text-[11px] font-bold">
-                <span className="text-[#77817b]">制作進捗</span>
-                <span className="text-[#1f6f4a]">{song.progress}%</span>
+                <span className="text-muted">制作進捗</span>
+                <span className="font-mono text-accent-blue">{song.progress}%</span>
               </div>
               <ProgressBar value={song.progress} />
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full bg-[#f5f3ed] px-3 py-2 text-[11px] font-bold text-[#5c6861]">
+              <span className="rounded-lg border border-line bg-panel-muted px-3 py-2 text-[11px] font-bold text-muted">
                 次: {song.nextMilestone}
               </span>
-              <span className="rounded-full bg-[#edf5f0] px-3 py-2 text-[11px] font-bold text-[#1f6f4a]">
+              <span className="rounded-lg border border-accent-blue/20 bg-accent-blue/10 px-3 py-2 font-mono text-[11px] font-bold text-accent-blue">
                 更新 {song.updatedAt}
               </span>
             </div>
@@ -133,10 +133,10 @@ export default async function SongDetailPage({
           <a
             key={item.href}
             href={item.href}
-            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-2.5 py-2 text-xs font-bold sm:px-4 ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-xl border px-2.5 py-2 text-xs font-bold transition sm:px-4 ${
               index === 0
-                ? "border-[#173f31] bg-[#173f31] text-white"
-                : "border-[#deded7] bg-white text-[#66716b]"
+                ? "border-accent-strong bg-accent-strong text-white shadow-[0_8px_20px_rgba(102,87,232,0.24)]"
+                : "border-line-strong bg-panel text-muted hover:border-accent/55 hover:text-ink"
             }`}
           >
             {item.label}
@@ -148,11 +148,11 @@ export default async function SongDetailPage({
         <div className="space-y-5">
           <section
             id="memo"
-            className="scroll-mt-32 rounded-[26px] border border-[#e3e2db] bg-white p-5 shadow-[0_10px_30px_rgba(38,49,42,0.035)] sm:p-7"
+            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-7"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
                   Song memo
                 </p>
                 <h2 className="mt-2 text-xl font-bold tracking-[-0.03em]">楽曲メモ</h2>
@@ -162,12 +162,12 @@ export default async function SongDetailPage({
                 disabled
                 aria-describedby="memo-edit-note"
                 title="未実装：メモは編集・保存できません"
-                className="min-h-11 cursor-not-allowed rounded-full border border-[#deded7] px-3 py-2 text-[11px] font-bold text-[#999f9b]"
+                className="min-h-11 cursor-not-allowed rounded-xl border border-line-strong bg-panel-muted px-3 py-2 text-[11px] font-bold text-subtle"
               >
                 編集
               </button>
             </div>
-            <p id="memo-edit-note" className="mt-3 text-[11px] leading-5 text-[#8a928d]">
+            <p id="memo-edit-note" className="mt-3 text-[11px] leading-5 text-subtle">
               編集は未実装です。この画面では保存されているメモの見た目だけを確認できます。
             </p>
 
@@ -177,20 +177,20 @@ export default async function SongDetailPage({
                 { label: "Arrangement / アレンジ", value: song.notes.arrangement },
                 { label: "Recording / 録音メモ", value: song.notes.recording },
               ].map((note) => (
-                <div key={note.label} className="border-l-2 border-[#bed6c6] pl-4 sm:pl-5">
-                  <h3 className="text-xs font-bold text-[#1f6f4a]">{note.label}</h3>
-                  <p className="mt-2 text-sm leading-7 text-[#536159]">{note.value}</p>
+                <div key={note.label} className="border-l-2 border-accent/55 pl-4 sm:pl-5">
+                  <h3 className="text-xs font-bold text-accent">{note.label}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted">{note.value}</p>
                 </div>
               ))}
             </div>
-            <p className="mt-6 border-t border-[#eceae4] pt-4 text-[10px] text-[#929995]">
+            <p className="mt-6 border-t border-line pt-4 font-mono text-[10px] text-subtle">
               最終更新: 涼 ・ {song.updatedAt}（モック表示）
             </p>
           </section>
 
           <section
             id="tasks"
-            className="scroll-mt-32 rounded-[26px] border border-[#e3e2db] bg-white p-5 shadow-[0_10px_30px_rgba(38,49,42,0.035)] sm:p-7"
+            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-7"
           >
             <TaskChecklist tasks={tasks} members={members} />
           </section>
@@ -199,16 +199,16 @@ export default async function SongDetailPage({
         <div className="space-y-5">
           <section
             id="comments"
-            className="scroll-mt-32 rounded-[26px] border border-[#e3e2db] bg-white p-5 shadow-[0_10px_30px_rgba(38,49,42,0.035)] sm:p-6"
+            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-6"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
                   Feedback
                 </p>
                 <h2 className="mt-2 text-lg font-bold">コメント</h2>
               </div>
-              <span className="text-xs font-bold text-[#1f6f4a]">{comments.length}件</span>
+              <span className="text-xs font-bold text-accent-blue">{comments.length}件</span>
             </div>
 
             <div className="mt-5 space-y-5">
@@ -221,11 +221,11 @@ export default async function SongDetailPage({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-xs font-bold">{author.name}</p>
-                        <span className="text-[10px] text-[#969c98]">{comment.createdAt}</span>
+                        <span className="font-mono text-[10px] text-subtle">{comment.createdAt}</span>
                       </div>
-                      <p className="mt-2 text-xs leading-6 text-[#56635c]">
+                      <p className="mt-2 text-xs leading-6 text-muted">
                         {comment.timestamp && (
-                          <span className="mr-1.5 inline-flex rounded-md bg-[#e9f4ed] px-2 py-0.5 font-bold text-[#1f6f4a]">
+                          <span className="mr-1.5 inline-flex rounded-md border border-accent-blue/20 bg-accent-blue/10 px-2 py-0.5 font-bold text-accent-blue">
                             ▶ {comment.timestamp}
                           </span>
                         )}
@@ -242,16 +242,16 @@ export default async function SongDetailPage({
 
           <section
             id="files"
-            className="scroll-mt-32 rounded-[26px] border border-[#e3e2db] bg-white p-5 shadow-[0_10px_30px_rgba(38,49,42,0.035)] sm:p-6"
+            className="scroll-mt-32 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-6"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
                   Files & versions
                 </p>
                 <h2 className="mt-2 text-lg font-bold">共有ファイル</h2>
               </div>
-              <span className="rounded-full bg-[#fff2dc] px-2.5 py-1 text-[10px] font-bold text-[#96611e]">
+              <span className="rounded-full border border-warning/25 bg-warning/10 px-2.5 py-1 text-[10px] font-bold text-warning">
                 表示のみ
               </span>
             </div>
@@ -262,18 +262,18 @@ export default async function SongDetailPage({
                 return (
                   <article
                     key={file.id}
-                    className="rounded-2xl border border-[#e8e6e0] bg-[#fbfaf7] p-4"
+                    className="rounded-xl border border-line bg-panel-muted p-4"
                   >
                     <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf3ed] text-xs font-bold text-[#1f6f4a]">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent-blue/20 bg-accent-blue/10 font-mono text-xs font-bold text-accent-blue">
                         {file.kind === "Audio" ? "WAV" : file.kind === "MIDI" ? "MID" : "REF"}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-bold text-[#334139]">{file.name}</p>
-                        <p className="mt-1 text-[10px] text-[#8b928e]">
+                        <p className="truncate text-xs font-bold text-ink">{file.name}</p>
+                        <p className="mt-1 text-[10px] text-muted">
                           {file.size} ・ {file.version} ・ {uploader?.name}
                         </p>
-                        <p className="mt-1 text-[10px] text-[#a0a5a2]">{file.updatedAt}</p>
+                        <p className="mt-1 font-mono text-[10px] text-subtle">{file.updatedAt}</p>
                       </div>
                     </div>
                   </article>
@@ -281,17 +281,17 @@ export default async function SongDetailPage({
               })}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-dashed border-[#cdd3ce] bg-[#faf9f6] p-5 text-center">
+            <div className="mt-4 rounded-xl border border-dashed border-line-strong bg-panel-muted p-5 text-center">
               <button
                 type="button"
                 disabled
                 aria-describedby="file-upload-note"
                 title="未実装：ファイルは選択・アップロードできません"
-                className="min-h-11 cursor-not-allowed rounded-full border border-[#d7dcd7] bg-white px-4 text-xs font-bold text-[#89918c]"
+                className="min-h-11 cursor-not-allowed rounded-xl border border-line-strong bg-panel px-4 text-xs font-bold text-subtle"
               >
                 ＋ ファイルを追加
               </button>
-              <p id="file-upload-note" className="mt-2 text-[10px] leading-5 text-[#8a928d]">
+              <p id="file-upload-note" className="mt-2 text-[10px] leading-5 text-subtle">
                 アップロード・保存・ダウンロードは未実装です
               </p>
             </div>

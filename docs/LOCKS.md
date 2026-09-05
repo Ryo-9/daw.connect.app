@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-014 | SURFACE-015B | Codex | `src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | `fix/surface-015b-song-detail-section-nav` | 2026-09-05 | PR マージまたは作業中止 | ISSUE-002の320pxセクションナビと直接の回帰確認だけに限定 |
+| LOCK-015 | VISUAL-001 | Codex | `src/app/**`、`src/components/**`、`src/lib/mock-data.ts`のvisual color、`docs/PROJECT_CONTEXT.md`、作業状態文書 | `visual/visual-001-streamband-foundation` | 2026-09-05 | PR マージまたは作業中止 | 既存情報構造を維持したvisual foundation変更。機能、package、CI、高risk領域は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-014 | SURFACE-015B | Codex | `src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | 2026-09-05 | 完了・PR #14。`Quality checks`成功とmainへのマージを確認して解除 |
 | LOCK-013 | BRIDGE-004 | Codex | `AGENTS.md`、`README.md`、`docs/PROJECT_CONTEXT.md`、`docs/AI_DELEGATION.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/DECISION_LOG.md` | 2026-09-05 | 完了・PR #13。`Quality checks`成功とmainへのマージを確認して解除 |
 | LOCK-012 | SURFACE-015A | Codex | 共通ナビゲーション、パンくず、バンドカード内リンク、楽曲詳細セクションナビ、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | 2026-09-05 | 完了・PR #12。`Quality checks`成功とmainへのマージを確認して解除 |
 | LOCK-011 | SURFACE-015 | Codex | `docs/MOBILE_AUDIT.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、ローカル一時スクリーンショット | 2026-09-05 | 完了・PR #11。モバイル監査レポートのmainへのマージを確認して解除 |

@@ -60,17 +60,18 @@ StreamBandは、バンドや小規模な音楽制作チームが、DAWの外側�
 
 ## Phase 1のUI方向性
 
-現在のUIは、音声編集画面ではなく「制作状況を落ち着いて確認できるworkspace」を目指します。詳細なdesign tokenの確定は別タスクですが、既存実装を変更する際は次を保ちます。
+現在のUIは、音声編集画面ではなく「制作状況を集中して確認できるworkspace」を目指します。VISUAL-001以降は、PCを主対象とする制作支援toolとして、次を保ちます。
 
 - 情報階層: バンドから楽曲へ進み、楽曲詳細に関連情報を集約する
-- 視覚: warmなoff-white、dark green、控えめなaccentを基調とする現在の雰囲気を尊重する
-- 密度: 一覧性を保ちつつ、cardと余白で情報のまとまりを示す
+- 視覚: 黒〜濃紺のcanvasとpanel、紫のprimary accent、青の進捗・情報accentを基調にする
+- 雰囲気: DAWを置き換える編集画面ではなく、DAWの外側で使うprofessionalな制作toolとして見せる
+- 密度: PCでは一覧性と作業toolらしい密度を優先し、細い境界線、階層化したpanel、抑えたshadowで情報のまとまりを示す
 - 状態: mock、未保存、未実装、処理不可を利用者へ明示する
-- Mobile first: 320pxを含む狭幅でpage全体の横overflowを作らず、主要操作はおおむね44pxのtap領域を確保する
+- Responsive: PCを主対象にしつつ、320pxを含む狭幅でpage全体の横overflowを作らず、主要操作はおおむね44pxのtap領域を確保する
 - Accessibility: semantic HTML、見出し順、label、keyboard focus、十分なcontrastを崩さない
 - 変更単位: 全画面の再設計を一度に行わず、監査issueやユーザーフロー単位で小さく変更する
 
-新しいUI案は、既存の使い方を壊す場合、先に目的と移行範囲をレビューします。好みだけを理由に全面的な色変更、navigation再編、component再生成を行いません。
+新しいUI案は、既存の使い方を壊す場合、先に目的と移行範囲をレビューします。VISUAL-001は情報構造と機能を変えず、visual foundationだけを同期する専用タスクです。以後も好みだけを理由にnavigation再編やcomponent再生成を行いません。
 
 ## DAWと制作ファイルの境界
 

@@ -15,7 +15,7 @@ export function MemberAvatar({
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full border-2 border-white font-bold text-white shadow-sm ${sizeClass}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full border-2 border-panel font-bold text-white shadow-[0_4px_14px_rgba(0,0,0,0.28)] ${sizeClass}`}
       style={{ backgroundColor: member.color }}
       title={`${member.name}・${member.part}`}
       aria-label={`${member.name}、${member.part}`}
@@ -37,10 +37,10 @@ export function AvatarStack({ members }: { members: Member[] }) {
 
 export function SongStatusBadge({ status }: { status: SongStatus }) {
   const styles: Record<SongStatus, string> = {
-    アイデア: "bg-[#eeeaf6] text-[#6d5489]",
-    制作中: "bg-[#e7f4ec] text-[#17623e]",
-    確認待ち: "bg-[#fff1d6] text-[#8b5f15]",
-    完成: "bg-[#e8eef8] text-[#45638f]",
+    アイデア: "border border-[#8b5cf6]/35 bg-[#8b5cf6]/14 text-[#c4b5fd]",
+    制作中: "border border-[#38bdf8]/35 bg-[#38bdf8]/14 text-[#7dd3fc]",
+    確認待ち: "border border-[#f59e0b]/35 bg-[#f59e0b]/14 text-[#fcd34d]",
+    完成: "border border-[#34d399]/35 bg-[#34d399]/14 text-[#6ee7b7]",
   };
 
   return (
@@ -54,9 +54,9 @@ export function SongStatusBadge({ status }: { status: SongStatus }) {
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   const styles: Record<TaskStatus, string> = {
-    未着手: "border-[#e5e2da] bg-[#f7f5f0] text-[#6e746f]",
-    進行中: "border-[#b9ddc8] bg-[#edf8f1] text-[#17623e]",
-    完了: "border-[#cfd9e9] bg-[#eff3f9] text-[#536a8e]",
+    未着手: "border-line bg-panel-muted text-muted",
+    進行中: "border-[#38bdf8]/35 bg-[#38bdf8]/12 text-[#7dd3fc]",
+    完了: "border-[#34d399]/35 bg-[#34d399]/12 text-[#6ee7b7]",
   };
 
   return (
@@ -71,7 +71,7 @@ export function TaskStatusBadge({ status }: { status: TaskStatus }) {
 export function ProgressBar({ value }: { value: number }) {
   return (
     <div
-      className="h-1.5 overflow-hidden rounded-full bg-[#e9e8e2]"
+      className="h-1.5 overflow-hidden rounded-full bg-panel-muted ring-1 ring-inset ring-line"
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
@@ -79,7 +79,7 @@ export function ProgressBar({ value }: { value: number }) {
       aria-label={`制作進捗 ${value}%`}
     >
       <div
-        className="h-full rounded-full bg-[#1f6f4a]"
+        className="h-full rounded-full bg-gradient-to-r from-accent-strong to-accent-blue shadow-[0_0_12px_rgba(90,155,255,0.4)]"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -88,8 +88,8 @@ export function ProgressBar({ value }: { value: number }) {
 
 export function PrototypeBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d7ded8] bg-white/80 px-3 py-1.5 text-[11px] font-bold text-[#526159] shadow-sm backdrop-blur">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#e5a84b]" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-panel/85 px-3 py-1.5 text-[11px] font-bold text-muted shadow-[0_8px_22px_rgba(0,0,0,0.18)] backdrop-blur">
+      <span className="h-1.5 w-1.5 rounded-full bg-warning shadow-[0_0_8px_rgba(251,191,36,0.55)]" />
       MOCK UI・保存されません
     </span>
   );

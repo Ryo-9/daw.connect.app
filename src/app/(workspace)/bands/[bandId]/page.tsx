@@ -33,17 +33,19 @@ export default async function BandDetailPage({
 
   return (
     <div>
-      <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#87908b]" aria-label="パンくず">
-        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]">
+      <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold text-subtle" aria-label="パンくず">
+        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-accent">
           バンド
         </Link>
         <span>/</span>
-        <span className="text-[#4d5a53]">{band.name}</span>
+        <span className="text-muted">{band.name}</span>
       </nav>
 
       <section
-        className="relative mt-5 overflow-hidden rounded-[30px] p-6 text-white shadow-[0_20px_48px_rgba(30,57,44,0.16)] sm:p-8 lg:p-10"
-        style={{ backgroundColor: band.accent }}
+        className="relative mt-5 overflow-hidden rounded-[24px] border border-white/10 p-6 text-white shadow-[0_24px_60px_rgba(0,0,0,0.32)] sm:p-8 lg:p-10"
+        style={{
+          background: `linear-gradient(115deg, ${band.accent}, #111827 78%)`,
+        }}
       >
         <div className="absolute -right-16 -top-28 h-72 w-72 rounded-full border-[48px] border-white/10" />
         <div className="absolute -bottom-24 left-1/3 h-56 w-80 rotate-6 rounded-[50%] bg-white/5" />
@@ -66,7 +68,7 @@ export default async function BandDetailPage({
           <div className="flex flex-wrap gap-3">
             <Link
               href={`/bands/${band.id}/songs`}
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-5 text-sm font-bold text-[#173f31] shadow-sm hover:bg-[#f4f1e8]"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#17152b] shadow-[0_10px_26px_rgba(0,0,0,0.2)] hover:bg-[#eeeaff]"
             >
               楽曲一覧を見る
             </Link>
@@ -75,7 +77,7 @@ export default async function BandDetailPage({
               disabled
               aria-describedby="member-invite-note"
               title="未実装：招待は送信されません"
-              className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-bold text-white/65"
+              className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white/65"
             >
               メンバーを招待
             </button>
@@ -95,10 +97,10 @@ export default async function BandDetailPage({
           { label: "未完了TODO", value: `${openTasks.length}件`, note: "次の期限 8/11" },
           { label: "最新更新", value: band.updatedAt, note: "Afterglow v0.8" },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-[20px] border border-[#e3e2db] bg-white p-5">
-            <p className="text-[11px] font-bold text-[#818a85]">{stat.label}</p>
+          <div key={stat.label} className="rounded-2xl border border-line bg-panel p-5">
+            <p className="text-[11px] font-bold text-muted">{stat.label}</p>
             <p className="mt-2 text-xl font-bold tracking-[-0.03em]">{stat.value}</p>
-            <p className="mt-2 text-[11px] text-[#1f6f4a]">{stat.note}</p>
+            <p className="mt-2 text-[11px] text-accent-blue">{stat.note}</p>
           </div>
         ))}
       </section>
@@ -107,12 +109,12 @@ export default async function BandDetailPage({
         <section>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">Songs</p>
+              <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">Songs</p>
               <h2 className="mt-2 text-xl font-bold tracking-[-0.03em]">最近の楽曲</h2>
             </div>
             <Link
               href={`/bands/${band.id}/songs`}
-              className="inline-flex min-h-11 items-center text-xs font-bold text-[#1f6f4a] hover:underline"
+              className="inline-flex min-h-11 items-center text-xs font-bold text-accent hover:text-ink hover:underline"
             >
               一覧へ →
             </Link>
@@ -124,10 +126,10 @@ export default async function BandDetailPage({
           </div>
         </section>
 
-        <aside className="rounded-[26px] border border-[#e3e2db] bg-white p-6 shadow-[0_10px_30px_rgba(38,49,42,0.035)]">
+        <aside className="rounded-2xl border border-line bg-panel p-6 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">メンバー</h2>
-            <span className="text-xs font-bold text-[#1f6f4a]">{bandMembers.length}人</span>
+            <span className="text-xs font-bold text-accent-blue">{bandMembers.length}人</span>
           </div>
           <div className="mt-5 space-y-4">
             {bandMembers.map((member) => (
@@ -135,26 +137,26 @@ export default async function BandDetailPage({
                 <MemberAvatar member={member} />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold">{member.name}</p>
-                  <p className="mt-0.5 text-[11px] text-[#818a85]">{member.part}</p>
+                  <p className="mt-0.5 text-[11px] text-subtle">{member.part}</p>
                 </div>
                 {member.id === "ryo" && (
-                  <span className="rounded-full bg-[#edf5f0] px-2 py-1 text-[10px] font-bold text-[#1f6f4a]">
+                  <span className="rounded-full border border-accent/25 bg-accent-strong/12 px-2 py-1 text-[10px] font-bold text-accent">
                     Owner
                   </span>
                 )}
               </div>
             ))}
           </div>
-          <div className="mt-6 border-t border-[#eceae4] pt-5">
-            <p className="text-xs font-bold text-[#5f6b64]">進行中のTODO</p>
+          <div className="mt-6 border-t border-line pt-5">
+            <p className="text-xs font-bold text-muted">進行中のTODO</p>
             <div className="mt-3 space-y-3">
               {openTasks.slice(0, 3).map((task) => {
                 const assignee = getMember(task.assigneeId);
                 return (
-                  <div key={task.id} className="rounded-xl bg-[#f8f7f3] p-3">
+                  <div key={task.id} className="rounded-xl border border-line bg-panel-muted p-3">
                     <p className="text-xs font-bold leading-5">{task.title}</p>
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <span className="text-[10px] text-[#808984]">
+                      <span className="text-[10px] text-subtle">
                         {assignee?.name} ・ {task.part}
                       </span>
                       <TaskStatusBadge status={task.status} />
