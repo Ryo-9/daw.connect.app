@@ -76,35 +76,35 @@ export const members: Member[] = [
     name: "涼",
     part: "Guitar / Compose",
     initials: "R",
-    color: "#1f6f4a",
+    color: "#6657e8",
   },
   {
     id: "sora",
     name: "颯",
     part: "Vocal",
     initials: "S",
-    color: "#d36b3c",
+    color: "#c2418f",
   },
   {
     id: "mei",
     name: "芽衣",
     part: "Bass",
     initials: "M",
-    color: "#5876a8",
+    color: "#3976d9",
   },
   {
     id: "haru",
     name: "晴",
     part: "Drums",
     initials: "H",
-    color: "#a7783d",
+    color: "#b7791f",
   },
   {
     id: "yui",
     name: "結衣",
     part: "Keyboard",
     initials: "Y",
-    color: "#8b68a7",
+    color: "#805ad5",
   },
 ];
 
@@ -115,7 +115,7 @@ export const bands: Band[] = [
     description:
       "夜の街と余韻をテーマに、オルタナティブ・ポップを制作する4人組。",
     genre: "Alternative Pop",
-    accent: "#1f6f4a",
+    accent: "#4f46a8",
     memberIds: ["ryo", "sora", "mei", "haru"],
     updatedAt: "今日 18:42",
   },
@@ -125,7 +125,7 @@ export const bands: Band[] = [
     description:
       "シンセとギターを軸にした週末プロジェクト。ライブ用の3曲を準備中。",
     genre: "Indie Electronic",
-    accent: "#5876a8",
+    accent: "#245da8",
     memberIds: ["ryo", "yui", "haru"],
     updatedAt: "昨日 22:10",
   },

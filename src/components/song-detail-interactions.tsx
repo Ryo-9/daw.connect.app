@@ -28,7 +28,7 @@ export function TaskChecklist({
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#87908b]">
+          <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
             Part tasks
           </p>
           <h2 className="mt-2 text-xl font-bold tracking-[-0.03em]">パート別TODO</h2>
@@ -36,7 +36,7 @@ export function TaskChecklist({
         <div className="flex flex-wrap items-center gap-2">
           <PrototypeBadge />
           <span
-            className="rounded-full bg-[#f3f1eb] px-3 py-1.5 text-xs font-bold text-[#68736d]"
+            className="rounded-full border border-line bg-panel-muted px-3 py-1.5 text-xs font-bold text-muted"
             aria-live="polite"
           >
             {incompleteCount}件 未完了
@@ -44,11 +44,11 @@ export function TaskChecklist({
         </div>
       </div>
 
-      <p id="mock-task-help" className="mt-4 text-xs leading-6 text-[#78827c]">
+      <p id="mock-task-help" className="mt-4 text-xs leading-6 text-muted">
         チェックすると見た目だけ切り替わります。変更は保存されず、リロードで元に戻ります。
       </p>
 
-      <div className="mt-5 divide-y divide-[#eceae4]">
+      <div className="mt-5 divide-y divide-line">
         {tasks.map((task) => {
           const assignee = members.find((member) => member.id === task.assigneeId);
           if (!assignee) return null;
@@ -72,17 +72,17 @@ export function TaskChecklist({
                 aria-label={`${task.title}を${isCompleted ? "未完了" : "完了"}にする`}
                 aria-describedby="mock-task-help"
                 onClick={() => toggleTask(task.id)}
-                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e5a84b] focus-visible:ring-offset-2 ${
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
                   isCompleted
-                    ? "border-[#7390b4] bg-[#e8eef8] text-[#45638f]"
-                    : "border-[#d8ddd8] bg-[#fafaf7] text-transparent hover:border-[#7fa28d]"
+                    ? "border-accent-blue/55 bg-accent-blue/12 text-accent-blue"
+                    : "border-line-strong bg-panel-muted text-transparent hover:border-accent/60"
                 }`}
               >
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded-md border-2 ${
                     isCompleted
-                      ? "border-[#5876a8] bg-[#5876a8] text-white"
-                      : "border-[#aebbb3] bg-white"
+                      ? "border-accent-blue bg-accent-blue text-white"
+                      : "border-subtle bg-panel"
                   }`}
                   aria-hidden
                 >
@@ -93,14 +93,14 @@ export function TaskChecklist({
               <div className="min-w-0 flex-1">
                 <p
                   className={`text-sm font-bold ${
-                    isCompleted ? "text-[#949b97] line-through" : "text-[#28372f]"
+                    isCompleted ? "text-subtle line-through" : "text-ink"
                   }`}
                 >
                   {task.title}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
                   <MemberAvatar member={assignee} size="sm" />
-                  <span className="text-[11px] text-[#818a85]">
+                  <span className="text-[11px] text-subtle">
                     {assignee.name} ・ {task.part}
                   </span>
                 </div>
@@ -108,7 +108,7 @@ export function TaskChecklist({
 
               <div className="hidden items-center gap-3 sm:flex">
                 <TaskStatusBadge status={displayStatus} />
-                <span className="text-xs font-bold text-[#ae702f]">{task.dueDate}</span>
+                <span className="font-mono text-xs font-bold text-warning">{task.dueDate}</span>
               </div>
             </article>
           );
@@ -149,28 +149,28 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
   };
 
   return (
-    <div className="mt-6 border-t border-[#eceae4] pt-5">
+    <div className="mt-6 border-t border-line pt-5">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-bold">コメントを試す</h3>
         <PrototypeBadge />
       </div>
-      <p id="mock-comment-help" className="mt-2 text-[11px] leading-5 text-[#78827c]">
+      <p id="mock-comment-help" className="mt-2 text-[11px] leading-5 text-muted">
         追加したコメントはこの画面だけに表示され、リロードすると消えます。
       </p>
 
       {temporaryComments.length > 0 && (
         <div className="mt-5 space-y-4" aria-label="今回追加したモックコメント">
           {temporaryComments.map((item) => (
-            <article key={item.id} className="flex gap-3 rounded-2xl bg-[#f3f8f5] p-3">
+            <article key={item.id} className="flex gap-3 rounded-xl border border-accent/20 bg-accent-strong/8 p-3">
               <MemberAvatar member={currentUser} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-xs font-bold">{currentUser.name}（あなた）</p>
-                  <span className="text-[10px] text-[#969c98]">たった今・一時表示</span>
+                  <span className="text-[10px] text-subtle">たった今・一時表示</span>
                 </div>
-                <p className="mt-2 break-words text-xs leading-6 text-[#56635c]">
+                <p className="mt-2 break-words text-xs leading-6 text-muted">
                   {item.timestamp && (
-                    <span className="mr-1.5 inline-flex rounded-md bg-[#e9f4ed] px-2 py-0.5 font-bold text-[#1f6f4a]">
+                    <span className="mr-1.5 inline-flex rounded-md border border-accent-blue/20 bg-accent-blue/10 px-2 py-0.5 font-bold text-accent-blue">
                       ▶ {item.timestamp}
                     </span>
                   )}
@@ -183,10 +183,10 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
       )}
 
       <form
-        className="mt-5 rounded-2xl border border-[#dfe3dd] bg-[#faf9f6] p-3"
+        className="mt-5 rounded-2xl border border-line bg-panel-muted p-3"
         onSubmit={handleSubmit}
       >
-        <label htmlFor="mock-comment" className="block text-xs font-bold text-[#58655e]">
+        <label htmlFor="mock-comment" className="block text-xs font-bold text-muted">
           コメント
         </label>
         <textarea
@@ -199,17 +199,17 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
           maxLength={280}
           aria-describedby="mock-comment-help mock-comment-count"
           placeholder="修正したい箇所や感想を入力"
-          className="mt-2 min-h-24 w-full resize-y rounded-xl border border-[#d9ddd7] bg-white p-3 text-sm text-[#28372f] outline-none transition placeholder:text-[#9da49f] focus:border-[#1f6f4a] focus:ring-2 focus:ring-[#1f6f4a]/20"
+          className="mt-2 min-h-24 w-full resize-y rounded-xl border border-line-strong bg-panel p-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
         />
         <div className="mt-1 flex justify-end">
-          <span id="mock-comment-count" className="text-[10px] text-[#929995]">
+          <span id="mock-comment-count" className="font-mono text-[10px] text-subtle">
             {comment.length} / 280
           </span>
         </div>
 
         <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="w-full sm:max-w-40">
-            <label htmlFor="mock-timestamp" className="block text-[11px] font-bold text-[#68736d]">
+            <label htmlFor="mock-timestamp" className="block text-[11px] font-bold text-muted">
               タイムスタンプ（任意）
             </label>
             <input
@@ -220,7 +220,7 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
               onChange={(event) => setTimestamp(event.target.value)}
               placeholder="例 01:24"
               aria-label="コメントのタイムスタンプ、任意"
-              className="mt-2 min-h-11 w-full rounded-xl border border-[#d9ddd7] bg-white px-3 text-sm outline-none transition placeholder:text-[#9da49f] focus:border-[#1f6f4a] focus:ring-2 focus:ring-[#1f6f4a]/20"
+              className="mt-2 min-h-11 w-full rounded-xl border border-line-strong bg-panel px-3 text-sm text-ink outline-none transition placeholder:text-subtle focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
           <button
@@ -228,19 +228,19 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
             disabled={!canSubmit}
             aria-describedby="mock-comment-help mock-submit-reason"
             title={canSubmit ? "画面上だけに一時表示します" : "コメントを入力してください"}
-            className="min-h-11 w-full rounded-full bg-[#173f31] px-5 text-sm font-bold text-white transition hover:bg-[#20513f] disabled:cursor-not-allowed disabled:bg-[#dfe4e0] disabled:text-[#79847e] sm:w-auto"
+            className="min-h-11 w-full rounded-xl bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(102,87,232,0.22)] transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:bg-panel-raised disabled:text-subtle disabled:shadow-none sm:w-auto"
           >
             画面に追加
           </button>
         </div>
-        <p id="mock-submit-reason" className="mt-3 text-[10px] leading-5 text-[#8a928d]">
+        <p id="mock-submit-reason" className="mt-3 text-[10px] leading-5 text-subtle">
           {canSubmit
             ? "送信先はありません。押すとこの画面にだけ追加します。"
             : "コメントを入力すると「画面に追加」ボタンを押せます。"}
         </p>
         {message && (
           <p
-            className="mt-3 rounded-xl bg-[#e9f4ed] px-3 py-2 text-xs font-bold text-[#1f6f4a]"
+            className="mt-3 rounded-xl border border-positive/20 bg-positive/10 px-3 py-2 text-xs font-bold text-positive"
             role="status"
             aria-live="polite"
           >

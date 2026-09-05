@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-05 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。SURFACE-015Bでは、監査ISSUE-002の320pxでの楽曲詳細セクションナビだけを小さく調整します。
+2026-09-05 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。VISUAL-001では、既存の情報構造を保ち、StreamBandの濃紺base・紫/青accentのvisual foundationを整えます。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | SURFACE-015B | 320pxの楽曲詳細セクションナビ改善 | 作業中。SURFACE-015のISSUE-002だけを対象に、最終tabの見切れと領域内横スクロールを解消する |
+| 1 | VISUAL-001 | StreamBand visual foundation | 作業中。PC中心の濃紺base・紫/青accentへ同期し、機能と情報構造は変えない |
 | 2 | SURFACE-015C | custom 404の追加 | SURFACE-015のISSUE-003。日本語案内と既存画面への復帰導線を追加する |
 
 ## Core Lane
@@ -64,8 +64,16 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-014 | P1 | アクセシビリティ改善 | 一部完了（PR #4）。基本的なラベルとフォーカスを実装済み。体系的な確認は未実施 |
 | SURFACE-015 | P1 | 主要画面のモバイル確認 | 完了（PR #11）。4 viewportで主要画面を監査し、Low issue 3件を独立した修正候補へ分割 |
 | SURFACE-015A | P2 | モバイルのタップ領域調整 | 完了（PR #12）。主要操作を44px目安へ調整し、320 / 375 / 390 / 768pxで横overflowがないことを確認 |
-| SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 作業中。監査ISSUE-002の最終tabの部分表示と領域内横スクロールを小さなspacing調整で解消 |
+| SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 完了（PR #14）。320pxで全section itemを表示し、navigation領域内の横scrollを解消 |
 | SURFACE-015C | P2 | custom 404の追加 | 監査ISSUE-003。日本語案内とダッシュボード / バンド一覧への復帰導線を追加する |
+
+## Visual Lane
+
+色、surface、type、spacingなど、既存の情報構造を保ったvisual systemを扱うレーンです。DAW本体の編集UIや新機能は含みません。
+
+| ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
+| --- | --- | --- | --- |
+| VISUAL-001 | P0 | StreamBand visual foundation | 作業中。黒〜濃紺のcanvas、紫/青accent、制作toolらしいpanel・border・shadowへ既存主要画面を同期 |
 
 ## Bridge Lane
 
@@ -92,6 +100,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| SURFACE-015B | #14 | 2026-09-05 | 320pxの楽曲詳細section navigationで見切れと領域内横scrollを解消 |
 | BRIDGE-004 | #13 | 2026-09-05 | Project Context、AI / Codex委任方針、将来の限定的auto-merge候補を文書化 |
 | SURFACE-015A | #12 | 2026-09-05 | 主要navigation、パンくず、頻出linkのtap領域を44px目安へ調整 |
 | SURFACE-015 | #11 | 2026-09-05 | 4 viewportで主要画面を監査し、Low issue 3件と独立した修正候補を記録 |

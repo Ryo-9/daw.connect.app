@@ -9,21 +9,21 @@ export function BrandMark({ compact = false, href = "/" }: BrandMarkProps) {
   return (
     <Link
       href={href}
-      className="group inline-flex min-h-11 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-4"
+      className="group inline-flex min-h-11 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-canvas"
       aria-label="DAW Connect App トップ"
     >
-      <span className="flex h-10 w-10 items-end justify-center gap-1 rounded-[14px] bg-[#173f31] px-2.5 py-2 shadow-[0_8px_24px_rgba(23,63,49,0.18)] transition-transform group-hover:-translate-y-0.5">
-        <span className="h-3 w-1 rounded-full bg-[#f3c86b]" />
+      <span className="flex h-10 w-10 items-end justify-center gap-1 rounded-xl border border-white/10 bg-gradient-to-br from-accent-strong to-[#326fc9] px-2.5 py-2 shadow-[0_10px_28px_rgba(102,87,232,0.3)] transition-transform group-hover:-translate-y-0.5">
+        <span className="h-3 w-1 rounded-full bg-[#9ee7ff]" />
         <span className="h-5 w-1 rounded-full bg-white" />
-        <span className="h-4 w-1 rounded-full bg-[#8dc9a8]" />
+        <span className="h-4 w-1 rounded-full bg-[#c4b5fd]" />
         <span className="h-6 w-1 rounded-full bg-white" />
       </span>
       {!compact && (
         <span className="leading-none">
-          <span className="block text-[15px] font-bold tracking-[-0.02em] text-[#14231c]">
+          <span className="block text-[15px] font-bold tracking-[-0.02em] text-ink">
             DAW Connect
           </span>
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.22em] text-[#718078]">
+          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.22em] text-subtle">
             make together
           </span>
         </span>
