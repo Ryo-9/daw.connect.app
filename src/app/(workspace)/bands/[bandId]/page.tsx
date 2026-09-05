@@ -34,7 +34,9 @@ export default async function BandDetailPage({
   return (
     <div>
       <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#87908b]" aria-label="パンくず">
-        <Link href="/bands" className="hover:text-[#1f6f4a]">バンド</Link>
+        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-[#1f6f4a]">
+          バンド
+        </Link>
         <span>/</span>
         <span className="text-[#4d5a53]">{band.name}</span>
       </nav>
@@ -110,7 +112,7 @@ export default async function BandDetailPage({
             </div>
             <Link
               href={`/bands/${band.id}/songs`}
-              className="text-xs font-bold text-[#1f6f4a] hover:underline"
+              className="inline-flex min-h-11 items-center text-xs font-bold text-[#1f6f4a] hover:underline"
             >
               一覧へ →
             </Link>

@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-015 | 主要画面のモバイル監査 | Codex | 作業中 | `audit/surface-015-mobile-ui` | `docs/MOBILE_AUDIT.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、ローカル一時スクリーンショット | 2026-09-03 | 本PR | 主要画面を複数viewportで自動計測・目視確認し、UIは変更せず問題と修正候補を記録 |
+| SURFACE-015A | モバイルのタップ領域調整 | Codex | 作業中 | `fix/surface-015a-tap-targets` | 共通ナビゲーション、パンくず、カード内リンク、楽曲詳細セクションナビ、関連作業文書 | 2026-09-05 | 未作成 | ISSUE-001の44px未満タップ領域だけを、見た目を大きく変えず調整 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| SURFACE-015 | 完了 | Codex | `audit/surface-015-mobile-ui` / #11 | 2026-09-05 | 主要画面を4 viewportで監査し、Low issue 3件と独立した修正候補を記録してmainへマージ済み |
 | BRIDGE-003 | 完了 | Codex | `docs/bridge-003-pr-template` / #10 | 2026-09-03 | 標準PRテンプレートを追加し、GitHub Actions成功後にmainへマージ済み |
 | BRIDGE-002 | 完了 | Codex | `chore/bridge-002-main-protection` / #9 | 2026-09-03 | mainへのPRと`Quality checks`を必須化し、削除・force pushを禁止するrulesetを設定してmainへマージ済み |
 | BRIDGE-008 | 完了 | Codex | `test/bridge-008-ui-automation` / #8 | 2026-09-03 | Level 1のComponent testとChromium smoke E2Eを追加し、GitHub Actions成功後にmainへマージ済み |

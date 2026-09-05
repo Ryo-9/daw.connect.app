@@ -23,7 +23,7 @@ export default function Home() {
             </span>
             <Link
               href="/dashboard"
-              className="rounded-full bg-[#173f31] px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(23,63,49,0.16)] transition hover:-translate-y-0.5 hover:bg-[#20513f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f6f4a] focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#173f31] px-5 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(23,63,49,0.16)] transition hover:-translate-y-0.5 hover:bg-[#20513f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1f6f4a] focus-visible:ring-offset-2"
             >
               デモを見る
             </Link>

@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-1 text-xs leading-5 text-[#cbded3]">3曲を制作中</p>
           <Link
             href="/bands/lumen-echo"
-            className="mt-4 inline-flex text-xs font-bold text-[#f3c86b] hover:text-white"
+            className="mt-4 inline-flex min-h-11 items-center text-xs font-bold text-[#f3c86b] hover:text-white"
           >
             ワークスペースを開く →
           </Link>
@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="shrink-0 rounded-full border border-[#deded7] bg-white px-3.5 py-2 text-xs font-bold text-[#4f5d55]"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-[#deded7] bg-white px-3.5 py-2 text-xs font-bold text-[#4f5d55]"
             >
               {item.label}
             </Link>

@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-011 | SURFACE-015 | Codex | `docs/MOBILE_AUDIT.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、ローカル一時スクリーンショット | `audit/surface-015-mobile-ui` | 2026-09-03 | PR マージまたは作業中止 | モバイル監査と記録のみ。UI・アプリコード・テスト・依存関係は変更しない |
+| LOCK-012 | SURFACE-015A | Codex | 共通ナビゲーション、パンくず、バンドカード内リンク、楽曲詳細セクションナビ、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | `fix/surface-015a-tap-targets` | 2026-09-05 | PR マージまたは作業中止 | ISSUE-001の44px未満タップ領域の最小修正に限定 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-011 | SURFACE-015 | Codex | `docs/MOBILE_AUDIT.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、ローカル一時スクリーンショット | 2026-09-05 | 完了・PR #11。モバイル監査レポートのmainへのマージを確認して解除 |
 | LOCK-010 | BRIDGE-003 | Codex | `.github/pull_request_template.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | 2026-09-03 | 完了・PR #10。GitHub Actions成功とmainへのマージを確認して解除 |
 | LOCK-009 | BRIDGE-002 | Codex | GitHub repository ruleset、`README.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/BRANCH_PROTECTION.md` | 2026-09-03 | 完了・PR #9。ruleset有効化、GitHub Actions成功、mainへのマージを確認して解除 |
 | LOCK-008 | BRIDGE-008 | Codex | `package.json`、`package-lock.json`、`vitest.config.mts`、`vitest.setup.ts`、`playwright.config.ts`、`tests/`、`.github/workflows/ci.yml`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md`、`docs/TESTING.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md` | 2026-09-03 | 完了・PR #8。GitHub Actions成功とmainへのマージを確認して解除 |
