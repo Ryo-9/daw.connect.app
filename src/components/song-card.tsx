@@ -6,7 +6,7 @@ export function SongCard({ song }: { song: Song }) {
   return (
     <Link
       href={`/songs/${song.id}`}
-      className="group block rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] transition hover:-translate-y-1 hover:border-accent/55 hover:bg-panel-raised hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-6"
+      className="instrument-panel group block rounded-xl border border-line bg-panel p-5 transition hover:-translate-y-1 hover:border-accent/55 hover:bg-panel-raised hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-6"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -23,7 +23,7 @@ export function SongCard({ song }: { song: Song }) {
             {song.summary}
           </p>
         </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line-strong bg-panel-muted text-accent-blue transition group-hover:border-accent/50 group-hover:bg-accent-strong group-hover:text-white">
+        <span className="hardware-key flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-panel-muted text-accent-blue transition group-hover:border-accent/50 group-hover:bg-accent-strong group-hover:text-white">
           →
         </span>
       </div>

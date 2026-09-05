@@ -39,7 +39,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/bands/lumen-echo/songs"
-          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_28px_rgba(102,87,232,0.25)] transition hover:bg-accent-hover"
+          className="hardware-key inline-flex min-h-11 items-center justify-center rounded-lg bg-accent-strong px-5 text-sm font-bold text-white shadow-[0_10px_28px_rgba(102,87,232,0.25)] transition hover:bg-accent-hover"
         >
           楽曲一覧を開く
         </Link>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         ].map((stat) => (
           <article
             key={stat.label}
-            className="rounded-2xl border border-line bg-panel p-5 shadow-[0_12px_30px_rgba(0,0,0,0.18)]"
+            className="instrument-panel rounded-xl border border-line bg-panel p-5"
           >
             <p className="text-xs font-bold text-muted">{stat.label}</p>
             <div className="mt-3 flex items-end gap-2">
@@ -104,7 +104,7 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          <section className="mt-9 rounded-2xl border border-line bg-panel p-5 shadow-[0_14px_34px_rgba(0,0,0,0.18)] sm:p-7">
+          <section className="instrument-panel mt-9 rounded-xl border border-line bg-panel p-5 sm:p-7">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
@@ -152,7 +152,7 @@ export default function DashboardPage() {
             </p>
             <h2 className="mt-3 text-xl font-bold">Lumen Echo リハーサル</h2>
             <p className="mt-2 font-mono text-sm text-muted">8月14日（金）19:30</p>
-            <div className="mt-6 rounded-2xl bg-white/8 p-4">
+            <div className="control-well mt-6 rounded-lg bg-white/8 p-4">
               <p className="text-xs font-bold text-accent-blue">確認する曲</p>
               <ul className="mt-3 space-y-2 text-sm text-ink">
                 <li>Afterglow / v0.8</li>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          <section className="mt-5 rounded-2xl border border-line bg-panel p-6 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
+          <section className="instrument-panel mt-5 rounded-xl border border-line bg-panel p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">最近の動き</h2>
               <span className="h-2 w-2 rounded-full bg-accent-blue shadow-[0_0_10px_rgba(90,155,255,0.7)]" aria-label="新着あり" />

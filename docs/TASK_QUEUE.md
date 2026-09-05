@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-05 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。VISUAL-001では、既存の情報構造を保ち、StreamBandの濃紺base・紫/青accentのvisual foundationを整えます。
+2026-09-05 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。VISUAL-002では、既存の情報構造を保ち、機材操作盤らしいvisual textureを控えめに追加します。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | VISUAL-001 | StreamBand visual foundation | 作業中。PC中心の濃紺base・紫/青accentへ同期し、機能と情報構造は変えない |
+| 1 | VISUAL-002 | Mechanical DAW workspace refinement | 作業中。VISUAL-001を保ち、panel、control、meterの機械的な質感を小さく追加する |
 | 2 | SURFACE-015C | custom 404の追加 | SURFACE-015のISSUE-003。日本語案内と既存画面への復帰導線を追加する |
 
 ## Core Lane
@@ -73,7 +73,8 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| VISUAL-001 | P0 | StreamBand visual foundation | 作業中。黒〜濃紺のcanvas、紫/青accent、制作toolらしいpanel・border・shadowへ既存主要画面を同期 |
+| VISUAL-001 | P0 | StreamBand visual foundation | 完了（PR #15）。黒〜濃紺のcanvas、紫/青accent、制作toolらしいpanel・border・shadowへ主要画面を同期 |
+| VISUAL-002 | P1 | Mechanical DAW workspace refinement | 作業中。微細なgrid、rack panel、inset control、segment meterで機材感を補強。機能・layoutは変更しない |
 
 ## Bridge Lane
 
@@ -100,6 +101,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| VISUAL-001 | #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映 |
 | SURFACE-015B | #14 | 2026-09-05 | 320pxの楽曲詳細section navigationで見切れと領域内横scrollを解消 |
 | BRIDGE-004 | #13 | 2026-09-05 | Project Context、AI / Codex委任方針、将来の限定的auto-merge候補を文書化 |
 | SURFACE-015A | #12 | 2026-09-05 | 主要navigation、パンくず、頻出linkのtap領域を44px目安へ調整 |

@@ -68,7 +68,7 @@ export default async function BandDetailPage({
           <div className="flex flex-wrap gap-3">
             <Link
               href={`/bands/${band.id}/songs`}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-white px-5 text-sm font-bold text-[#17152b] shadow-[0_10px_26px_rgba(0,0,0,0.2)] hover:bg-[#eeeaff]"
+              className="hardware-key inline-flex min-h-11 items-center justify-center rounded-lg bg-white px-5 text-sm font-bold text-[#17152b] shadow-[0_10px_26px_rgba(0,0,0,0.2)] hover:bg-[#eeeaff]"
             >
               楽曲一覧を見る
             </Link>
@@ -77,7 +77,7 @@ export default async function BandDetailPage({
               disabled
               aria-describedby="member-invite-note"
               title="未実装：招待は送信されません"
-              className="inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white/65"
+              className="hardware-key inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg border border-white/20 bg-white/10 px-5 text-sm font-bold text-white/65"
             >
               メンバーを招待
             </button>
@@ -97,7 +97,7 @@ export default async function BandDetailPage({
           { label: "未完了TODO", value: `${openTasks.length}件`, note: "次の期限 8/11" },
           { label: "最新更新", value: band.updatedAt, note: "Afterglow v0.8" },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-2xl border border-line bg-panel p-5">
+          <div key={stat.label} className="instrument-panel rounded-xl border border-line bg-panel p-5">
             <p className="text-[11px] font-bold text-muted">{stat.label}</p>
             <p className="mt-2 text-xl font-bold tracking-[-0.03em]">{stat.value}</p>
             <p className="mt-2 text-[11px] text-accent-blue">{stat.note}</p>
@@ -126,7 +126,7 @@ export default async function BandDetailPage({
           </div>
         </section>
 
-        <aside className="rounded-2xl border border-line bg-panel p-6 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
+        <aside className="instrument-panel rounded-xl border border-line bg-panel p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">メンバー</h2>
             <span className="text-xs font-bold text-accent-blue">{bandMembers.length}人</span>
@@ -153,7 +153,7 @@ export default async function BandDetailPage({
               {openTasks.slice(0, 3).map((task) => {
                 const assignee = getMember(task.assigneeId);
                 return (
-                  <div key={task.id} className="rounded-xl border border-line bg-panel-muted p-3">
+                  <div key={task.id} className="control-well rounded-lg border border-line bg-panel-muted p-3">
                     <p className="text-xs font-bold leading-5">{task.title}</p>
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <span className="text-[10px] text-subtle">

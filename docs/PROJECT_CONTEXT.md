@@ -65,6 +65,7 @@ StreamBandは、バンドや小規模な音楽制作チームが、DAWの外側�
 - 情報階層: バンドから楽曲へ進み、楽曲詳細に関連情報を集約する
 - 視覚: 黒〜濃紺のcanvasとpanel、紫のprimary accent、青の進捗・情報accentを基調にする
 - 雰囲気: DAWを置き換える編集画面ではなく、DAWの外側で使うprofessionalな制作toolとして見せる
+- 質感: 微細なgrid、insetのcontrol、segment meter、硬質なedgeを控えめに使い、機材操作盤らしさを出す。サイバーゲーム風の過剰な発光や装飾は避ける
 - 密度: PCでは一覧性と作業toolらしい密度を優先し、細い境界線、階層化したpanel、抑えたshadowで情報のまとまりを示す
 - 状態: mock、未保存、未実装、処理不可を利用者へ明示する
 - Responsive: PCを主対象にしつつ、320pxを含む狭幅でpage全体の横overflowを作らず、主要操作はおおむね44pxのtap領域を確保する
