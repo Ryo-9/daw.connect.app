@@ -123,7 +123,7 @@ export default async function SongDetailPage({
         </div>
       </section>
 
-      <nav className="mt-5 flex gap-2 overflow-x-auto pb-2" aria-label="楽曲詳細セクション">
+      <nav className="mt-5 flex flex-wrap gap-1 pb-2 sm:gap-2" aria-label="楽曲詳細セクション">
         {[
           { href: "#memo", label: "メモ" },
           { href: "#tasks", label: `TODO ${tasks.length}` },
@@ -133,7 +133,7 @@ export default async function SongDetailPage({
           <a
             key={item.href}
             href={item.href}
-            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 py-2 text-xs font-bold ${
+            className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-2.5 py-2 text-xs font-bold sm:px-4 ${
               index === 0
                 ? "border-[#173f31] bg-[#173f31] text-white"
                 : "border-[#deded7] bg-white text-[#66716b]"

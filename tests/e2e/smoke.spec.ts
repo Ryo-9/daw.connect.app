@@ -50,6 +50,24 @@ test("存在しないバンドと楽曲は404になる", async ({ page }) => {
   await expect(page.getByText("This page could not be found.")).toBeVisible();
 });
 
+test("320pxで楽曲詳細セクションナビが横スクロールなしで収まる", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/songs/afterglow");
+
+  const sectionNavigation = page.getByRole("navigation", {
+    name: "楽曲詳細セクション",
+  });
+  await expect(sectionNavigation).toBeVisible();
+  await expect(sectionNavigation.getByRole("link")).toHaveCount(4);
+
+  const fitsWithoutHorizontalScroll = await sectionNavigation.evaluate(
+    (element) => element.scrollWidth <= element.clientWidth,
+  );
+  expect(fitsWithoutHorizontalScroll).toBe(true);
+});
+
 test("検索・TODO・コメントは操作でき、リロードで一時状態が消える", async ({
   page,
 }) => {
