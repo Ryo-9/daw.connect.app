@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-017 | Song create/edit form non-saving prototype | Codex | 作業中 | `surface/surface-017-song-form-prototype` | 楽曲作成・編集フォーム、既存画面からの入口、最小テスト、関連文書 | 2026-09-06 | 未作成 | React画面内stateのreview previewのみ。保存・通信・uploadは対象外 |
+| SURFACE-017 | Song create/edit form non-saving prototype | Codex | レビュー待ち | `surface/surface-017-song-form-prototype` | 楽曲作成・編集フォーム、既存画面からの入口、最小テスト、関連文書 | 2026-09-06 | #18 | React画面内stateのreview previewのみ。保存・通信・uploadは対象外 |
 
 ## 完了・中止履歴
 
