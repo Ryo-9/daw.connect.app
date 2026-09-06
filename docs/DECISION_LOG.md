@@ -20,6 +20,7 @@
 | DEC-005 | 2026-08-10 | UI 操作はブラウザ内の一時状態に限定する | 承認済み | UI 操作プロトタイプ | - |
 | DEC-006 | 2026-09-03 | 初期テストを Vitest / React Testing Library / Playwright で構成する | 提案中 | 自動テスト / CI | - |
 | DEC-007 | 2026-09-05 | AI委任境界と限定的auto-merge条件を定める | 提案中 | 開発運用 / GitHub | - |
+| DEC-008 | 2026-09-06 | 楽曲詳細を制作レビューsurfaceとして視覚化する | 提案中 | 楽曲詳細visual | - |
 
 ---
 
@@ -118,6 +119,16 @@
 - 未決事項: opt-in label、allowlist、diff上限、実装方式、監査log、緊急停止、正式な承認時期。
 - 見直し条件: dry-run開始時、teamや権限の変更時、DB / Auth / production導入時、AI関連incident発生時。
 - 関連: BRIDGE-004、[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)、[AI_DELEGATION.md](AI_DELEGATION.md)、[BRANCH_PROTECTION.md](BRANCH_PROTECTION.md)
+
+## DEC-008: 楽曲詳細を制作レビューsurfaceとして視覚化する
+
+- 日付: 2026-09-06
+- ステータス: 提案中
+- 提案者: Codex（VISUAL-003）
+- 実装事実: 楽曲詳細にWaveform、MIDI proposal、Comment / Version、Call Bar風の表示専用surfaceを追加し、PC中心の制作workspace感を強めた。スマートフォンでは既存情報を崩さない範囲に留めた。
+- 境界: 音声解析・再生、MIDI解析・編集・生成、通話、DAW連携、保存は未実装のまま維持する。元MIDIとproposalは明確に分け、元データを上書きする表現にしない。
+- 未決事項: 実機能の採用、データ形式、再生・同期方式、proposalの承認flow、通話方式。
+- 関連: VISUAL-003、[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
 
 ---
 
