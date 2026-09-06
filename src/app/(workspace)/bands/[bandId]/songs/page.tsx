@@ -44,21 +44,15 @@ export default async function BandSongsPage({
             曲ごとの進捗、基本情報、次の確認事項を一覧で把握できます。
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          aria-describedby="song-create-note"
-          className="hardware-key inline-flex min-h-11 cursor-not-allowed items-center justify-center rounded-lg border border-line-strong bg-panel px-5 text-sm font-bold text-subtle"
-          title="未実装：楽曲は作成・保存されません"
+        <Link
+          href={`/bands/${band.id}/songs/new`}
+          className="hardware-key inline-flex min-h-11 items-center justify-center rounded-lg border border-accent-blue/45 bg-accent-blue/10 px-5 text-sm font-bold text-accent-blue hover:border-accent-blue"
         >
-          ＋ 楽曲を作成
-        </button>
+          ＋ 新規楽曲
+        </Link>
       </header>
 
       <SongFilterPanel songs={bandSongs} />
-      <p id="song-create-note" className="sr-only">
-        楽曲作成は未実装です。このプロトタイプではデータを保存できません。
-      </p>
     </div>
   );
 }

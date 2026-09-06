@@ -117,6 +117,12 @@ export default async function SongDetailPage({
               <ProgressBar value={song.progress} />
             </div>
             <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/songs/${song.id}/edit`}
+                className="hardware-key inline-flex min-h-11 items-center justify-center rounded-lg border border-accent-blue/45 bg-accent-blue/10 px-3 py-2 text-[11px] font-bold text-accent-blue hover:border-accent-blue"
+              >
+                楽曲情報を編集
+              </Link>
               <span className="rounded-lg border border-line bg-panel-muted px-3 py-2 text-[11px] font-bold text-muted">
                 次: {song.nextMilestone}
               </span>

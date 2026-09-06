@@ -109,3 +109,40 @@ test("検索・TODO・コメントは操作でき、リロードで一時状態�
   ).toHaveAttribute("aria-checked", "false");
   await expect(page.getByText("E2Eの一時コメント")).toHaveCount(0);
 });
+
+test("楽曲作成・編集フォームはプレビューだけを更新し、リロードで元に戻る", async ({
+  page,
+}) => {
+  await page.goto("/bands/lumen-echo/songs");
+  await page.getByRole("link", { name: "新規楽曲" }).click();
+  await expect(page).toHaveURL(/\/bands\/lumen-echo\/songs\/new$/);
+  await expect(page.getByRole("heading", { level: 1, name: "新しい楽曲を作成" })).toBeVisible();
+  await expect(page.getByText("このフォームはまだ保存されません")).toBeVisible();
+
+  await page.getByRole("textbox", { name: /SONG TITLE/ }).fill("E2E Draft Song");
+  await page.getByRole("button", { name: "Previewに反映" }).click();
+  await expect(
+    page.getByLabel("未保存の楽曲プレビュー").getByRole("heading", { name: "E2E Draft Song" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "保存（未実装）" })).toBeDisabled();
+
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: /SONG TITLE/ })).toHaveValue("");
+  await expect(page.getByLabel("未保存の楽曲プレビュー").getByText("Untitled song")).toBeVisible();
+
+  await page.goto("/songs/afterglow");
+  await page.getByRole("link", { name: "楽曲情報を編集" }).click();
+  await expect(page).toHaveURL(/\/songs\/afterglow\/edit$/);
+  await expect(page.getByRole("textbox", { name: /SONG TITLE/ })).toHaveValue("Afterglow");
+
+  await page.getByRole("textbox", { name: /SONG TITLE/ }).fill("Afterglow Edit Preview");
+  await page.getByRole("button", { name: "Previewに反映" }).click();
+  await expect(
+    page
+      .getByLabel("未保存の楽曲プレビュー")
+      .getByRole("heading", { name: "Afterglow Edit Preview" }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: /SONG TITLE/ })).toHaveValue("Afterglow");
+});

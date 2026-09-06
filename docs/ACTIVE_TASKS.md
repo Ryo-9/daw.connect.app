@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| VISUAL-003 | Waveform MIDI collaboration surfaces | Codex | レビュー待ち | `visual/visual-003-waveform-midi-collaboration-surfaces` | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visualと関連文書 | 2026-09-06 | #17 | 表示専用の制作review surface。音声、MIDI、通話、DAW連携の実機能は対象外 |
+| SURFACE-017 | Song create/edit form non-saving prototype | Codex | 作業中 | `surface/surface-017-song-form-prototype` | 楽曲作成・編集フォーム、既存画面からの入口、最小テスト、関連文書 | 2026-09-06 | 未作成 | React画面内stateのreview previewのみ。保存・通信・uploadは対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| VISUAL-003 | 完了 | Codex | `visual/visual-003-waveform-midi-collaboration-surfaces` / #17 | 2026-09-06 | 表示専用のWaveform、MIDI proposal、Comment / Version、Call Bar surfaceをmainへマージ済み |
 | VISUAL-002 | 完了 | Codex | `visual/visual-002-mechanical-daw-workspace` / #16 | 2026-09-06 | mechanical canvas、panel、control、segment meterのvisual refinementをmainへマージ済み |
 | VISUAL-001 | 完了 | Codex | `visual/visual-001-streamband-foundation` / #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映してmainへマージ済み |
 | SURFACE-015B | 完了 | Codex | `fix/surface-015b-song-detail-section-nav` / #14 | 2026-09-05 | 320pxで楽曲詳細section navigationの全項目を見切れなく表示し、領域内横scrollを解消 |
