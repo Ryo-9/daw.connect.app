@@ -10,6 +10,11 @@ import {
   SongStatusBadge,
 } from "@/components/ui";
 import {
+  MidiProposalSurface,
+  MockCallBar,
+  WaveformPreviewSurface,
+} from "@/components/song-production-surfaces";
+import {
   currentUser,
   getBand,
   getMember,
@@ -46,20 +51,20 @@ export default async function SongDetailPage({
         className="flex flex-wrap items-center gap-2 text-xs font-semibold text-subtle"
         aria-label="パンくず"
       >
-        <Link href="/bands" className="inline-flex min-h-11 items-center hover:text-accent">
+        <Link href="/bands" className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-accent">
           バンド
         </Link>
         <span>/</span>
         <Link
           href={`/bands/${band.id}`}
-          className="inline-flex min-h-11 items-center hover:text-accent"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-accent"
         >
           {band.name}
         </Link>
         <span>/</span>
         <Link
           href={`/bands/${band.id}/songs`}
-          className="inline-flex min-h-11 items-center hover:text-accent"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center hover:text-accent"
         >
           楽曲
         </Link>
@@ -122,6 +127,8 @@ export default async function SongDetailPage({
           </div>
         </div>
       </section>
+
+      <WaveformPreviewSurface song={song} />
 
       <nav className="mt-5 flex flex-wrap gap-1 pb-2 sm:gap-2" aria-label="楽曲詳細セクション">
         {[
@@ -188,6 +195,8 @@ export default async function SongDetailPage({
             </p>
           </section>
 
+          <MidiProposalSurface />
+
           <section
             id="tasks"
             className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-7"
@@ -211,12 +220,25 @@ export default async function SongDetailPage({
               <span className="text-xs font-bold text-accent-blue">{comments.length}件</span>
             </div>
 
+            <div className="control-well mt-4 grid grid-cols-3 divide-x divide-line overflow-hidden rounded-lg border border-line bg-panel-muted">
+              {[
+                { label: "VERSION", value: song.version },
+                { label: "NOTES", value: `${comments.length}` },
+                { label: "TARGET", value: "MASTER" },
+              ].map((item) => (
+                <div key={item.label} className="min-w-0 px-2 py-3 text-center">
+                  <p className="font-mono text-[8px] font-bold tracking-[0.12em] text-subtle">{item.label}</p>
+                  <p className="mt-1 truncate font-mono text-[10px] font-bold text-ink">{item.value}</p>
+                </div>
+              ))}
+            </div>
+
             <div className="mt-5 space-y-5">
               {comments.map((comment) => {
                 const author = getMember(comment.authorId);
                 if (!author) return null;
                 return (
-                  <article key={comment.id} className="flex gap-3">
+                  <article key={comment.id} className="control-well flex gap-3 rounded-lg border border-line bg-panel-muted/65 p-3">
                     <MemberAvatar member={author} size="sm" />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -225,8 +247,8 @@ export default async function SongDetailPage({
                       </div>
                       <p className="mt-2 text-xs leading-6 text-muted">
                         {comment.timestamp && (
-                          <span className="mr-1.5 inline-flex rounded-md border border-accent-blue/20 bg-accent-blue/10 px-2 py-0.5 font-bold text-accent-blue">
-                            ▶ {comment.timestamp}
+                          <span className="mr-1.5 inline-flex rounded-md border border-accent-blue/20 bg-accent-blue/10 px-2 py-0.5 font-mono font-bold text-accent-blue">
+                            TIME {comment.timestamp}
                           </span>
                         )}
                         {comment.body}
@@ -281,6 +303,16 @@ export default async function SongDetailPage({
               })}
             </div>
 
+            <div className="control-well mt-4 rounded-lg border border-line bg-panel-muted p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-subtle">Version note / visual mock</p>
+                <span className="rounded border border-accent-blue/20 bg-accent-blue/10 px-2 py-1 font-mono text-[9px] font-bold text-accent-blue">{song.version}</span>
+              </div>
+              <p className="mt-3 text-xs leading-6 text-muted">
+                ギター再録とベース低域修正を反映した確認用デモ。履歴・差分・復元機能は未実装です。
+              </p>
+            </div>
+
             <div className="control-well mt-4 rounded-lg border border-dashed border-line-strong bg-panel-muted p-5 text-center">
               <button
                 type="button"
@@ -298,6 +330,8 @@ export default async function SongDetailPage({
           </section>
         </div>
       </div>
+
+      <MockCallBar members={members} />
     </div>
   );
 }

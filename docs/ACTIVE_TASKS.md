@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| VISUAL-002 | Mechanical DAW workspace refinement | Codex | 作業中 | `visual/visual-002-mechanical-daw-workspace` | `src/app/**`、`src/components/**`、関連作業状態文書 | 2026-09-05 | 未作成 | VISUAL-001を保ち、機械的なpanel、control、meterの質感を控えめに追加 |
+| VISUAL-003 | Waveform MIDI collaboration surfaces | Codex | レビュー待ち | `visual/visual-003-waveform-midi-collaboration-surfaces` | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visualと関連文書 | 2026-09-06 | #17 | 表示専用の制作review surface。音声、MIDI、通話、DAW連携の実機能は対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| VISUAL-002 | 完了 | Codex | `visual/visual-002-mechanical-daw-workspace` / #16 | 2026-09-06 | mechanical canvas、panel、control、segment meterのvisual refinementをmainへマージ済み |
 | VISUAL-001 | 完了 | Codex | `visual/visual-001-streamband-foundation` / #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映してmainへマージ済み |
 | SURFACE-015B | 完了 | Codex | `fix/surface-015b-song-detail-section-nav` / #14 | 2026-09-05 | 320pxで楽曲詳細section navigationの全項目を見切れなく表示し、領域内横scrollを解消 |
 | BRIDGE-004 | 完了 | Codex | `docs/bridge-004-project-context-ai-delegation` / #13 | 2026-09-05 | Project Context、AI / Codex委任方針、将来の限定的auto-merge候補を文書化してmainへマージ済み |
