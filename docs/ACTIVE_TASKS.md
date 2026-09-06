@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| VISUAL-003 | Waveform MIDI collaboration surfaces | Codex | 作業中 | `visual/visual-003-waveform-midi-collaboration-surfaces` | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visualと関連文書 | 2026-09-06 | 未作成 | 表示専用の制作review surface。音声、MIDI、通話、DAW連携の実機能は対象外 |
+| VISUAL-003 | Waveform MIDI collaboration surfaces | Codex | レビュー待ち | `visual/visual-003-waveform-midi-collaboration-surfaces` | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visualと関連文書 | 2026-09-06 | #17 | 表示専用の制作review surface。音声、MIDI、通話、DAW連携の実機能は対象外 |
 
 ## 完了・中止履歴
 
