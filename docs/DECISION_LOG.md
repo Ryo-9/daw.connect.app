@@ -21,6 +21,7 @@
 | DEC-006 | 2026-09-03 | 初期テストを Vitest / React Testing Library / Playwright で構成する | 提案中 | 自動テスト / CI | - |
 | DEC-007 | 2026-09-05 | AI委任境界と限定的auto-merge条件を定める | 提案中 | 開発運用 / GitHub | - |
 | DEC-008 | 2026-09-06 | 楽曲詳細を制作レビューsurfaceとして視覚化する | 提案中 | 楽曲詳細visual | - |
+| DEC-009 | 2026-09-06 | 楽曲作成・編集を非保存フォームで先行検証する | 提案中 | 楽曲フォーム / Phase 1 | - |
 
 ---
 
@@ -129,6 +130,17 @@
 - 境界: 音声解析・再生、MIDI解析・編集・生成、通話、DAW連携、保存は未実装のまま維持する。元MIDIとproposalは明確に分け、元データを上書きする表現にしない。
 - 未決事項: 実機能の採用、データ形式、再生・同期方式、proposalの承認flow、通話方式。
 - 関連: VISUAL-003、[PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)
+
+## DEC-009: 楽曲作成・編集を非保存フォームで先行検証する
+
+- 日付: 2026-09-06
+- ステータス: 提案中
+- 提案者: Codex（SURFACE-017）
+- 実装事実: Phase 1では楽曲作成・編集フォームをReactの画面内stateだけで動く非保存プロトタイプとして追加し、入力後のreview previewを確認できるようにする。
+- 境界: DB、API、Auth、AWS、ブラウザ保存、実ファイルuploadは後続Phaseへ分離し、現在のmock dataを更新しない。
+- 表示方針: PCメインの制作workspaceを優先し、スマートフォンでは横overflowを避けて入力と確認ができる縦積み表示に留める。
+- 未決事項: 永続data schema、validation、保存API、権限、競合処理、ファイル管理。
+- 関連: SURFACE-017、[SCREEN_LIST.md](SCREEN_LIST.md)、[USER_FLOW.md](USER_FLOW.md)
 
 ---
 

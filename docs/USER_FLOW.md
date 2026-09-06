@@ -34,6 +34,19 @@
 
 この導線は操作位置と説明の分かりやすさを検証するものです。実際の作成、更新、送信、アップロード、永続化は行いません。
 
+## 楽曲作成・編集の非保存プロトタイプで確認できる導線
+
+`SURFACE-017` では、保存方式を決める前にフォーム項目とreview表示を次の流れで確認します。
+
+1. `/bands/lumen-echo/songs` の「新規楽曲」から `/bands/lumen-echo/songs/new` を開く
+2. 楽曲名、制作metadata、初期version、メモ、担当partを入力する
+3. 「Previewに反映」で同じ画面の未保存reviewを確認する
+4. `/songs/afterglow` の「楽曲情報を編集」から `/songs/afterglow/edit` を開く
+5. 既存mock dataを初期値として変更し、同じ未保存reviewを確認する
+6. ページをリロードし、入力変更が消えて初期状態へ戻ることを確認する
+
+この操作はReactの画面内stateだけを使います。「保存（未実装）」は無効で、DB、API、Auth、AWS、localStorage、cookie、実ファイルuploadは使用しません。
+
 ## 1. 初回訪問
 
 目的: アプリが自分たちの制作に役立つかを理解する。

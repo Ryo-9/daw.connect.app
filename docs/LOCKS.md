@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-017 | VISUAL-003 | Codex | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visual、`src/components/song-production-surfaces.tsx`、関連作業状態文書 | `visual/visual-003-waveform-midi-collaboration-surfaces` | 2026-09-06 | PR マージまたは作業中止 | 表示専用visual refinement。音声、MIDI、通話、DAW連携、package、CI、高risk領域は対象外 |
+| LOCK-018 | SURFACE-017 | Codex | song create/edit form prototype、既存画面の入口、最小テスト、関連文書 | `surface/surface-017-song-form-prototype` | 2026-09-06 | PR マージまたは作業中止 | 非保存の画面内previewのみ。DB、API、Auth、AWS、upload、package、CIは対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-017 | VISUAL-003 | Codex | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visual、`src/components/song-production-surfaces.tsx`、関連作業状態文書 | 2026-09-06 | 完了・PR #17。mainへのマージを確認して解除 |
 | LOCK-016 | VISUAL-002 | Codex | `src/app/**`、`src/components/**`、`docs/PROJECT_CONTEXT.md`、作業状態文書 | 2026-09-06 | 完了・PR #16。mainへのマージを確認して解除 |
 | LOCK-015 | VISUAL-001 | Codex | `src/app/**`、`src/components/**`、`src/lib/mock-data.ts`のvisual color、`docs/PROJECT_CONTEXT.md`、作業状態文書 | 2026-09-05 | 完了・PR #15。`Quality checks`成功とmainへのマージを確認して解除 |
 | LOCK-014 | SURFACE-015B | Codex | `src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/TASK_QUEUE.md` | 2026-09-05 | 完了・PR #14。`Quality checks`成功とmainへのマージを確認して解除 |

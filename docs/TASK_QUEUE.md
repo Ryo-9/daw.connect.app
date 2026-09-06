@@ -12,7 +12,7 @@
 
 ## 現在の状態と次候補
 
-2026-09-06 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。VISUAL-003では、楽曲詳細に表示専用のWaveform / MIDI / Comment / Call Bar風surfaceを追加します。
+2026-09-06 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はSURFACE-017として、楽曲作成・編集フォームの非保存プロトタイプをPR #18でレビュー中です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
@@ -20,7 +20,8 @@
 | --- | --- | --- | --- |
 | 1 | SURFACE-015C | custom 404の追加 | SURFACE-015のISSUE-003。日本語案内と既存画面への復帰導線を追加する |
 | 2 | SURFACE-016 | 長い楽曲名の境界確認 | 長文fixtureでcard、見出し、breadcrumbの折返しを独立して確認する |
-| 3 | SURFACE-017 | 楽曲作成・編集フォームの非保存プロトタイプ | DB / APIを使わず、入力と未保存状態のUIだけを検討する |
+| 3 | DATA-001 | mock data schema review | 現在の表示用schemaと将来のdata要件を比較する。DB実装や採用決定は含めない |
+| 4 | FLOW-001 | Preview → Comment → Proposal → Version の画面導線整理 | 現在の表示専用surfaceを前提に、制作reviewの順序と境界を整理する |
 
 ## Core Lane
 
@@ -55,7 +56,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-004 | P0 | ダッシュボード UI | 完了（PR #3）。バンド、最近の楽曲、自分の TODO をモック表示する |
 | SURFACE-005 | P0 | バンド一覧・詳細 UI | 一部完了（PR #3）。通常状態は実装済み。空状態とエラー状態は未実装 |
 | SURFACE-006 | P0 | 楽曲一覧・詳細 UI | 一部完了（PR #3）。画面、状態、更新情報は実装済み。正式なモバイル確認は SURFACE-015 で行う |
-| SURFACE-007 | P1 | 楽曲作成・編集フォーム | 入力制限とエラー表示をモックで検証する |
+| SURFACE-007 | P1 | 楽曲作成・編集フォーム | SURFACE-017でPhase 1の非保存入力とreview previewを作業中。保存・詳細validationは後続で検討する |
 | SURFACE-008 | P1 | 楽曲メモ UI | 表示と編集状態を分け、未保存が分かるようにする |
 | SURFACE-009 | P1 | コメント UI | 一部完了（PR #3、#4）。表示と非永続の一時追加は実装済み。返信などは未実装 |
 | SURFACE-010 | P1 | タイムスタンプコメント UI | 一部完了（PR #3、#4）。時刻表示と任意入力は実装済み。音源・バージョン連携は未実装 |
@@ -68,7 +69,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 完了（PR #14）。320pxで全section itemを表示し、navigation領域内の横scrollを解消 |
 | SURFACE-015C | P2 | custom 404の追加 | 監査ISSUE-003。日本語案内とダッシュボード / バンド一覧への復帰導線を追加する |
 | SURFACE-016 | P2 | 長い楽曲名の境界確認 | 長文fixtureを使い、主要card、見出し、breadcrumbの折返しと横overflowを確認する |
-| SURFACE-017 | P1 | 楽曲作成・編集フォームの非保存プロトタイプ | 保存処理なしで入力、validation、未保存状態の見せ方を検証する |
+| SURFACE-017 | P1 | 楽曲作成・編集フォームの非保存プロトタイプ | レビュー待ち（PR #18）。保存処理なしで入力、review preview、未保存状態の見せ方を検証する |
 
 ## Visual Lane
 
@@ -78,7 +79,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | --- | --- | --- | --- |
 | VISUAL-001 | P0 | StreamBand visual foundation | 完了（PR #15）。黒〜濃紺のcanvas、紫/青accent、制作toolらしいpanel・border・shadowへ主要画面を同期 |
 | VISUAL-002 | P1 | Mechanical DAW workspace refinement | 完了（PR #16）。微細なgrid、rack panel、inset control、segment meterで機材感を補強 |
-| VISUAL-003 | P1 | Waveform MIDI collaboration surfaces | 作業中。楽曲詳細に表示専用のWaveform、MIDI proposal、review、presence surfaceを追加。実機能は含めない |
+| VISUAL-003 | P1 | Waveform MIDI collaboration surfaces | 完了（PR #17）。楽曲詳細に表示専用のWaveform、MIDI proposal、review、presence surfaceを追加。実機能は含めない |
 
 ## Bridge Lane
 
@@ -105,6 +106,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| VISUAL-003 | #17 | 2026-09-06 | 楽曲詳細へ表示専用のWaveform、MIDI proposal、Comment / Version、Call Bar surfaceを追加 |
 | VISUAL-002 | #16 | 2026-09-06 | mechanical canvas、panel、control、segment meterのvisual refinementを主要画面へ反映 |
 | VISUAL-001 | #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映 |
 | SURFACE-015B | #14 | 2026-09-05 | 320pxの楽曲詳細section navigationで見切れと領域内横scrollを解消 |
