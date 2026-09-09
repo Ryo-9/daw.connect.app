@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DATA-001 | Mock data schema review | Codex | 作業中 | `data/data-001-mock-schema-review` | `docs/DATABASE.md`、data model関連文書、作業状態文書 | 2026-09-09 | 未作成 | Phase 1棚卸しとPhase 2草案のみ。DB、API、Auth、AWSの実装は対象外 |
+| DATA-001 | Mock data schema review | Codex | レビュー待ち | `data/data-001-mock-schema-review` | `docs/DATABASE.md`、data model関連文書、作業状態文書 | 2026-09-09 | #19 | Phase 1棚卸しとPhase 2草案のみ。DB、API、Auth、AWSの実装は対象外 |
 
 ## 完了・中止履歴
 

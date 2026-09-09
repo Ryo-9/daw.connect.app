@@ -12,7 +12,7 @@
 
 ## 現在の状態と次候補
 
-2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はDATA-001として、DB/API実装前のmock data schema reviewを作業中です。
+2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はDATA-001として、DB/API実装前のmock data schema reviewをPR #19でレビュー中です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
@@ -29,7 +29,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| DATA-001 | P1 | Mock data schema review | 作業中。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化する |
+| DATA-001 | P1 | Mock data schema review | レビュー待ち（PR #19）。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化する |
 | DATA-002 | P1 | API boundary draft | DATA-001後にAPIの入力・出力、認可、validation、競合境界を整理する。API実装は含めない |
 
 ## Core Lane
