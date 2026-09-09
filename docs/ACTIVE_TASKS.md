@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-001 | Phase 2 Cloud MVP Architecture Plan | Codex | 作業中 | `cloud/cloud-001-phase2-mvp-plan` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、作業状態文書 | 2026-09-09 | 未作成 | 2026年末Private Alpha向けのdocs-only計画。AWS resource、Auth、DB、API、storage実装は対象外 |
+| CLOUD-001 | Phase 2 Cloud MVP Architecture Plan | Codex | レビュー待ち | `cloud/cloud-001-phase2-mvp-plan` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、作業状態文書 | 2026-09-09 | #22 | 2026年末Private Alpha向けのdocs-only計画。AWS resource、Auth、DB、API、storage実装は対象外 |
 
 ## 完了・中止履歴
 

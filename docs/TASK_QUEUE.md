@@ -42,7 +42,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| CLOUD-001 | P0 | Phase 2 Cloud MVP Architecture Plan | 作業中。2 user / 1 private BandのAuth、API、metadata、private Asset、monitoring、cost、recovery、critical pathをdocs化。resource作成なし |
+| CLOUD-001 | P0 | Phase 2 Cloud MVP Architecture Plan | レビュー待ち（PR #22）。2 user / 1 private BandのAuth、API、metadata、private Asset、monitoring、cost、recovery、critical pathをdocs化。resource作成なし |
 | CLOUD-002 | P0 | Cloud foundation / environment / IaC decision | account分離、Region、IaC、pricing、rollback、credential方式を人が承認してから最小foundationへ進む |
 | HOST-001 | P0 | Next.js Private Alpha hosting decision | Next.js compatibility、preview、cost、AWS integration、logs、rollback、migrationを比較 |
 | AUTH-001 | P0 | Private Alpha authentication prototype | Cognito候補。public self-sign-upなしのcontrolled user、verification、session、resetを検証 |
