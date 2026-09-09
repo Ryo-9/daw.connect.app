@@ -29,7 +29,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | DATA-001 | P1 | Mock data schema review | 完了（PR #19）。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化 |
-| DATA-002 | P1 | API boundary draft | 作業中。DATA-001 / FLOW-001を前提に、core operation、認可、runtime validation、競合、冪等性、upload境界を文書化する。API実装は含めない |
+| DATA-002 | P1 | API boundary draft | レビュー待ち（PR #21）。DATA-001 / FLOW-001を前提に、core operation、認可、runtime validation、競合、冪等性、upload境界を文書化する。API実装は含めない |
 
 ## Flow Lane
 

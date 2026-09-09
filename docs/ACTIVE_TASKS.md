@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DATA-002 | Core API / Persistence Boundary Draft | Codex | 作業中 | `data/data-002-core-api-boundary` | `docs/API.md`、最小関連docs、作業状態文書 | 2026-09-09 | 未作成 | 実装非依存のcontract草案のみ。DB、API、Auth、AWS、storage実装は対象外 |
+| DATA-002 | Core API / Persistence Boundary Draft | Codex | レビュー待ち | `data/data-002-core-api-boundary` | `docs/API.md`、最小関連docs、作業状態文書 | 2026-09-09 | #21 | 実装非依存のcontract草案のみ。DB、API、Auth、AWS、storage実装は対象外 |
 
 ## 完了・中止履歴
 
