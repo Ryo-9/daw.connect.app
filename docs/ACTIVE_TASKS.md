@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-017 | Song create/edit form non-saving prototype | Codex | レビュー待ち | `surface/surface-017-song-form-prototype` | 楽曲作成・編集フォーム、既存画面からの入口、最小テスト、関連文書 | 2026-09-06 | #18 | React画面内stateのreview previewのみ。保存・通信・uploadは対象外 |
+| DATA-001 | Mock data schema review | Codex | レビュー待ち | `data/data-001-mock-schema-review` | `docs/DATABASE.md`、data model関連文書、作業状態文書 | 2026-09-09 | #19 | Phase 1棚卸しとPhase 2草案のみ。DB、API、Auth、AWSの実装は対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| SURFACE-017 | 完了 | Codex | `surface/surface-017-song-form-prototype` / #18 | 2026-09-06 | 楽曲作成・編集の非保存フォームと画面内review previewをmainへマージ済み |
 | VISUAL-003 | 完了 | Codex | `visual/visual-003-waveform-midi-collaboration-surfaces` / #17 | 2026-09-06 | 表示専用のWaveform、MIDI proposal、Comment / Version、Call Bar surfaceをmainへマージ済み |
 | VISUAL-002 | 完了 | Codex | `visual/visual-002-mechanical-daw-workspace` / #16 | 2026-09-06 | mechanical canvas、panel、control、segment meterのvisual refinementをmainへマージ済み |
 | VISUAL-001 | 完了 | Codex | `visual/visual-001-streamband-foundation` / #15 | 2026-09-05 | 濃紺base・紫/青accentのvisual foundationを主要画面へ反映してmainへマージ済み |
