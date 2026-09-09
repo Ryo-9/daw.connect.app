@@ -47,6 +47,29 @@
 
 この操作はReactの画面内stateだけを使います。「保存（未実装）」は無効で、DB、API、Auth、AWS、localStorage、cookie、実ファイルuploadは使用しません。
 
+## Phase 1 core collaboration review flow
+
+`FLOW-001`では、DAWで作った素材をStreamBand上で確認し、判断を次の制作へ返す順序をSong Detail内で明確にします。
+
+```text
+DAW export
+→ Preview review
+→ Version / bar / beat / time / trackに紐づくComment
+→ Originalと分離されたMIDI Proposal review
+→ Accept / Partial / Hold / RejectのDecision
+→ 作曲者がDAW側へ判断を反映
+→ 新しいPreview / MIDIをexport
+→ New StreamBand Version
+```
+
+- Song Detailの5 step navigationから既存のPreview、Comment、Proposal、Decision、Version sectionへ移動する
+- Original MIDIは読み取り専用として示し、Proposalによって上書きしない
+- ProposalをAcceptしてもDAWへ自動反映せず、Versionも自動作成しない
+- Comment AnchorはDATA-001の草案に合わせ、対象Versionとbar / beat / time / trackの文脈を分けて表示する
+- Decision button、anchor、statusはPhase 1のvisual mockで、保存・通信・backend stateは持たない
+
+このflowはDAWを置き換えません。最終判断の反映と正式な音源・MIDIの生成はDAW側で行い、StreamBandでは共有された新しいVersionを次のreview単位として扱う想定です。
+
 ## 1. 初回訪問
 
 目的: アプリが自分たちの制作に役立つかを理解する。

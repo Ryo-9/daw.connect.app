@@ -12,16 +12,15 @@
 
 ## 現在の状態と次候補
 
-2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はDATA-001として、DB/API実装前のmock data schema reviewをPR #19でレビュー中です。
+2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はFLOW-001として、Song DetailのPreview → Comment → Proposal → Decision → Version導線を非保存prototypeの範囲で整理しています。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | FLOW-001 | Preview → Comment → Proposal → Version の画面導線整理 | 現在の表示専用surfaceを前提に、制作reviewの順序と境界を整理する |
+| 1 | DATA-002 | API boundary draft | DATA-001のentity境界を前提に、API責務・認可・validation・競合方針を文書化する。実装なし |
 | 2 | SURFACE-015C | custom 404の追加 | SURFACE-015のISSUE-003。日本語案内と既存画面への復帰導線を追加する |
 | 3 | SURFACE-016 | 長い楽曲名の境界確認 | 長文fixtureでcard、見出し、breadcrumbの折返しを独立して確認する |
-| 4 | DATA-002 | API boundary draft | DATA-001のentity境界を前提に、API責務・認可・validation・競合方針を文書化する。実装なし |
 
 ## Data Design Lane
 
@@ -29,8 +28,16 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| DATA-001 | P1 | Mock data schema review | レビュー待ち（PR #19）。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化する |
+| DATA-001 | P1 | Mock data schema review | 完了（PR #19）。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化 |
 | DATA-002 | P1 | API boundary draft | DATA-001後にAPIの入力・出力、認可、validation、競合境界を整理する。API実装は含めない |
+
+## Flow Lane
+
+既存surfaceを使った共同制作の順序と、DAW / StreamBand間の責務境界を整理するレーンです。Phase 1では表示と画面内の一時操作だけを扱います。
+
+| ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
+| --- | --- | --- | --- |
+| FLOW-001 | P1 | Core Collaboration Review Flow | 作業中。Song DetailでPreview → Comment → MIDI Proposal → Decision → Versionの順序を示す。保存、DAW自動反映、Version自動作成は含めない |
 
 ## Core Lane
 
@@ -115,6 +122,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| DATA-001 | #19 | 2026-09-09 | Phase 1 mock dataとPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応、永続化前の論点を文書化 |
 | SURFACE-017 | #18 | 2026-09-06 | 楽曲作成・編集の非保存フォーム、画面内review preview、reloadでの初期化を追加 |
 | VISUAL-003 | #17 | 2026-09-06 | 楽曲詳細へ表示専用のWaveform、MIDI proposal、Comment / Version、Call Bar surfaceを追加 |
 | VISUAL-002 | #16 | 2026-09-06 | mechanical canvas、panel、control、segment meterのvisual refinementを主要画面へ反映 |

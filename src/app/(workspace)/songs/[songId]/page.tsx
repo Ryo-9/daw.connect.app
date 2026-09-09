@@ -15,6 +15,10 @@ import {
   WaveformPreviewSurface,
 } from "@/components/song-production-surfaces";
 import {
+  CollaborationReviewFlow,
+  ReviewDecisionSurface,
+} from "@/components/collaboration-review-flow";
+import {
   currentUser,
   getBand,
   getMember,
@@ -134,6 +138,8 @@ export default async function SongDetailPage({
         </div>
       </section>
 
+      <CollaborationReviewFlow version={song.version} />
+
       <WaveformPreviewSurface song={song} />
 
       <nav className="mt-5 flex flex-wrap gap-1 pb-2 sm:gap-2" aria-label="楽曲詳細セクション">
@@ -203,6 +209,8 @@ export default async function SongDetailPage({
 
           <MidiProposalSurface />
 
+          <ReviewDecisionSurface version={song.version} />
+
           <section
             id="tasks"
             className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-7"
@@ -226,18 +234,26 @@ export default async function SongDetailPage({
               <span className="text-xs font-bold text-accent-blue">{comments.length}件</span>
             </div>
 
-            <div className="control-well mt-4 grid grid-cols-3 divide-x divide-line overflow-hidden rounded-lg border border-line bg-panel-muted">
+            <div
+              className="control-well mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-5"
+              aria-label="コメント位置コンテキストのモック表示"
+            >
               {[
                 { label: "VERSION", value: song.version },
-                { label: "NOTES", value: `${comments.length}` },
-                { label: "TARGET", value: "MASTER" },
+                { label: "BAR", value: "37" },
+                { label: "BEAT", value: "2" },
+                { label: "TIME", value: "01:24" },
+                { label: "TRACK", value: "VOCAL" },
               ].map((item) => (
-                <div key={item.label} className="min-w-0 px-2 py-3 text-center">
+                <div key={item.label} className="min-w-0 bg-panel-muted px-2 py-3 text-center">
                   <p className="font-mono text-[8px] font-bold tracking-[0.12em] text-subtle">{item.label}</p>
                   <p className="mt-1 truncate font-mono text-[10px] font-bold text-ink">{item.value}</p>
                 </div>
               ))}
             </div>
+            <p className="mt-2 text-[10px] leading-5 text-subtle">
+              COMMENT CONTEXTは{song.version}の既存コメント位置を示すvisual mockです。Version / bar / beat / time / trackへの保存・同期は未実装です。
+            </p>
 
             <div className="mt-5 space-y-5">
               {comments.map((comment) => {
@@ -309,7 +325,10 @@ export default async function SongDetailPage({
               })}
             </div>
 
-            <div className="control-well mt-4 rounded-lg border border-line bg-panel-muted p-4">
+            <div
+              id="version"
+              className="control-well mt-4 scroll-mt-32 rounded-lg border border-line bg-panel-muted p-4"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-subtle">Version note / visual mock</p>
                 <span className="rounded border border-accent-blue/20 bg-accent-blue/10 px-2 py-1 font-mono text-[9px] font-bold text-accent-blue">{song.version}</span>
@@ -317,6 +336,14 @@ export default async function SongDetailPage({
               <p className="mt-3 text-xs leading-6 text-muted">
                 ギター再録とベース低域修正を反映した確認用デモ。履歴・差分・復元機能は未実装です。
               </p>
+              <div className="mt-4 border-t border-line pt-4">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-accent-blue">
+                  Decision → DAW reflection → New export → New version
+                </p>
+                <p className="mt-2 text-[10px] leading-5 text-subtle">
+                  Proposalの判断だけではVersionは増えません。作曲者がDAWへ反映し、新しいPreview / MIDIを書き出した後に次Versionとして共有します。
+                </p>
+              </div>
             </div>
 
             <div className="control-well mt-4 rounded-lg border border-dashed border-line-strong bg-panel-muted p-5 text-center">
