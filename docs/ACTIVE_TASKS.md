@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FLOW-001 | Core Collaboration Review Flow | Codex | レビュー待ち | `flow/flow-001-core-collaboration-review` | Song Detail review flow、関連component / test、`USER_FLOW.md`、`SCREEN_LIST.md`、作業状態文書 | 2026-09-09 | #20 | Preview → Comment → Proposal → Decision → Versionを非保存prototypeとして整理 |
+| DATA-002 | Core API / Persistence Boundary Draft | Codex | 作業中 | `data/data-002-core-api-boundary` | `docs/API.md`、最小関連docs、作業状態文書 | 2026-09-09 | 未作成 | 実装非依存のcontract草案のみ。DB、API、Auth、AWS、storage実装は対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| FLOW-001 | 完了 | Codex | `flow/flow-001-core-collaboration-review` / #20 | 2026-09-09 | Preview → Comment → Proposal → Decision → Versionの非保存review flowをmainへマージ済み |
 | DATA-001 | 完了 | Codex | `data/data-001-mock-schema-review` / #19 | 2026-09-09 | Phase 1 mock data棚卸しとPhase 2 cloud data model草案をmainへマージ済み。実装変更なし |
 | SURFACE-017 | 完了 | Codex | `surface/surface-017-song-form-prototype` / #18 | 2026-09-06 | 楽曲作成・編集の非保存フォームと画面内review previewをmainへマージ済み |
 | VISUAL-003 | 完了 | Codex | `visual/visual-003-waveform-midi-collaboration-surfaces` / #17 | 2026-09-06 | 表示専用のWaveform、MIDI proposal、Comment / Version、Call Bar surfaceをmainへマージ済み |
