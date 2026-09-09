@@ -78,7 +78,7 @@
 以下のservice方向はCLOUD-001 / PR #22 review後の人間承認済みplanning baselineです。現在の実装事実ではなく、resource作成、credential設定、application integration、deploymentは未実施で、それぞれ人の承認と専用taskを必要とします。
 
 ```text
-Next.js Web Hosting (TBD / Private Alpha blocker)
+Next.js Web Hosting (Vercel Pro candidate / human approval pending)
           |
           v
 API Gateway HTTP API
@@ -121,17 +121,18 @@ CloudFrontはPrivate Alphaの実測でS3 short-lived accessにlatency / cache / 
 
 本物の未公開曲を入れる前に、Private Alphaをnonprodと別AWS accountへ分離することを推奨します。同一accountを続ける場合はhuman risk acceptanceを必須とし、data、IAM、resource、budgetを混在させません。
 
-### Web hosting is a blocking deployment decision before Private Alpha
+### Web hosting target（HOST-001 proposal）
 
-Vercel、AWS Amplify Hosting、AWS-native custom Next.js hosting等から、次を専用`HOST-001`候補で比較します。
+HOST-001では、**Vercel Proを第一候補**、**AWS Amplify Hostingを条件付きfallback**として提案します。これは人間承認待ちで、account接続、project、domain、credential、deploymentは未実施です。比較とsecurity / release gateの詳細は[HOSTING.md](HOSTING.md)を参照します。
 
-- Next.js 16とのcompatibilityとupgrade追従
-- deploymentの単純さ、branch preview、environment separation
-- cost、logs、rollback、custom domain
-- Cognito / API Gatewayとのsession、CORS、CSRF境界
-- AWS backend integrationと将来migration
+- VercelはNext.jsのverified adapterで、Next.js `16.3.0`へのcompatibility riskと2人teamの運用負荷を抑えやすい
+- Vercel Hobbyはpersonal / non-commercial用途に限定されるため、Private Alphaの既定案にしない
+- Amplify HostingのAWS公式managed SSR supportは現時点でNext.js 15までのため、Next.js 16 official supportまたはPoC成功までdeploy-ready fallbackとしない
+- AWS-native Node.js / DockerはNext.js機能を実行できるが、reverse proxy、runtime、cache、rollback、monitoringの運用範囲が大きいためlast resortとする
+- Previewはprotectedなnonprod / synthetic dataだけに限定し、Private AlphaはCognito + application authorization完成前にreal unreleased dataを扱わない
+- production releaseは`Quality checks`済みのimmutable commitをhumanが明示promoteする候補とし、hosting rollbackとdata recoveryを分離する
 
-Private Alphaの最小構成としてAWS-native custom hostingを前提にしません。採用先とdeployment設定はCLOUD-001では未決定です。
+Vercel Proのbase / usage costはPrivate Alphaの通常目標を超える可能性があるため、current price、tax、為替、seat、protection add-onをaccount接続直前に再確認し、human cost acceptanceを必須にします。
 
 ### Foundation / Infrastructure as Code boundary
 
@@ -215,7 +216,8 @@ CLOUD-001 reviewではAmazon Cognito User PoolをPrivate Alphaのprimary target�
 - ロールと操作権限の詳細
 - API Gateway + Lambda contractとNext.js側BFF / direct access境界
 - S3 bucket / object key、上限、許可形式、プレビュー方式
-- ホスティング先、CDK採用、account bootstrap、deployment方式
+- Vercel Proの採用、account / project境界、current cost、production protection / promotion方式。AmplifyのNext.js 16 support
+- CDK採用、account bootstrap、deployment方式
 - ログ保持期間、alarm threshold、backup / restore detail
 - 本番公開、課金、利用規約、プライバシー対応
 
