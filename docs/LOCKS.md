@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-023 | CLOUD-002 | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `cloud/cloud-002-foundation-decision` | 2026-09-10 | PR マージまたは作業中止 | foundation / environment / IaCのdocs-only判断。AWS接続、resource、credential、runtime、package、config変更は対象外 |
+| LOCK-024 | HOST-001 | Codex | `docs/HOSTING.md`、`docs/ARCHITECTURE.md`、`docs/AWS.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/host-001-private-alpha-hosting-decision` | 2026-09-10 | PR マージまたは作業中止 | Next.js Private Alpha hostingのdocs-only比較。account接続、deployment、domain、credential、runtime、package、config変更は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-023 | CLOUD-002 | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #23。mainへのマージを確認して解除 |
 | LOCK-022 | CLOUD-001 | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-10 | 完了・PR #22。mainへのマージを確認して解除 |
 | LOCK-021 | DATA-002 | Codex | `docs/API.md`、DATA-002に必要な`docs/USER_FLOW.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-09 | 完了・PR #21。mainへのマージを確認して解除 |
 | LOCK-020 | FLOW-001 | Codex | Song Detail core collaboration flow、関連component / test、`docs/USER_FLOW.md`、`docs/SCREEN_LIST.md`、作業状態文書 | 2026-09-09 | 完了・PR #20。mainへのマージを確認して解除 |

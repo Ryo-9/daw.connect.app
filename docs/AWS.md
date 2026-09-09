@@ -360,17 +360,17 @@ retention期間、法的削除、account削除、backupからの消去はTBDで�
 
 ### Web hosting decision
 
-Next.js web applicationのremote hostingはPrivate Alphaのblocking deployment decisionです。CLOUD-001では採用先を決めません。
+Next.js web applicationのremote hostingはPrivate Alphaのblocking deployment decisionです。HOST-001ではVercel Proを第一候補、AWS Amplify HostingをNext.js 16 support確認後の条件付きfallback、AWS-native custom Next.jsをlast resortとして提案します。いずれもhuman approval待ちで、account接続・deploymentは行っていません。詳細は[HOSTING.md](HOSTING.md)を参照します。
 
 | criterion | Vercel | AWS Amplify Hosting | AWS-native custom Next.js |
 | --- | --- | --- | --- |
-| Next.js compatibility | current Next.js機能とofficial support範囲を確認 | supported feature / runtime / deployment制約を確認 | framework更新ごとに運用責任が大きい |
-| deployment / preview | branch preview、rollback、secret管理を比較 | branch環境、backend integrationを比較 | build、runtime、CDN、rollbackを自前設計 |
-| cost / logs | Private Alpha trafficで再見積もり | build / hosting / transferを再見積もり | resource数と常時costを含める |
+| Next.js compatibility | verified adapter。現行16.3.0の第一候補 | AWS公式managed SSR supportは現時点で15まで。16はgate | Node.js / Dockerは全機能候補だが運用責任が大きい |
+| deployment / preview | protected Preview、staged production、instant rollback候補 | PR preview、branch access control、atomic deploy候補 | build、runtime、CDN、rollbackを自前設計 |
+| cost / logs | Pro base + usage / add-on。接続前に再見積もり | build / hosting / transfer / SSRの従量課金 | resource数、idle cost、運用時間を含める |
 | AWS backend integration | CORS、token/session、region latencyを確認 | IAM / Cognito / API連携を確認 | 柔軟だが運用負担が最大 |
 | migration | standard buildとAPI contractのportable性を確認 | hosting固有設定を限定 | AWS couplingとrunbookが増える |
 
-HOST-001候補で、preview environment、custom domain、logs、rollback、CORS/CSRF、Cognito session、future migrationを実測比較してhuman approvalします。AWS-native custom hostingはPrivate Alphaの最小構成としては原則避けます。
+Previewはsynthetic dataとnonprod backendだけに接続し、Private Alpha dataのprimary boundaryはCognito + Lambda application authorizationに置きます。production promotion、custom domain、CORS / callback、cost、rollbackはhosting接続taskでhuman approvalし、AWS-native custom hostingは原則避けます。
 
 ### Infrastructure as Code decision
 
@@ -390,8 +390,8 @@ CLOUD-002で、初心者の運用負荷、data resource保護、preview / plan�
 
 1 task = 1 small PRを維持し、前段のsecurity / data gateが通るまで後段を開始しません。
 
-1. `CLOUD-002` Cloud foundation / account・environment・IaC decision、pricing estimate、rollback
-2. `HOST-001` Next.js Private Alpha hosting decision（比較は早期、deployは後段）
+1. `CLOUD-002` Cloud foundation / account・environment・IaC decision、pricing estimate、rollback（完了・PR #23）
+2. `HOST-001` Next.js Private Alpha hosting decision（今回の提案。deployは別task）
 3. `CLOUD-003` nonprod account security、cost visibility、short-lived access、OIDC、IaC bootstrap
 4. `AUTH-001` Cognito authentication prototype（controlled user、verification、session、reset）
 5. `CLOUD-DATA-001` DynamoDB access pattern / physical design、PITR / restore plan
