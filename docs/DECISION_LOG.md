@@ -22,6 +22,7 @@
 | DEC-007 | 2026-09-05 | AI委任境界と限定的auto-merge条件を定める | 提案中 | 開発運用 / GitHub | - |
 | DEC-008 | 2026-09-06 | 楽曲詳細を制作レビューsurfaceとして視覚化する | 提案中 | 楽曲詳細visual | - |
 | DEC-009 | 2026-09-06 | 楽曲作成・編集を非保存フォームで先行検証する | 提案中 | 楽曲フォーム / Phase 1 | - |
+| DEC-010 | 2026-09-09 | 永続化前にmockとcloud data modelの境界を整理する | 提案中 | データ設計 / Phase 2準備 | - |
 
 ---
 
@@ -141,6 +142,18 @@
 - 表示方針: PCメインの制作workspaceを優先し、スマートフォンでは横overflowを避けて入力と確認ができる縦積み表示に留める。
 - 未決事項: 永続data schema、validation、保存API、権限、競合処理、ファイル管理。
 - 関連: SURFACE-017、[SCREEN_LIST.md](SCREEN_LIST.md)、[USER_FLOW.md](USER_FLOW.md)
+
+## DEC-010: 永続化前にmockとcloud data modelの境界を整理する
+
+- 日付: 2026-09-09
+- ステータス: 提案中
+- 提案者: Codex（DATA-001）
+- 背景: 現在の表示用mockをそのまま永続schemaと見なすと、Version、Proposal、Comment anchor、file metadata、権限の境界が曖昧になる。
+- 決定案: DB/API実装前にPhase 1の実装事実とPhase 2のcloud data model草案を分けて記録し、Song Version、MIDI Proposal、Comment Anchor、Audio/MIDI Assetを独立した関係として扱う。
+- 非破壊原則: MIDI Proposalは元MIDIを直接上書きせず、source assetとproposal assetを別参照にする。VersionとProposal、MemoとDecision、Song statusとReview statusも混同しない。
+- 境界: 実保存、DB/ORM選定、API、Auth、AWS/S3、migrationは後続Phaseと専用taskへ分離する。
+- 未決事項: 採用DB、ID形式、enum確定、storage provider、権限matrix、削除保持期間、audit log方式、API契約。
+- 関連: DATA-001、[DATABASE.md](DATABASE.md)、[API.md](API.md)
 
 ---
 

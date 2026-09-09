@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-018 | SURFACE-017 | Codex | song create/edit form prototype、既存画面の入口、最小テスト、関連文書 | `surface/surface-017-song-form-prototype` | 2026-09-06 | PR マージまたは作業中止 | 非保存の画面内previewのみ。DB、API、Auth、AWS、upload、package、CIは対象外 |
+| LOCK-019 | DATA-001 | Codex | `docs/DATABASE.md`、mock data schema review、関連作業状態文書 | `data/data-001-mock-schema-review` | 2026-09-09 | PR マージまたは作業中止 | データ設計文書のみ。runtime、DB、API、Auth、AWS、storage実装は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-018 | SURFACE-017 | Codex | song create/edit form prototype、既存画面の入口、最小テスト、関連文書 | 2026-09-06 | 完了・PR #18。mainへのマージを確認して解除 |
 | LOCK-017 | VISUAL-003 | Codex | 楽曲詳細のWaveform / MIDI / Comment / Call Bar visual、`src/components/song-production-surfaces.tsx`、関連作業状態文書 | 2026-09-06 | 完了・PR #17。mainへのマージを確認して解除 |
 | LOCK-016 | VISUAL-002 | Codex | `src/app/**`、`src/components/**`、`docs/PROJECT_CONTEXT.md`、作業状態文書 | 2026-09-06 | 完了・PR #16。mainへのマージを確認して解除 |
 | LOCK-015 | VISUAL-001 | Codex | `src/app/**`、`src/components/**`、`src/lib/mock-data.ts`のvisual color、`docs/PROJECT_CONTEXT.md`、作業状態文書 | 2026-09-05 | 完了・PR #15。`Quality checks`成功とmainへのマージを確認して解除 |
