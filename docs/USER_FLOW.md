@@ -70,6 +70,32 @@ DAW export
 
 このflowはDAWを置き換えません。最終判断の反映と正式な音源・MIDIの生成はDAW側で行い、StreamBandでは共有された新しいVersionを次のreview単位として扱う想定です。
 
+### Phase 2 server boundary補足（DATA-002候補）
+
+FLOW-001のユーザー導線は変えず、Cloud化する場合は各操作の間にserver側の検証境界を置きます。具体的なtransportは、Next.js Route Handlers、Server Actions、別Backend/APIを含めて未決定です。
+
+```text
+DAWでPreview / MIDIを書き出す
+↓
+private upload instructionを要求する
+↓
+serverが認証・Band membership・metadataを検証する
+↓
+upload済みassetをserverが検証する
+↓
+Versionを明示的に作成 / finalizeする
+↓
+Preview → Comment → Proposal → Decisionのreviewを行う
+↓
+作曲者がDAWへ反映し、次のVersionを別操作で共有する
+```
+
+- Commentは対象Versionを明示し、bar / beat / time / trackのanchor整合性をserverで検証する。
+- MIDI ProposalはOriginal MIDIとは別entity / assetとして作成し、元データを上書きしない。
+- DecisionはProposal reviewの記録であり、Versionを自動作成しない。
+- authorization、runtime validation、競合検出、idempotencyはUI表示ではなくserver boundaryの責務とする。
+- これはDATA-002時点の設計候補であり、upload、API、DB、Auth、Storageは未実装のままとする。
+
 ## 1. 初回訪問
 
 目的: アプリが自分たちの制作に役立つかを理解する。

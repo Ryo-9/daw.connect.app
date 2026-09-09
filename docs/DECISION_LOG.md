@@ -168,6 +168,19 @@
 - 境界: 音声再生、MIDI解析・編集・生成、Proposal / Decision / Versionの保存、DB、API、Auth、AWS、DAW連携は未実装のまま維持する。
 - 関連: FLOW-001、[USER_FLOW.md](USER_FLOW.md)、[SCREEN_LIST.md](SCREEN_LIST.md)、[DATABASE.md](DATABASE.md)
 
+## DEC-012: Core API / persistence boundaryを実装前にcontract化する
+
+- 日付: 2026-09-09
+- ステータス: 提案中
+- 提案者: Codex（DATA-002）
+- 決定案: Song、Version、Comment、MIDI Proposal、Decision、Assetのcore writeについて、UI input、server checks、mutation、response、競合riskを実装前に整理する。
+- 非破壊原則: Original MIDIはread-only sourceとして扱い、Proposalを別entity / assetとして作成する。Proposal DecisionとVersion作成を分離し、Decision後は作曲者がDAWへ反映してから新しいVersionを明示的に共有する。
+- server responsibility: authorization、runtime validation、resource ownership、allowed state transitionはserver側で確認し、UI上の表示だけを権限判定に使わない。
+- 競合方針候補: revision等でstale writeを検出し、silent overwriteしない。
+- file境界候補: 未公開楽曲のAssetをpublic object / permanent public URLで配布せず、認可後の短時間accessを使う。
+- 境界: DATA-002ではcontract候補を文書化するだけで、transport、framework、DB、Auth、Storage providerを採用決定せず、実装もしない。
+- 関連: DATA-002、[API.md](API.md)、[DATABASE.md](DATABASE.md)、[USER_FLOW.md](USER_FLOW.md)
+
 ---
 
 ## 新規決定テンプレート
