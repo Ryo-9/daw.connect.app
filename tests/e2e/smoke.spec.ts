@@ -68,6 +68,33 @@ test("320pxで楽曲詳細セクションナビが横スクロールなしで収
   expect(fitsWithoutHorizontalScroll).toBe(true);
 });
 
+test("楽曲詳細のreview flowから5つの対象sectionへ移動できる", async ({
+  page,
+}) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto("/songs/afterglow");
+
+  const flowNavigation = page.getByRole("navigation", {
+    name: "コラボレーションレビューフロー",
+  });
+  await expect(flowNavigation.getByRole("link")).toHaveCount(5);
+
+  for (const step of [
+    { name: "01 PREVIEWへ移動", target: "preview" },
+    { name: "02 COMMENTへ移動", target: "comments" },
+    { name: "03 PROPOSALへ移動", target: "proposal" },
+    { name: "04 DECISIONへ移動", target: "decision" },
+    { name: "05 VERSIONへ移動", target: "version" },
+  ]) {
+    await flowNavigation.getByRole("link", { name: step.name }).click();
+    await expect(page).toHaveURL(new RegExp(`#${step.target}$`));
+    await expect(page.locator(`#${step.target}`)).toBeVisible();
+  }
+
+  expect(pageErrors).toEqual([]);
+});
+
 test("検索・TODO・コメントは操作でき、リロードで一時状態が消える", async ({
   page,
 }) => {

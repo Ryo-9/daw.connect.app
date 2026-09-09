@@ -14,6 +14,10 @@
 | バンド詳細 | `/bands/lumen-echo` | 実装済み |
 | 楽曲一覧 | `/bands/lumen-echo/songs` | 実装済み |
 | 楽曲詳細 | `/songs/afterglow` | 実装済み |
+| Preview review | `/songs/afterglow#preview` | Waveform visual mock。音声再生・解析なし |
+| MIDI Proposal review | `/songs/afterglow#proposal` | Originalと別案を分離したvisual mock |
+| Review Decision | `/songs/afterglow#decision` | Accept / Partial / Hold / Rejectの無効button表示のみ |
+| Version handoff | `/songs/afterglow#version` | DAW反映後に次Versionを共有する説明。自動作成なし |
 | 楽曲作成 | `/bands/lumen-echo/songs/new` | Phase 1非保存フォーム。画面内previewのみ |
 | 楽曲編集 | `/songs/afterglow/edit` | Phase 1非保存フォーム。元mock dataは変更しない |
 | 楽曲メモ | `/songs/afterglow#memo` | 楽曲詳細内に表示 |
@@ -108,6 +112,9 @@
 ### 14. 楽曲詳細
 
 - 楽曲概要、メモ、最新バージョン、コメント、TODO をまとめる
+- Preview → Comment → MIDI Proposal → Decision → Versionを一つの制作review flowとして示し、各stepから既存sectionへ移動できる
+- CommentはVersion / bar / beat / time / trackの文脈を表示し、Original MIDIとProposalは別データとして明示する
+- DecisionはPhase 1の無効なmock操作で、DAW自動反映やVersion自動作成を行わない
 - モバイルでは情報をタブまたはセクションで整理する
 - 初期優先度: 高
 

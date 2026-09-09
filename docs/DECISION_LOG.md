@@ -23,6 +23,7 @@
 | DEC-008 | 2026-09-06 | 楽曲詳細を制作レビューsurfaceとして視覚化する | 提案中 | 楽曲詳細visual | - |
 | DEC-009 | 2026-09-06 | 楽曲作成・編集を非保存フォームで先行検証する | 提案中 | 楽曲フォーム / Phase 1 | - |
 | DEC-010 | 2026-09-09 | 永続化前にmockとcloud data modelの境界を整理する | 提案中 | データ設計 / Phase 2準備 | - |
+| DEC-011 | 2026-09-09 | Phase 1の中心review flowを定義する | 提案中 | Song Detail / 制作review | - |
 
 ---
 
@@ -154,6 +155,18 @@
 - 境界: 実保存、DB/ORM選定、API、Auth、AWS/S3、migrationは後続Phaseと専用taskへ分離する。
 - 未決事項: 採用DB、ID形式、enum確定、storage provider、権限matrix、削除保持期間、audit log方式、API契約。
 - 関連: DATA-001、[DATABASE.md](DATABASE.md)、[API.md](API.md)
+
+## DEC-011: Phase 1の中心review flowを定義する
+
+- 日付: 2026-09-09
+- ステータス: 提案中
+- 提案者: Codex（FLOW-001）
+- 決定案: Song Detailの中心review flowをPreview → Comment → MIDI Proposal → Decision → Versionの順とし、同一画面内のsection navigationで示す。
+- Comment境界: CommentはVersionを基準に、bar / beat / time / trackの位置文脈を持つ候補として表示する。Phase 1ではvisual mockであり保存しない。
+- 非破壊原則: Original MIDIはProposalによって上書きしない。ProposalのAcceptはDAWへの自動反映ではなく、作曲者がDAWで判断を反映する。
+- Version境界: 作曲者がDAW側で反映し、新しいPreview / MIDIを書き出して共有した時点を次のStreamBand Versionとする。DecisionだけでVersionを自動作成しない。
+- 境界: 音声再生、MIDI解析・編集・生成、Proposal / Decision / Versionの保存、DB、API、Auth、AWS、DAW連携は未実装のまま維持する。
+- 関連: FLOW-001、[USER_FLOW.md](USER_FLOW.md)、[SCREEN_LIST.md](SCREEN_LIST.md)、[DATABASE.md](DATABASE.md)
 
 ---
 

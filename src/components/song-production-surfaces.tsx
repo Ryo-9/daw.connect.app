@@ -19,7 +19,8 @@ const pianoRollRows = [
 export function WaveformPreviewSurface({ song }: { song: Song }) {
   return (
     <section
-      className="instrument-panel mt-5 overflow-hidden rounded-xl border border-line bg-panel"
+      id="preview"
+      className="instrument-panel mt-5 scroll-mt-32 overflow-hidden rounded-xl border border-line bg-panel"
       aria-labelledby="waveform-preview-heading"
     >
       <div className="flex flex-col gap-3 border-b border-line px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -114,7 +115,7 @@ export function WaveformPreviewSurface({ song }: { song: Song }) {
 
 export function MidiProposalSurface() {
   return (
-    <section className="instrument-panel rounded-xl border border-line bg-panel p-5 sm:p-7" aria-labelledby="midi-proposal-heading">
+    <section id="proposal" className="instrument-panel scroll-mt-32 rounded-xl border border-line bg-panel p-5 sm:p-7" aria-labelledby="midi-proposal-heading">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-subtle">
@@ -128,7 +129,7 @@ export function MidiProposalSurface() {
       </div>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
-        <div className="control-well rounded-lg border border-line bg-panel-muted p-3">
+        <div className="control-well rounded-lg border border-line bg-panel-muted p-3" aria-label="Original MIDI、読み取り専用">
           <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-subtle">Original</p>
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-xs font-bold">keys_v07.mid</span>
@@ -136,7 +137,7 @@ export function MidiProposalSurface() {
           </div>
           <p className="mt-2 text-[10px] text-subtle">元データ・変更なし</p>
         </div>
-        <div className="control-well rounded-lg border border-accent/25 bg-accent-strong/8 p-3">
+        <div className="control-well rounded-lg border border-accent/25 bg-accent-strong/8 p-3" aria-label="Originalとは別データのMIDI Proposal">
           <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-accent">Proposal A</p>
           <div className="mt-2 flex items-center justify-between gap-2">
             <span className="text-xs font-bold">サビ上声案</span>
@@ -145,6 +146,10 @@ export function MidiProposalSurface() {
           <p className="mt-2 text-[10px] text-subtle">表示例のみ・別案として表現</p>
         </div>
       </div>
+
+      <p className="mt-3 rounded-lg border border-line bg-panel-muted px-3 py-2 text-center font-mono text-[9px] font-bold tracking-[0.12em] text-muted">
+        ORIGINAL MIDI <span className="px-2 text-warning">≠</span> PROPOSAL DATA
+      </p>
 
       <div className="control-well mt-4 overflow-hidden rounded-lg border border-line-strong bg-panel-muted">
         <div className="flex items-center justify-between border-b border-line px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-subtle">
