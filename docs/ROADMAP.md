@@ -32,6 +32,8 @@
 
 目的: 小規模チームが継続して試せる最小の機能を接続する。
 
+2026年末のPrivate Alphaでは、開発者本人と友人の2人・1 private Bandに範囲を限定し、Studio Oneからmanual exportしたPreview / MIDIを安全に共有して、Version Comment、MIDI Proposal、Decision、DAW反映後のNew Versionまでを成立させます。
+
 - DB、認証、権限方式の比較と採用判断
 - バンド、メンバー、楽曲、メモ、コメント、TODO の永続化
 - 最小限の招待とアクセス制御
@@ -40,6 +42,25 @@
 - バリデーション、エラー処理、テスト
 
 完了の目安: 許可されたテストユーザーが、自分のバンド内で主要機能を安全に利用できる。
+
+### 2026年末Private Alpha critical path候補
+
+```text
+Cloud foundation / IaC decision
+→ Authentication
+→ Band Membership / authorization
+→ Song / Version metadata persistence
+→ Private Preview upload / access
+→ Version-scoped Comment
+→ Private Source MIDI
+→ Separate MIDI Proposal
+→ Decision
+→ Private Alpha web deployment
+```
+
+Web hosting、IaC、AWS account / environment分離は実装前のblocking decisionです。CloudFront、WebSocket、server transcoding、formal invitation emailは初期loopに必須とせず、実測で必要になった時に追加します。具体的な構成、cost guardrail、security、backup、failure handlingは[AWS.md](AWS.md)を参照します。
+
+Private Alphaの完成条件には、別Band / removed userの拒否、未公開Assetの非公開、backup / restore確認、basic error / cost monitoringを含めます。Studio One自動連携、Companion App、VST3、WebRTC、課金、public launchは2026年末の完了条件に含めません。
 
 ## Phase 3：β版
 

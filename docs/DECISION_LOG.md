@@ -24,6 +24,8 @@
 | DEC-009 | 2026-09-06 | 楽曲作成・編集を非保存フォームで先行検証する | 提案中 | 楽曲フォーム / Phase 1 | - |
 | DEC-010 | 2026-09-09 | 永続化前にmockとcloud data modelの境界を整理する | 提案中 | データ設計 / Phase 2準備 | - |
 | DEC-011 | 2026-09-09 | Phase 1の中心review flowを定義する | 提案中 | Song Detail / 制作review | - |
+| DEC-012 | 2026-09-09 | Core API / persistence boundaryを実装前にcontract化する | 提案中 | API / persistence設計 | - |
+| DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 提案中 | Cloud architecture / Phase 2 | - |
 
 ---
 
@@ -180,6 +182,22 @@
 - file境界候補: 未公開楽曲のAssetをpublic object / permanent public URLで配布せず、認可後の短時間accessを使う。
 - 境界: DATA-002ではcontract候補を文書化するだけで、transport、framework、DB、Auth、Storage providerを採用決定せず、実装もしない。
 - 関連: DATA-002、[API.md](API.md)、[DATABASE.md](DATABASE.md)、[USER_FLOW.md](USER_FLOW.md)
+
+## DEC-013: 2026年末Private AlphaのCloud targetとhuman gatesを定める
+
+- 日付: 2026-09-09
+- ステータス: 提案中
+- 提案者: Codex（CLOUD-001）
+- Private Alpha goal: 2 user / 1 private Bandで、Studio Oneからmanual exportしたPreview / MIDIを共有し、Version Comment、separate MIDI Proposal、Decision、DAW反映後のNew Versionまでを安全に行う。
+- 推奨target: Cognito User Pool、API Gateway HTTP API + Lambda、DynamoDB On-Demand、private S3、CloudWatch、AWS Budgetsをlow fixed costのAWS serverless候補とする。`ap-northeast-1`を単一Regionの第一候補とする。
+- Auth境界: Cognitoはidentity、BandMembershipとoperation capabilityはapplication data / server責務とし、Cognito groupだけへBand authorizationを置かない。
+- Non-destructive boundary: SOURCE_MIDIとPROPOSAL_MIDIを別Assetとして扱い、DecisionはOriginalやDAWを自動変更せず、Versionを自動作成しない。
+- Defer: CloudFront、WebSocket、server transcoding、formal invitation、realtime、Companion / Bridge、paymentは年末acceptance criteriaから外す。
+- Security / operations候補: public Asset禁止、short-lived access、nonprod / Private Alpha分離、finite logs、backup / restore drill、stale write防止、cost alertsをPrivate Alpha前gateとする。
+- Cost rule候補: Developmentはできる限り数千円/月、Private Alphaは概ね¥3,000〜¥10,000/月を目標とし、月¥10,000超を予測する変更はhuman approvalを必須とする。AWS Budgetsはhard capではない。
+- Human approval待ち: AWS service採用、DynamoDB physical design、permission matrix、MFA、account分離、web hosting、IaC、file limit / retention、price estimate、incident / rollback。
+- 実装状態: docs-only。AWS account / resource、credential、Auth、DB、API、S3、deploymentは作成していない。
+- 関連: CLOUD-001、[AWS.md](AWS.md)、[ARCHITECTURE.md](ARCHITECTURE.md)、[ROADMAP.md](ROADMAP.md)
 
 ---
 
