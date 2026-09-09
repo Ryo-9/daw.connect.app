@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-001 | Phase 2 Cloud MVP Architecture Plan | Codex | レビュー待ち | `cloud/cloud-001-phase2-mvp-plan` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、作業状態文書 | 2026-09-09 | #22 | 2026年末Private Alpha向けのdocs-only計画。AWS resource、Auth、DB、API、storage実装は対象外 |
+| CLOUD-002 | Cloud Foundation / Environment / IaC Decision | Codex | 作業中 | `cloud/cloud-002-foundation-decision` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-10 | 未作成 | account / environment、IaC、credential、cost、rollbackのdocs-only判断。AWS接続・resource作成なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-001 | 完了 | Codex | `cloud/cloud-001-phase2-mvp-plan` / #22 | 2026-09-10 | 2026年末Private AlphaのCloud MVP architectureとhuman gateをmainへマージ済み。AWS resource作成なし |
 | DATA-002 | 完了 | Codex | `data/data-002-core-api-boundary` / #21 | 2026-09-09 | Core collaboration API / persistence boundary草案をmainへマージ済み。runtime実装なし |
 | FLOW-001 | 完了 | Codex | `flow/flow-001-core-collaboration-review` / #20 | 2026-09-09 | Preview → Comment → Proposal → Decision → Versionの非保存review flowをmainへマージ済み |
 | DATA-001 | 完了 | Codex | `data/data-001-mock-schema-review` / #19 | 2026-09-09 | Phase 1 mock data棚卸しとPhase 2 cloud data model草案をmainへマージ済み。実装変更なし |

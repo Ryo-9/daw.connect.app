@@ -73,9 +73,9 @@
 - Stripe、課金、請求
 - 本番ホスティング、監視、バックアップ
 
-## Phase 2 target architecture（CLOUD-001提案）
+## Phase 2 target architecture（CLOUD-001 planning baseline）
 
-以下は2026年末Private Alphaの推奨ターゲットであり、現在の実装事実ではありません。resource作成、service採用、credential設定、deploymentは未実施で、人の承認と専用taskを必要とします。
+以下のservice方向はCLOUD-001 / PR #22 review後の人間承認済みplanning baselineです。現在の実装事実ではなく、resource作成、credential設定、application integration、deploymentは未実施で、それぞれ人の承認と専用taskを必要とします。
 
 ```text
 Next.js Web Hosting (TBD / Private Alpha blocker)
@@ -133,9 +133,18 @@ Vercel、AWS Amplify Hosting、AWS-native custom Next.js hosting等から、次�
 
 Private Alphaの最小構成としてAWS-native custom hostingを前提にしません。採用先とdeployment設定はCLOUD-001では未決定です。
 
-### Infrastructure as Code
+### Foundation / Infrastructure as Code boundary
 
-IaCはresource作成前に必須としますが、AWS CDK、Terraform、other supported approachの採用は未決定です。CLOUD-002前にTypeScript親和性、beginner operational load、plan / review、destroy / recreate、data resource保護、state management、CIのshort-lived credential、rollbackを比較し、人が承認します。
+CLOUD-002ではAWS CDK + TypeScriptを第一候補として提案し、Terraform / OpenTofu / CloudFormation directと比較します。CDKは現行TypeScript skillを再利用し、CloudFormation stackをstate / deployment境界にできる点を優先しますが、tool採用、`infra/` package、CDK bootstrapはhuman approval待ちです。
+
+- environment: `local`、AWS `nonprod`、`private-alpha`だけを初期境界とする
+- account: 本物の未公開曲を入れる前にnonprodとPrivate Alphaを別AWS accountへ分ける
+- credential: local humanはIAM Identity Center等のshort-lived session、GitHub ActionsはOIDC AssumeRoleを第一候補とし、long-lived access keyを使わない
+- deployment: nonprod / Private Alphaのrole、stack、approvalを分離し、Private Alphaのunattended destroyを禁止する
+- rollback: application、infrastructure、data recoveryを分け、IaC rollbackをuser data restoreと見なさない
+- source layout: repository rootの`infra/`を候補とし、app packageや`src/**`と分離する。CLOUD-002では作成しない
+
+account、IAM / OIDC、bootstrap resource、stack、workflowは未作成です。詳細は[AWS.md](AWS.md)のCLOUD-002章を参照します。
 
 ## 自動テスト
 
@@ -145,7 +154,7 @@ IaCはresource作成前に必須としますが、AWS CDK、Terraform、other su
 
 ## 将来的な DB 候補
 
-CLOUD-001ではPrivate Alphaのlow fixed costとserverless運用を優先し、DynamoDB On-Demandを第一候補、managed PostgreSQLをfallback比較対象とします。どちらも未採用・未実装で、物理schemaはCLOUD-DATA-001のreview後に決めます。
+CLOUD-001 reviewではPrivate Alphaのlow fixed costとserverless運用を優先し、DynamoDB On-Demandをprimary target、managed PostgreSQLをfallback比較対象とする方向が人間承認されました。resourceは未作成で、物理schemaはCLOUD-DATA-001のreview後に決めます。
 
 比較項目:
 
@@ -159,7 +168,7 @@ CLOUD-001ではPrivate Alphaのlow fixed costとserverless運用を優先し、D
 
 ## 将来的な認証候補
 
-CLOUD-001ではAmazon Cognito User PoolをPrivate Alphaの第一候補とします。Auth.js、Clerk、Supabase Authなどは、Cognitoの要件適合性やhosting方式に問題が判明した場合の比較候補です。いずれも未採用・未実装で、AUTH-001の検証とhuman reviewを経て確定します。
+CLOUD-001 reviewではAmazon Cognito User PoolをPrivate Alphaのprimary targetとする方向が人間承認されました。Auth.js、Clerk、Supabase Authなどは、Cognitoの要件適合性やhosting方式に問題が判明した場合の比較候補です。resourceとintegrationは未実装で、AUTH-001の検証とhuman reviewを経て確定します。
 
 比較項目:
 
@@ -171,17 +180,20 @@ CLOUD-001ではAmazon Cognito User PoolをPrivate Alphaの第一候補としま�
 
 認証だけでなく、「誰がどのバンド・楽曲へアクセスできるか」という認可を別に設計します。
 
-## 将来的な AWS 利用候補
+## Phase 2の AWS target
 
-- S3: 非公開の音源 / MIDI ファイル保存候補
-- CloudFront: 安全な配信とキャッシュの候補
+- Cognito: controlled userのauthentication target。Band authorizationはapplication responsibility
+- API Gateway HTTP API + Lambda: core application API target
+- DynamoDB On-Demand: metadata target。physical designは未決定
+- S3: 非公開の音源 / MIDI file storage target
+- CloudWatch: 有限保持のログ、メトリクス、アラームtarget
+- AWS Budgets: hard capではない費用warning target
+- CloudFront: Private AlphaではDEFER
+- API Gateway WebSocket: Private AlphaではDEFER
 - Route 53: DNS 管理候補
-- CloudWatch: ログ、メトリクス、アラーム候補
 - IAM: 人とサービスの最小権限管理
-- Lambda / API Gateway: 必要な場合だけ使うサーバーレス処理候補
-- AWS Budgets: 予算超過の通知
 
-具体的な利用条件は [AWS.md](AWS.md) に記載します。AWS を使わない構成も比較対象に残します。
+これらはplanning targetであり、resourceは未作成です。具体的な利用条件は [AWS.md](AWS.md) に記載します。
 
 ## 想定する責務の分け方
 
@@ -198,13 +210,13 @@ CLOUD-001ではAmazon Cognito User PoolをPrivate Alphaの第一候補としま�
 
 - Node.js のローカル標準運用バージョンと更新方針（CI は `24`）
 - Level 2 / 3のテスト構成、カバレッジ運用
-- DB 製品、ORM、スキーマ管理方法
-- 認証サービス、セッション方式、招待フロー
+- DynamoDBのphysical table / key / index、transaction、migration / export方式
+- Cognitoのapp integration、セッション方式、招待フロー
 - ロールと操作権限の詳細
-- API を Route Handler / Server Action / 別バックエンドのどれで構成するか
-- ファイル保存先、上限、許可形式、プレビュー方式
-- ホスティング先、AWS の利用範囲、リージョン
-- ログ、監視、分析、バックアップのサービス
+- API Gateway + Lambda contractとNext.js側BFF / direct access境界
+- S3 bucket / object key、上限、許可形式、プレビュー方式
+- ホスティング先、CDK採用、account bootstrap、deployment方式
+- ログ保持期間、alarm threshold、backup / restore detail
 - 本番公開、課金、利用規約、プライバシー対応
 
 ## 変更管理

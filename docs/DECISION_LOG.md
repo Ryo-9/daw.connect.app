@@ -25,7 +25,8 @@
 | DEC-010 | 2026-09-09 | 永続化前にmockとcloud data modelの境界を整理する | 提案中 | データ設計 / Phase 2準備 | - |
 | DEC-011 | 2026-09-09 | Phase 1の中心review flowを定義する | 提案中 | Song Detail / 制作review | - |
 | DEC-012 | 2026-09-09 | Core API / persistence boundaryを実装前にcontract化する | 提案中 | API / persistence設計 | - |
-| DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 提案中 | Cloud architecture / Phase 2 | - |
+| DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 承認済み | Cloud architecture / Phase 2 | - |
+| DEC-014 | 2026-09-10 | Phase 2 Cloud foundation / IaC policyを定める | 提案中 | AWS account / IaC / deployment safety | - |
 
 ---
 
@@ -186,18 +187,37 @@
 ## DEC-013: 2026年末Private AlphaのCloud targetとhuman gatesを定める
 
 - 日付: 2026-09-09
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（CLOUD-001）
+- 承認者: 人間側（CLOUD-002依頼でreview結果を明示）
 - Private Alpha goal: 2 user / 1 private Bandで、Studio Oneからmanual exportしたPreview / MIDIを共有し、Version Comment、separate MIDI Proposal、Decision、DAW反映後のNew Versionまでを安全に行う。
-- 推奨target: Cognito User Pool、API Gateway HTTP API + Lambda、DynamoDB On-Demand、private S3、CloudWatch、AWS Budgetsをlow fixed costのAWS serverless候補とする。`ap-northeast-1`を単一Regionの第一候補とする。
+- 承認済みplanning baseline: Cognito User Pool、API Gateway HTTP API + Lambda、DynamoDB On-Demand、private S3、CloudWatch、AWS Budgetsをlow fixed costのAWS serverless targetとする。`ap-northeast-1`を単一Regionの第一候補とし、resource作成直前にservice availability、quota、official pricingを再確認する。
 - Auth境界: Cognitoはidentity、BandMembershipとoperation capabilityはapplication data / server責務とし、Cognito groupだけへBand authorizationを置かない。
 - Non-destructive boundary: SOURCE_MIDIとPROPOSAL_MIDIを別Assetとして扱い、DecisionはOriginalやDAWを自動変更せず、Versionを自動作成しない。
 - Defer: CloudFront、WebSocket、server transcoding、formal invitation、realtime、Companion / Bridge、paymentは年末acceptance criteriaから外す。
 - Security / operations候補: public Asset禁止、short-lived access、nonprod / Private Alpha分離、finite logs、backup / restore drill、stale write防止、cost alertsをPrivate Alpha前gateとする。
-- Cost rule候補: Developmentはできる限り数千円/月、Private Alphaは概ね¥3,000〜¥10,000/月を目標とし、月¥10,000超を予測する変更はhuman approvalを必須とする。AWS Budgetsはhard capではない。
-- Human approval待ち: AWS service採用、DynamoDB physical design、permission matrix、MFA、account分離、web hosting、IaC、file limit / retention、price estimate、incident / rollback。
+- Cost rule: Developmentはできる限り数千円/月、Private Alphaは通常¥500〜¥1,500/月を目標とする。月¥5,000超はusage / resource調査、月¥10,000超を予測する変更はhuman approvalを必須とする。AWS Budgetsはhard capではない。
+- Human approval待ち: individual resource作成、DynamoDB physical design、permission matrix、MFA、AWS account作成 / bootstrap、web hosting、IaC、file limit / retention、price estimate、incident / rollback。
 - 実装状態: docs-only。AWS account / resource、credential、Auth、DB、API、S3、deploymentは作成していない。
 - 関連: CLOUD-001、[AWS.md](AWS.md)、[ARCHITECTURE.md](ARCHITECTURE.md)、[ROADMAP.md](ROADMAP.md)
+
+## DEC-014: Phase 2 Cloud foundation / IaC policyを定める
+
+- 日付: 2026-09-10
+- ステータス: 提案中
+- 提案者: Codex（CLOUD-002）
+- 承認済み前提: DEC-013のAWS serverless target、Tokyo Region第一候補、CloudFront / WebSocket / transcodingのDEFER、real unreleased data投入前のnonprod / Private Alpha account分離、cost guardrailを維持する。
+- IaC推奨案: AWS CDK + TypeScriptを第一候補とする。現行のTypeScript skillを再利用し、AWS-onlyのsmall architectureをCloudFormation stackで管理して、別remote state backendの運用を増やさないため。採用と最初のbootstrapはhuman approval待ち。
+- Repository候補: rootの`infra/`をapp `src/**`から分け、独立packageとして小さく開始する。directory / packageはCLOUD-002では作成しない。
+- Account / environment: `local`、AWS `nonprod`、`private-alpha`を初期境界とする。nonprodとPrivate Alphaは別accountを推奨し、Private Alpha account未準備なら本物のdata投入をblockする。
+- Credential候補: local humanはIAM Identity Center等のshort-lived session、GitHub Actionsはrepository / environmentを限定したOIDC AssumeRoleとする。long-lived access key、共有credential、root daily useを禁止する。
+- Change safety候補: naming / tagでproject・environment・purposeを識別し、Private Alphaのdestroy、replacement、protection disable、data migrationを通常deployから分離してhuman approvalを要求する。
+- Rollback境界: application rollback、CloudFormation / infrastructure rollback、DynamoDB / S3等のdata recoveryを別手順にする。IaC rollbackはuser data restoreではない。
+- Drift方針候補: managed resourceはreviewed IaCをsource of truthとし、Console emergency changeは記録後に専用task / PRでreconcileする。
+- 次のresource境界: `HOST-001`でhostingを決定後、最初のAWS接続 / resource作成を`CLOUD-003`候補へ分離する。CLOUD-002ではAWS connection、account / IAM / OIDC / bootstrap / stack作成を行わない。
+- Human approval待ち: CDK採用、`infra/`作成、AWS account / Organizations model、root security、OIDC trust、bootstrap policy、first deploy、destructive gate、exact budget threshold / recipient。
+- 見直し条件: multi-cloud要件、既存Terraform estate、CDKで未対応のresource、team運用負荷、state / rollback事故、hosting decisionとの不整合が判明した場合。
+- 関連: CLOUD-002、CLOUD-003候補、HOST-001、[AWS.md](AWS.md)、[ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
