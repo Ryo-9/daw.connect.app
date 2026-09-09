@@ -2,7 +2,7 @@
 
 ## 重要
 
-この文書は将来 AWS を使う場合の候補と注意点を整理するメモです。CLOUD-001ではAWSのserverless構成を2026年末Private Alphaの推奨ターゲットとして具体化しますが、人の承認と専用実装taskを経るまでは採用済み・実装済みではありません。今回はアカウント作成、IAM設定、resource構築、S3 upload、本番deploymentを行いません。
+この文書は将来 AWS を使う場合の候補と注意点を整理するメモです。CLOUD-001 / PR #22のreview後、Cognito、API Gateway HTTP API + Lambda、DynamoDB On-Demand、private S3、CloudWatch、AWS BudgetsをPhase 2 Private Alphaのprimary targetとする方向は人間承認済みです。ただしservice resource、account、credential、application integration、deploymentは未作成・未実装で、それぞれ専用taskと承認を必要とします。
 
 ## CLOUD-001: Phase 2 Cloud MVP Plan
 
@@ -10,7 +10,7 @@
 
 この章の状態語は次の意味です。
 
-- `MVP TARGET`: CLOUD-001がPrivate Alphaに推奨する構成。resource作成前に人が承認する
+- `MVP TARGET`: CLOUD-001 reviewで人間承認されたPrivate Alphaのplanning baseline。resource作成は別taskで再承認する
 - `DEFER`: 2026年末の共同制作loopに不要で、必要性が確認されるまで作らない
 - `TBD / BLOCKER`: 実装開始またはPrivate Alpha開始前に専用taskで決める
 
@@ -106,7 +106,7 @@ AWS Budgets -------------> delayed cost warning, not a hard cap
 | Realtime API | API Gateway WebSocket / `DEFER` | HTTP APIだけでreview loopが成立する |
 | Email delivery | Cognito既定deliveryから小さく開始する候補 / `TBD` | quota、sender、SES移行要否をAUTH-001で確認 |
 | Web hosting | Vercel / Amplify Hosting / AWS-native等を比較 / `TBD / BLOCKER` | Private Alpha前に専用decisionが必要 |
-| IaC | AWS CDK / Terraform等を比較 / `TBD / BLOCKER` | CLOUD-002前にhuman decisionが必要 |
+| IaC | AWS CDK + TypeScriptを第一候補 / `TBD / BLOCKER` | CLOUD-002 reviewでhuman approvalが必要。詳細は後段 |
 
 ### Authenticationとapplication authorization
 
@@ -238,7 +238,7 @@ Private Alpha初期は、userがStudio Oneから互換性を確認したlightwei
 
 #### Region
 
-単一Regionの第一候補はAsia Pacific (Tokyo) `ap-northeast-1`です。2 userが日本中心であるためlatencyと運用の単純さを優先し、multi-Region replicationはDEFERします。CLOUD-002でCognito、API Gateway HTTP API、Lambda、DynamoDB、S3、CloudWatchの利用可否、quota、実価格、data residency要件を再確認してから確定します。
+単一Regionの第一候補はAsia Pacific (Tokyo) `ap-northeast-1`です。2 userが日本中心であるためlatencyと運用の単純さを優先し、multi-Region replicationはDEFERします。各resource作成taskでCognito、API Gateway HTTP API、Lambda、DynamoDB、S3、CloudWatchの利用可否、quota、実価格、data residency要件を再確認します。
 
 #### Environment stages
 
@@ -303,7 +303,8 @@ enterprise audit systemは作りませんが、`who / what / when / resource / r
 これはAWSの料金保証ではなく、StreamBandのplanning ruleです。
 
 - Development target: できる限り数千円/月以内
-- Private Alpha target: おおむね¥3,000〜¥10,000/月以内
+- Private Alpha normal target: おおむね¥500〜¥1,500/月
+- 月¥5,000を超えた場合はusage、resource、data transfer、異常requestを確認する
 - projected monthly costが¥10,000を超えるarchitecture / resource変更はhuman approval必須
 - implementation前と大きな変更前にofficial AWS pricing pageとAWS Pricing Calculatorで再見積もりする
 - environment / service / owner tag候補でcostを追跡する
@@ -383,7 +384,7 @@ IaCはresource作成前に必須ですが、今回は導入しません。
 | state management | CloudFormation/CDKのstack state | remote state / lock / secret保護 | rollbackと共同作業を確認 |
 | CI | OIDC、approval、environment gateが必要 | 同左 | long-lived keyを使わない |
 
-CLOUD-002の前に、初心者の運用負荷、data resource保護、preview / plan、drift、rollback、CI credentialを比較してhuman decisionを記録します。`cdk deploy`や`terraform apply`はCLOUD-001で実行しません。
+CLOUD-002で、初心者の運用負荷、data resource保護、preview / plan、drift、rollback、CI credentialを比較し、AWS CDK + TypeScriptを第一候補として提案します。詳細と未承認事項は後段のCLOUD-002章へ分離します。`cdk bootstrap`、`cdk deploy`、`terraform` / `tofu` commandは実行しません。
 
 ### Critical pathとimplementation slices
 
@@ -391,16 +392,17 @@ CLOUD-002の前に、初心者の運用負荷、data resource保護、preview / 
 
 1. `CLOUD-002` Cloud foundation / account・environment・IaC decision、pricing estimate、rollback
 2. `HOST-001` Next.js Private Alpha hosting decision（比較は早期、deployは後段）
-3. `AUTH-001` Cognito authentication prototype（controlled user、verification、session、reset）
-4. `CLOUD-DATA-001` DynamoDB access pattern / physical design、PITR / restore plan
-5. `AUTHZ-001` Band Membershipとcapability matrix
-6. `API-001` Band / Song core read-write boundaryの最小実装
-7. `STORAGE-001` private Preview / MIDI upload・complete・access
-8. `VERSION-001` persisted Version workflow
-9. `COMMENT-001` Version-scoped Comment + Anchor
-10. `PROPOSAL-001` separate MIDI Proposal + Decision
-11. `OBS-001` alarms、budget、backup / restore drill、operational runbook
-12. `DEPLOY-001` isolated Private Alpha deploymentとacceptance test
+3. `CLOUD-003` nonprod account security、cost visibility、short-lived access、OIDC、IaC bootstrap
+4. `AUTH-001` Cognito authentication prototype（controlled user、verification、session、reset）
+5. `CLOUD-DATA-001` DynamoDB access pattern / physical design、PITR / restore plan
+6. `AUTHZ-001` Band Membershipとcapability matrix
+7. `API-001` Band / Song core read-write boundaryの最小実装
+8. `STORAGE-001` private Preview / MIDI upload・complete・access
+9. `VERSION-001` persisted Version workflow
+10. `COMMENT-001` Version-scoped Comment + Anchor
+11. `PROPOSAL-001` separate MIDI Proposal + Decision
+12. `OBS-001` alarms、budget、backup / restore drill、operational runbook
+13. `DEPLOY-001` isolated Private Alpha deploymentとacceptance test
 
 Surface taskの`SURFACE-015C` / `SURFACE-016`はCloud critical pathと領域が重ならない場合のみ別branch / lockで並行候補にできます。CLOUD-001からは着手しません。
 
@@ -444,6 +446,277 @@ Surface taskの`SURFACE-015C` / `SURFACE-016`はCloud critical pathと領域が�
 - [AWS Budgets cost management](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html)
 - [AWS account separation guidance](https://docs.aws.amazon.com/whitepapers/latest/organizing-your-aws-environment/implementation.html)
 - [AWS Regions and Availability Zones](https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html)
+
+## CLOUD-002: Cloud Foundation Decision
+
+### Decision status
+
+CLOUD-001 review後、次は人間承認済みのplanning baselineです。
+
+- primary Cloud target: Cognito、API Gateway HTTP API + Lambda、DynamoDB On-Demand、private S3、CloudWatch、AWS Budgets
+- `ap-northeast-1`を単一Regionの第一候補とし、resource作成直前にservice availability、quota、official pricingを再確認する
+- local、AWS nonprod、Private Alphaを分け、本物の未公開曲を入れる前にPrivate Alpha accountをnonprodから分離する
+- CloudFront、WebSocket、server-side transcodingをDEFERし、Companion App / VST3 Bridgeは2027年以降へ分離する
+
+CLOUD-002で新しく提案するAWS CDK + TypeScript、`infra/`配置、credential、naming / tagging、destructive operation、bootstrap手順は、PR reviewによるhuman approval待ちです。今回はAWSへ接続せず、account、IAM、OIDC、bootstrap resourceを含むresourceを1つも作りません。
+
+### AWS account strategy
+
+| option | isolation / blast radius | cost visibility | beginner operations | future path |
+| --- | --- | --- | --- | --- |
+| A. 1 account内でnonprod / private-alphaをresource分離 | 誤ったrole、region、stack、manual操作が両environmentへ届くriskが残る | tagで分離できるが、untagged / shared costの判別が難しい | account作成は少ないが、毎回environmentを慎重に識別する必要 | 後からaccount分離するmigrationとcredential変更が必要 |
+| B. nonprod accountとprivate-alpha accountを分離 | accountがIAM、quota、billing、dataの強い境界になり、事故の影響を限定しやすい | account単位とtag単位の両方で追跡できる | initial setup、cross-account role、billing運用は増える | future production-like environmentへ自然に拡張しやすい |
+
+推奨はOption Bです。最初のAWS integrationはnonprod accountだけでdummy dataを使い、本物の未公開曲を入れる前にPrivate Alpha専用accountを準備します。管理account / AWS Organizations / Control Towerの必要性とownerはCLOUD-003前のhuman gateで決め、今回accountを作りません。
+
+同一accountでPrivate Alphaを代替することは既定のfallbackにしません。account分離が準備できない場合は、自動的に保護を弱めず、本物のdata投入をblockして人がriskを再評価します。
+
+### Environment model
+
+| environment | 目的 | 許可data | change / destroy gate |
+| --- | --- | --- | --- |
+| `local` | 現在のmock UI、unit / component / E2E、local contract検証 | mock / syntheticのみ。Cloud credentialと本物の未公開曲は禁止 | local artifactは再生成可能。shared sourceは通常PRを通す |
+| `nonprod` | AWS integration、failure、IaC、Auth/API/Storageの検証 | dummy/test audio・MIDIのみ | reviewed plan後の作成・更新。disposableであることを確認したstackだけ明示destroy可 |
+| `private-alpha` | 2 controlled usersが本物の未公開曲をreview | authorizedなreal unreleased data | human-approved deployment、backup / restore、強いdeletion protection。unattended destroy禁止 |
+
+形式だけの`dev / test / staging / prod`を増やしません。初期は上記3境界だけとし、nonprodとPrivate Alphaでaccount、credential、state / stack、data、log、budgetを共有しません。
+
+### Region policy
+
+- primary Region candidateはTokyo `ap-northeast-1`
+- 日本の2 userに対するlatency、data location、operational simplicityを優先する
+- Private Alphaはsingle Regionとし、multi-Region replication / failoverを作らない
+- CLOUD-003、AUTH-001、CLOUD-DATA-001、STORAGE-001のresource作成直前に、対象serviceのRegion availability、quota、current official pricingを再確認する
+- Region変更はstorage、backup、credential、latency、data migrationへ影響するため、単なるconfig変更として扱わずhuman approvalを要求する
+
+### IaC options
+
+IaCは必須ですが、tool adoptionと最初のbootstrapはまだ未承認です。
+
+| criterion | AWS CDK + TypeScript | Terraform | OpenTofu | CloudFormation direct |
+| --- | --- | --- | --- | --- |
+| AWS-only fit | AWS construct / CloudFormationと直接統合 | AWS provider経由。multi-cloudにも広げられる | Terraform-compatibleなprovider model | AWS nativeだが低level |
+| TypeScript fit | 現行teamのTypeScript知識を再利用可能 | HCLを学ぶ必要 | HCLを学ぶ必要 | YAML / JSONとintrinsic functionを学ぶ必要 |
+| beginner cost | application codeに近いが、constructとgenerated templateの両方を理解する | declarative syntaxは読みやすいがstate / backend運用が増える | Terraformに近く、state / backend / encryption運用が増える | toolは少ないが大きなtemplateとreferenceが難しい |
+| review / diff | `cdk synth`と`cdk diff`。replacement / IAM changeをtemplate / change setでも確認 | `plan`が明確。apply直前の再planが必要 | `tofu plan`。apply直前の再確認が必要 | change setとtemplate diff |
+| state | CloudFormation stackがmanaged state。別remote state backendは不要 | remote state、locking、access、backupが必要 | remote state、locking、access、backupに加えstate encryption候補 | CloudFormation stackがmanaged state |
+| bootstrap | account / RegionごとのCDK bootstrap resourceが必要 | backend / provider initializationが必要 | backend / provider initializationが必要 | CDK bootstrap不要。deployment role等は別途必要 |
+| drift | CloudFormation drift / CDK diffを運用 | refresh / planで検出 | refresh / planで検出 | CloudFormation drift / change set |
+| destroy / rollback | CloudFormation rollbackとremoval policy。data restoreは別 | plan / state / lifecycleに依存。data restoreは別 | plan / state / lifecycleに依存。data restoreは別 | CloudFormation rollback / policy。data restoreは別 |
+| CI/CD | synth / test / diffとOIDC AssumeRole候補 | plan artifact、remote state、locking、OIDCが必要 | plan、remote state、locking、OIDCが必要 | template validation / change set、OIDCが必要 |
+| secrets | secret valueをconstruct / outputへ埋めない。CloudFormation outputも公開範囲に注意 | state / planにsecretが残り得るため機密扱い | state / planにsecretが残り得るため機密扱い | parameter / output / eventへsecretを出さない |
+| multi-account | stackをaccount / Regionごとに分けてbootstrap / roleを管理 | provider alias / state境界を管理 | provider / state境界を管理 | stack / roleをaccountごとに管理 |
+| maintenance / community | AWS releaseとconstruct ecosystemへ依存 | provider / Terraform version、license、backendと広いcommunity資産を管理 | provider compatibility、OpenTofu version、governanceとcommunity成熟度を管理 | AWS resource schemaとofficial exampleへ直接追従 |
+| vendor coupling | AWS / CloudFormationへのcouplingが強い | languageはcross-cloudだがAWS resource定義は移植不能 | 同左。tool migrationにもstate検証が必要 | AWSへのcouplingが最も直接的 |
+| tool cost | tool自体よりbootstrap / deployed resource / CIのcostを確認 | CLIとoptional managed backend / runnerのcostを確認 | CLIとremote backend / runnerのcostを確認 | deployed resource / CIのcostを確認 |
+
+#### Recommendation: AWS CDK + TypeScript（human approval pending）
+
+StreamBandはAWS-onlyのsmall serverless architectureで、applicationとteam skillがTypeScript中心です。CDKなら言語を増やさず、CloudFormation stackをstate / deployment単位に使えるため、2人のteamが別途remote state backendとlockingを運用する範囲を減らせます。construct-level diffだけで安全と判断せず、synthesized template、security change、replacement、CloudFormation change setをreview対象にします。
+
+Terraform / OpenTofuはplanの明確さとAWS外への拡張性が強みですが、現在のscopeではHCLに加えてremote state、locking、state secret、backend recoveryを運用する負担が増えます。将来multi-cloud、既存Terraform estate、専任infra運用、CDKで表現しにくいprovider要件が出た場合は再評価します。CloudFormation directは低level templateのreview負担が大きいため第一候補にしません。
+
+CDKはdeploy前にaccount / Region単位のbootstrapが必要で、S3 / ECR / IAM role等のbootstrap resourceを作ります。bootstrapのtrustとexecution policyは強い権限になり得るため、CLOUD-003でtemplate、trusted principal、permissions、costをreviewした上で一度ずつ明示承認します。
+
+### Future repository layout
+
+第一候補はrepository rootの`infra/`です。今回はdirectoryもpackageも作りません。
+
+```text
+infra/
+├ package.json          # app packageとは依存とscriptを分離する候補
+├ tsconfig.json
+├ cdk.json
+├ bin/
+├ lib/
+├ test/
+└ config/               # secretなしのenvironment metadataだけ
+```
+
+- `src/**`とinfrastructure sourceを分け、appのinstall / buildへ無条件にCDKを混ぜない
+- 最初は1 repository内の小さなpackageとし、monorepo toolや別repositoryを追加しない
+- reusable constructを早期に階層化せず、environment-specific stackとshared codeを最小にする
+- account ID、credential、signed URL、secret、実email、private hostnameをconfigへcommitしない
+- generated assembly / asset / local stateをcommitしない
+- test、synth、diff、deploy scriptは将来のinfra taskで定義し、application `Quality checks`の変更とは別PRにする
+
+`infrastructure/`は意味が明確ですが、長いpathにする利点が小さいため`infra/`を推奨します。future Companion / Bridgeが増えても、Cloud backend foundationは同じ`infra/`境界に置き、client codeと混同しません。
+
+### Credential and CI authentication
+
+#### Local human access
+
+- AWS IAM Identity Center等のfederated sign-inとshort-lived sessionを第一候補にする
+- 人ごと・environmentごとにpermission set / roleを分け、credentialを共有しない
+- Private Alpha accessはnonprodより狭くし、日常のread / deployとsecurity / billing administrationを分離する
+- session expiry、MFA、revocation、lost-device、offboardingをbootstrap runbookへ含める
+- long-lived IAM user access keyを`.env`、shell profile、password managerから常用する設計にしない
+
+#### GitHub Actions
+
+- GitHub OIDCからenvironment別AWS deploy roleをAssumeRoleする方式を推奨する
+- IAM trustはrepository、branch / GitHub Environment、audience等のconditionで限定し、任意fork / arbitrary refからAssumeRoleできないようにする
+- PR checksはread-only synth / testを基本とし、AWS接続を必要とするdiff / deployは別workflow、明示environment、human approvalへ分離する
+- nonprodとPrivate Alphaでroleを分け、Private Alpha deploy roleを通常PRへ渡さない
+- long-lived IAM user access keyをGitHub Secretへ保存しない
+- OIDC provider、role、workflow permissionはCLOUD-003の専用PRで実schemaを確認して作る。今回は`.github/workflows/**`を変更しない
+
+#### Root account baseline
+
+将来accountを作成する場合のbootstrap checklist候補:
+
+- root userへphishing-resistant MFAを含む強いMFAを設定する
+- root credentialとrecovery methodを安全に保管し、日常作業に使わない
+- root access keyを作らない。既存の場合は利用状況確認後に無効化 / 削除する
+- administrative daily accessはIAM Identity Center等のtemporary credentialへ移す
+- accountのbilling / security / operations contactを確認する。private emailをrepositoryやdocsへ記録しない
+- root / recovery accessとsecurity setting変更はhuman approvalと監査記録を必須にする
+
+### Resource naming and tagging
+
+#### Naming
+
+人がConsole、diff、alertでenvironmentを誤認しにくいよう、原則を`project-environment-purpose`とします。
+
+```text
+streamband-nonprod-<purpose>
+streamband-alpha-<purpose>
+```
+
+- environment codeは`nonprod`と`alpha`に固定し、`prod`をPrivate Alphaの曖昧な別名にしない
+- CloudFormation stack候補は`streamband-nonprod-foundation`等、purposeを狭くする
+- S3 bucketのglobal uniqueness、service length / character rule、physical name固定のreplacement riskは各resource taskで確認する
+- account ID、email、real name、未公開Song / Band名、credentialをresource nameへ含めない
+- CDKの自動physical nameを使うか固定するかは、cross-stack reference、replacement、migrationをreviewしてresourceごとに決める
+
+#### Minimum tags
+
+| key | 候補value | 目的 |
+| --- | --- | --- |
+| `Project` | `StreamBand` | project識別 |
+| `Environment` | `nonprod` / `private-alpha` | data / change gateとcost分離 |
+| `ManagedBy` | `IaC` | manual resourceとの区別 |
+| `Purpose` | `foundation` / service単位の安定code | owner調査とcost分類 |
+
+必要なdata resourceには`DataClass=synthetic`または`DataClass=unreleased-private`を追加候補とします。個人名、email、Song / Band名、secretをtagへ書きません。tagはauthorization boundaryではなく、未tag resourceも安全である必要があります。`Owner` / `CostCenter`は2人のPrivate Alphaで維持価値が生じた時だけ、個人情報ではないteam codeを採用します。
+
+### Cost visibility and Budgets
+
+- `Project`、`Environment`、`Purpose`をcost allocation候補として有効化し、account / service / tagで追跡する
+- Developmentはできる限り数千円/月以内、Private Alphaは通常¥500〜¥1,500/月を目標とする
+- 月¥5,000を超えた場合はusage、resource、request / transfer、retention、異常accessを確認する
+- projected ¥10,000/月超の構成変更はhuman approvalなしで進めない
+- AWS Budgetsはbilling反映と通知に遅延がありhard capではない。low early warning、mid warning、¥5,000相当のinvestigation、¥10,000相当のhuman gateをfoundation taskで設定候補とする
+- JPY / USD換算、actual threshold、recipient、official pricing、Pricing Calculator estimateはresource作成時に再確認する
+- budget alertに対するowner、確認期限、nonessential environment停止、upload制限、incident escalationをrunbook化する
+
+NAT Gateway、EC2 always-on、ALB、always-on ECS、EKS、OpenSearch、ElastiCache、provisioned RDSはfoundation baselineで作りません。追加には専用Decision、monthly estimate、human approvalが必要です。
+
+### Destructive operation and deletion protection
+
+| operation | nonprod gate | private-alpha gate |
+| --- | --- | --- |
+| stack / environment destroy | synthetic dataと対象stackを確認し、diff / listと明示承認後だけ実行 | unattended / routine destroy禁止。backup、restore test、影響一覧、別human approvalが必要 |
+| S3 bucket delete / replace | empty確認とorphan / retention確認。automatic cleanupを既定にしない | retention / versioning / recovery確認なしでは禁止。retain policy候補 |
+| DynamoDB table delete / replace | disposable tableだけ。backup要否とmigrationをreview | deletion protection、PITR、backup、restore先、cutover / rollback承認が必須 |
+| Cognito User Pool replace | test userへの影響とsign-in regressionを確認 | identity loss / subject changeをdata migrationなしで許可しない |
+| resource rename | physical replacementの有無をchange setで確認 | replacementならrenameではなくmigration taskとして扱う |
+| PITR / versioning / backup disable | 理由と再有効化条件をPRに記録 | human approvalとrecovery impact reviewなしで禁止 |
+
+- `cdk destroy`やenvironment-wide deleteをPrivate Alpha automationへ入れない
+- data-bearing resourceはCDK removal policy、CloudFormation termination protection、service deletion protectionを実装taskで検討する
+- protectionを外す変更は通常deployに混ぜず、専用task、expected resource、backup evidence、rollback planを必要とする
+- wildcard target、曖昧なprofile / account、unreviewed replacementを使わない
+
+### Rollback and data restore boundary
+
+Rollbackを3種類に分けます。
+
+1. Application rollback: HOST-001 / DEPLOY-001でprevious known-good artifact / commitへ戻す。DB schemaやdataを自動で巻き戻さない。
+2. Infrastructure rollback: CloudFormation rollbackまたはknown-good IaC commitの再deploy。replacement済みresourceや外部stateが元に戻るとは仮定しない。
+3. Data recovery: DynamoDB PITR / backup、S3 Versioning / lifecycle、application audit / reconciliationを使う別runbook。CLOUD-DATA-001、STORAGE-001、OBS-001で検証する。
+
+`IaC rollback != deleted user data restore`です。CloudFormation stack rollbackが成功しても、削除済みitem、上書き済みobject、Cognito identity、外部email、client retryの整合は回復しない可能性があります。data migrationにはforward / backward compatibility、backup、restore先、cutover、verification、abort conditionを別途定義します。
+
+### Drift and state policy
+
+#### Drift
+
+- IaC managed resourceはConsoleで日常的に直接変更せず、repositoryのreviewed IaCをsource of truthにする
+- Consoleのread-only確認とincident対応は許可するが、emergency変更はactor、時刻、理由、対象を記録する
+- emergency変更後は専用task / PRでIaCへ反映するか、review後にIaCの状態へ戻す。放置しない
+- future CIでsynth / testを行い、AWSへ接続する`cdk diff` / drift detectionはcredentialとcostを持つ別gateにする
+- drift解消時もprivate-alphaの現物を無条件にIaCへ合わせず、削除 / replacementをreviewする
+
+#### State
+
+- CDK: CloudFormation stackがresource stateを管理する。CDK bootstrap stack / bucket / ECR / IAM roleもaccount / Regionごとのmanaged foundation resourceであり、application stackと同じくinventory、cost、protection対象にする
+- Terraform: local `terraform.tfstate`を共有・commitせず、remote backend、locking、encryption、versioning、access、backup、recovery ownerが必要
+- OpenTofu: 同様にremote stateとlockingが必要。state / plan encryptionを使う場合はkey loss、rotation、recoveryも運用対象になる
+- どのtoolでもplan / state / outputはcredentialやsensitive attributeを含み得るため、PR、artifact、logへ無制限に公開しない
+
+### Deployment approval boundary
+
+- PRではIaC source、unit test、synthesized template、expected changeをreviewする
+- AWSへ接続するdiff / change setは対象account、Region、role、stackを明示し、resultを秘密情報なしでreviewする
+- apply / deployはapproved commitからだけ行い、PRのarbitrary codeへPrivate Alpha roleを渡さない
+- nonprod deployとPrivate Alpha deployを別role / environment / approvalにする
+- Private Alphaのdelete、replacement、protection disable、security / root change、¥10,000超予測は通常deployから分離する
+- branch protectionや`Quality checks`をCloud deployの代わりにせず、専用workflow / environment gateはCLOUD-003以降で設計する
+
+### Future bootstrap sequence
+
+以下はCLOUD-003候補で1段ずつ確認する順序で、CLOUD-002では実行しません。
+
+1. account / ownership / billing / support / alternate contactのsecurity checklistを人が承認する
+2. root MFA、root recovery、root daily-use禁止、root access keyなしを確認する
+3. Budgets / Cost Explorer / cost allocation tag等のcost visibilityとnotification ownerを準備する
+4. IAM Identity Center等で個別human identityとshort-lived least-privilege accessを準備する
+5. GitHub OIDC providerとenvironment別AssumeRole trustをreviewし、nonprod deploy roleだけを先に作る
+6. 採用済みIaC toolとbootstrap template / policy / trust / costをreviewして、nonprodだけをbootstrapする
+7. synth / test / diff / approvalのCI boundaryを確認する
+8. logging / tagging / protectionを含む最小nonprod foundation stackをdeployする
+9. account / Region / tag / budget / role / drift / rollbackを再取得して検証する
+10. その後にAUTH-001等のservice resource taskを1 task = 1 PRで開始する
+
+Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手順をreviewしてから別の明示承認で行います。
+
+### Boundaries with following tasks
+
+- `HOST-001`: Vercel / Amplify Hosting / AWS-native Next.js hostingを決める。hosting由来のOIDC、domain、secret、rollback条件をCLOUD-003前に連携する
+- `AUTH-001`: Cognito User Pool、app client、session integrationを設計・実装する。CLOUD-002では作らない
+- `CLOUD-DATA-001`: DynamoDBのtable数、partition / sort key、index、transaction、PITRを決める
+- `AUTHZ-001`: Band Membership capability matrixとserver authorization testを決める
+- `STORAGE-001`: S3 bucket名、opaque object key詳細、MIME / size、lifecycle、versioning、retention、presigned accessを決める
+- `CLOUD-003`: 最初のAWS接続 / resource作成task候補。CLOUD-002 / HOST-001の承認前には開始しない
+
+### Human approval gates
+
+- AWS account作成、AWS Organizations / management model
+- real unreleased dataをPrivate Alpha accountへ初めて投入すること
+- AWS CDK + TypeScriptの採用と`infra/`package作成
+- 最初のCDK bootstrap、bootstrap trust / execution policy、最初のAWS deployment
+- GitHub OIDC trustとdeploy role、Private Alpha workflow / environment access
+- root / recovery / billing / security setting変更
+- projected ¥10,000/月超、新しい高固定費service、multi-Region / VPC / NAT等の追加
+- Private Alphaのdestroy、resource replacement、data migration、deletion protection / backup disable
+- hosting、Cognito integration、DynamoDB physical design、S3 retention / limitの各専用Decision
+
+### Official references（2026-09-10確認）
+
+- [AWS CDK bootstrapping](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html)
+- [AWS CDK diff](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-diff.html)
+- [CloudFormation termination protection](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)
+- [IAM security best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [AWS root user best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html)
+- [IAM Identity Center temporary credentials](https://docs.aws.amazon.com/singlesignon/latest/userguide/howtogetcredentials.html)
+- [GitHub Actions: OIDC in AWS](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+- [Terraform remote state](https://developer.hashicorp.com/terraform/language/state/remote)
+- [Terraform plan](https://developer.hashicorp.com/terraform/cli/commands/plan)
+- [OpenTofu state locking](https://opentofu.org/docs/language/state/locking/)
+- [OpenTofu state encryption](https://opentofu.org/docs/language/state/encryption/)
+- [AWS tagging best practices](https://docs.aws.amazon.com/tag-editor/latest/userguide/best-practices-and-strats.html)
+- [AWS cost allocation tags](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
 
 ## 利用候補
 
