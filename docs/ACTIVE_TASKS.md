@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FLOW-001 | Core Collaboration Review Flow | Codex | 作業中 | `flow/flow-001-core-collaboration-review` | Song Detail review flow、関連component / test、`USER_FLOW.md`、`SCREEN_LIST.md`、作業状態文書 | 2026-09-09 | 未作成 | Preview → Comment → Proposal → Decision → Versionを非保存prototypeとして整理 |
+| FLOW-001 | Core Collaboration Review Flow | Codex | レビュー待ち | `flow/flow-001-core-collaboration-review` | Song Detail review flow、関連component / test、`USER_FLOW.md`、`SCREEN_LIST.md`、作業状態文書 | 2026-09-09 | #20 | Preview → Comment → Proposal → Decision → Versionを非保存prototypeとして整理 |
 
 ## 完了・中止履歴
 

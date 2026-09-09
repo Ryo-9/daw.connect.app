@@ -37,7 +37,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| FLOW-001 | P1 | Core Collaboration Review Flow | 作業中。Song DetailでPreview → Comment → MIDI Proposal → Decision → Versionの順序を示す。保存、DAW自動反映、Version自動作成は含めない |
+| FLOW-001 | P1 | Core Collaboration Review Flow | レビュー待ち（PR #20）。Song DetailでPreview → Comment → MIDI Proposal → Decision → Versionの順序を示す。保存、DAW自動反映、Version自動作成は含めない |
 
 ## Core Lane
 
