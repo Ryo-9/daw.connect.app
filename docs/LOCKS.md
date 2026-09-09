@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-021 | DATA-002 | Codex | `docs/API.md`、DATA-002に必要な`docs/USER_FLOW.md`、`docs/DECISION_LOG.md`、作業状態文書 | `data/data-002-core-api-boundary` | 2026-09-09 | PR マージまたは作業中止 | API / persistence boundaryの設計文書のみ。runtime、package、config、cloud変更は対象外 |
+| LOCK-022 | CLOUD-001 | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、作業状態文書 | `cloud/cloud-001-phase2-mvp-plan` | 2026-09-09 | PR マージまたは作業中止 | Phase 2 Cloud MVPのdocs-only計画。resource、credential、runtime、package、config変更は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-021 | DATA-002 | Codex | `docs/API.md`、DATA-002に必要な`docs/USER_FLOW.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-09 | 完了・PR #21。mainへのマージを確認して解除 |
 | LOCK-020 | FLOW-001 | Codex | Song Detail core collaboration flow、関連component / test、`docs/USER_FLOW.md`、`docs/SCREEN_LIST.md`、作業状態文書 | 2026-09-09 | 完了・PR #20。mainへのマージを確認して解除 |
 | LOCK-019 | DATA-001 | Codex | `docs/DATABASE.md`、mock data schema review、関連作業状態文書 | 2026-09-09 | 完了・PR #19。mainへのマージを確認して解除 |
 | LOCK-018 | SURFACE-017 | Codex | song create/edit form prototype、既存画面の入口、最小テスト、関連文書 | 2026-09-06 | 完了・PR #18。mainへのマージを確認して解除 |

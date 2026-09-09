@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| DATA-002 | Core API / Persistence Boundary Draft | Codex | レビュー待ち | `data/data-002-core-api-boundary` | `docs/API.md`、最小関連docs、作業状態文書 | 2026-09-09 | #21 | 実装非依存のcontract草案のみ。DB、API、Auth、AWS、storage実装は対象外 |
+| CLOUD-001 | Phase 2 Cloud MVP Architecture Plan | Codex | レビュー待ち | `cloud/cloud-001-phase2-mvp-plan` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、作業状態文書 | 2026-09-09 | #22 | 2026年末Private Alpha向けのdocs-only計画。AWS resource、Auth、DB、API、storage実装は対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| DATA-002 | 完了 | Codex | `data/data-002-core-api-boundary` / #21 | 2026-09-09 | Core collaboration API / persistence boundary草案をmainへマージ済み。runtime実装なし |
 | FLOW-001 | 完了 | Codex | `flow/flow-001-core-collaboration-review` / #20 | 2026-09-09 | Preview → Comment → Proposal → Decision → Versionの非保存review flowをmainへマージ済み |
 | DATA-001 | 完了 | Codex | `data/data-001-mock-schema-review` / #19 | 2026-09-09 | Phase 1 mock data棚卸しとPhase 2 cloud data model草案をmainへマージ済み。実装変更なし |
 | SURFACE-017 | 完了 | Codex | `surface/surface-017-song-form-prototype` / #18 | 2026-09-06 | 楽曲作成・編集の非保存フォームと画面内review previewをmainへマージ済み |

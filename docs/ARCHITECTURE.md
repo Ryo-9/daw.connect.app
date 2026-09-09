@@ -73,6 +73,70 @@
 - Stripe、課金、請求
 - 本番ホスティング、監視、バックアップ
 
+## Phase 2 target architecture（CLOUD-001提案）
+
+以下は2026年末Private Alphaの推奨ターゲットであり、現在の実装事実ではありません。resource作成、service採用、credential設定、deploymentは未実施で、人の承認と専用taskを必要とします。
+
+```text
+Next.js Web Hosting (TBD / Private Alpha blocker)
+          |
+          v
+API Gateway HTTP API
+          |
+          v
+AWS Lambda application boundary
+  |       |       |
+  |       |       +--> CloudWatch logs / metrics
+  |       +----------> private S3 Assets
+  +------------------> DynamoDB On-Demand metadata
+
+Cognito User Pool: identity / authentication
+Application Membership: Band authorization
+AWS Budgets: delayed cost alerts
+```
+
+### MVP target
+
+- Authentication: Amazon Cognito User Pool。controlledな2 user、email verification、sign in / out、password reset、sessionを候補とする
+- Authorization: BandMembershipをapplication dataとして持ち、Lambdaがrequestごとにcapabilityとresource ownershipを確認する
+- API: API Gateway HTTP API + Lambdaをshared core API候補とし、DATA-002のruntime validation、revision、idempotencyを適用する
+- Metadata: DynamoDB On-DemandをPrivate Alphaの第一候補とし、logical entityとphysical table / key設計を分離する
+- Files: S3 private object、Block Public Access、server-controlled opaque key、短時間upload / access instruction
+- Operations: CloudWatchの有限保持log / metrics、AWS Budgetsのactual / forecast warning、backup / restore runbook
+- Region: 日本中心の単一Regionとして`ap-northeast-1`を第一候補にし、service availabilityと価格を実装直前に再確認する
+
+### Defer
+
+- CloudFront、WebSocket、server transcoding、formal invitation email、notification
+- Companion App、VST3 / AU、Studio One自動連携、WebRTC、realtime co-editing
+- always-on server、NAT Gateway、ALB、ECS、OpenSearch、provisioned RDS、ElastiCache、EKS
+
+CloudFrontはPrivate Alphaの実測でS3 short-lived accessにlatency / cache / transfer上の問題が出た時だけ再評価します。WebSocketはreview loopの完成条件ではないため導入しません。
+
+### Environment boundary
+
+- Local: mock / synthetic dataだけを使い、実credentialや未公開音源を置かない
+- AWS nonprod: synthetic / disposable dataでAuth、API、DB、Storage、failureを検証する
+- Private Alpha: 本物の未公開曲を扱うisolated environment
+
+本物の未公開曲を入れる前に、Private Alphaをnonprodと別AWS accountへ分離することを推奨します。同一accountを続ける場合はhuman risk acceptanceを必須とし、data、IAM、resource、budgetを混在させません。
+
+### Web hosting is a blocking deployment decision before Private Alpha
+
+Vercel、AWS Amplify Hosting、AWS-native custom Next.js hosting等から、次を専用`HOST-001`候補で比較します。
+
+- Next.js 16とのcompatibilityとupgrade追従
+- deploymentの単純さ、branch preview、environment separation
+- cost、logs、rollback、custom domain
+- Cognito / API Gatewayとのsession、CORS、CSRF境界
+- AWS backend integrationと将来migration
+
+Private Alphaの最小構成としてAWS-native custom hostingを前提にしません。採用先とdeployment設定はCLOUD-001では未決定です。
+
+### Infrastructure as Code
+
+IaCはresource作成前に必須としますが、AWS CDK、Terraform、other supported approachの採用は未決定です。CLOUD-002前にTypeScript親和性、beginner operational load、plan / review、destroy / recreate、data resource保護、state management、CIのshort-lived credential、rollbackを比較し、人が承認します。
+
 ## 自動テスト
 
 初期テスト構成として、Unit test runner に Vitest、Client Components の Component testing に React Testing Library + jsdom、ブラウザ E2E に Playwright を使用しています。async Server Components で構成された動的ページや 404 は直接の Component test ではなく、Playwright で確認します。
@@ -81,22 +145,21 @@
 
 ## 将来的な DB 候補
 
-主なデータがバンド、メンバー、楽曲、コメント、TODO の関係を持つため、PostgreSQL を第一の比較対象とします。マネージド PostgreSQL、Supabase、Neon、AWS RDS などは候補であり、未採用です。
+CLOUD-001ではPrivate Alphaのlow fixed costとserverless運用を優先し、DynamoDB On-Demandを第一候補、managed PostgreSQLをfallback比較対象とします。どちらも未採用・未実装で、物理schemaはCLOUD-DATA-001のreview後に決めます。
 
 比較項目:
 
-- 初期費用と利用増加時の費用
-- 初心者でも安全にバックアップ・復旧できるか
-- マイグレーションとローカル開発のしやすさ
-- 接続情報とネットワークの安全性
-- 将来の移行性とベンダーロックイン
-- 利用地域、データ保護、停止方法
+- DynamoDB On-Demandのrequest連動cost、capacity management削減、access-pattern / index設計負担
+- managed PostgreSQLのrelation / join / constraint、local development、migrationの分かりやすさとminimum compute / connection運用
+- backup / PITR、restore test、export / migration
+- transaction、conditional write、idempotency、optimistic concurrency
+- 利用地域、data protection、停止方法、vendor coupling
 
 詳細なテーブル候補は [DATABASE.md](DATABASE.md) に記載します。
 
 ## 将来的な認証候補
 
-Auth.js、Clerk、Supabase Auth、Amazon Cognito などを比較候補とします。未採用です。
+CLOUD-001ではAmazon Cognito User PoolをPrivate Alphaの第一候補とします。Auth.js、Clerk、Supabase Authなどは、Cognitoの要件適合性やhosting方式に問題が判明した場合の比較候補です。いずれも未採用・未実装で、AUTH-001の検証とhuman reviewを経て確定します。
 
 比較項目:
 

@@ -12,15 +12,18 @@
 
 ## 現在の状態と次候補
 
-2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はDATA-002として、将来のCloud実装前にcore API / persistence boundaryを実装非依存のdocsとして整理しています。
+2026-09-09 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）、core API / persistence boundary（PR #21）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWSは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCLOUD-001として、2026年末Private Alphaの最小Cloud architecture、security、cost、recovery、実装順をdocs上で計画しています。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-001 | Phase 2 cloud implementation planning | DATA-002のreview後に、採用候補、段階、費用、安全性、rollbackを計画する。実装・resource作成なし |
-| 2 | SURFACE-015C | custom 404の追加 | SURFACE-015のISSUE-003。日本語案内と既存画面への復帰導線を追加する |
-| 3 | SURFACE-016 | 長い楽曲名の境界確認 | 長文fixtureでcard、見出し、breadcrumbの折返しを独立して確認する |
+| 1 | CLOUD-002 | Cloud foundation / environment / IaC decision | CLOUD-001のhuman review後にaccount境界、IaC、pricing estimate、rollbackを確定する。resource作成は明示許可があるtaskへ分離 |
+| 2 | AUTH-001 | Private Alpha authentication prototype | CLOUD-002後。controlled user、email verification、session、password resetを最小実装する候補 |
+| 3 | CLOUD-DATA-001 | Metadata access pattern / physical design | DynamoDB候補のkey、index、transaction、PITR、restoreを実装前にreviewする |
+| 4 | HOST-001 | Next.js Private Alpha hosting decision | Vercel / Amplify Hosting / AWS-native等をcompatibility、cost、rollbackで比較。Cloud pathと並行可能 |
+| 5 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
+| 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
 
 ## Data Design Lane
 
@@ -29,7 +32,29 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | DATA-001 | P1 | Mock data schema review | 完了（PR #19）。Phase 1の実装事実とPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応を文書化 |
-| DATA-002 | P1 | API boundary draft | レビュー待ち（PR #21）。DATA-001 / FLOW-001を前提に、core operation、認可、runtime validation、競合、冪等性、upload境界を文書化する。API実装は含めない |
+| DATA-002 | P1 | API boundary draft | 完了（PR #21）。DATA-001 / FLOW-001を前提に、core operation、認可、runtime validation、競合、冪等性、upload境界を文書化。API実装なし |
+
+## Cloud Implementation Lane
+
+2026年末Private Alphaへ向けた候補です。CLOUD-001はplanningのみで、後続taskはそれぞれhuman approval、専用branch、lock、PRを必要とします。
+
+既存Core LaneのAuth / DB / Storage / Monitoring候補と目的が重なる項目は、このCloud critical pathと二重に実装しません。CLOUD-002で既存候補との対応を確認し、後続task IDとscopeを一つに統合してから着手します。
+
+| ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
+| --- | --- | --- | --- |
+| CLOUD-001 | P0 | Phase 2 Cloud MVP Architecture Plan | レビュー待ち（PR #22）。2 user / 1 private BandのAuth、API、metadata、private Asset、monitoring、cost、recovery、critical pathをdocs化。resource作成なし |
+| CLOUD-002 | P0 | Cloud foundation / environment / IaC decision | account分離、Region、IaC、pricing、rollback、credential方式を人が承認してから最小foundationへ進む |
+| HOST-001 | P0 | Next.js Private Alpha hosting decision | Next.js compatibility、preview、cost、AWS integration、logs、rollback、migrationを比較 |
+| AUTH-001 | P0 | Private Alpha authentication prototype | Cognito候補。public self-sign-upなしのcontrolled user、verification、session、resetを検証 |
+| CLOUD-DATA-001 | P0 | Metadata persistence physical design | access patternからDynamoDB key / index / transaction候補をreview。PostgreSQL fallback条件も確認 |
+| AUTHZ-001 | P0 | Band Membership authorization | capability matrixとresource ownershipをserver-side testで固定 |
+| API-001 | P0 | Band / Song core read-write | DATA-002 contractの最小slice。Auth/Authz/Dataのgate後のみ |
+| STORAGE-001 | P0 | Private Preview / MIDI Asset | Block Public Access、short-lived upload/access、complete verification、retention |
+| VERSION-001 | P0 | Persisted Version workflow | DAW export後の明示Version作成。Proposal Decisionによる自動作成なし |
+| COMMENT-001 | P0 | Persisted Version Comment | Version-scoped Comment + Anchorとpermission / conflict test |
+| PROPOSAL-001 | P1 | Persisted MIDI Proposal + Decision | SOURCE_MIDIを上書きしない別Asset / entityとDecision履歴 |
+| OBS-001 | P0 | Private Alpha operations baseline | finite logs、alarms、Budgets、backup / restore drill、incident / cost runbook |
+| DEPLOY-001 | P0 | Isolated Private Alpha deployment | required checksとyear-end acceptance criteriaを満たす2 user環境 |
 
 ## Flow Lane
 
@@ -122,6 +147,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| DATA-002 | #21 | 2026-09-09 | Song / Version / Comment / Proposal / Assetのcore API boundary、authorization、validation、競合、冪等性、upload lifecycleを文書化 |
 | FLOW-001 | #20 | 2026-09-09 | Song Detailに5 stepのreview導線、Comment Context、非破壊Proposal、Decision、DAW経由のVersion handoffを追加 |
 | DATA-001 | #19 | 2026-09-09 | Phase 1 mock dataとPhase 2 cloud data model候補を分け、entity、関係、enum、画面対応、永続化前の論点を文書化 |
 | SURFACE-017 | #18 | 2026-09-06 | 楽曲作成・編集の非保存フォーム、画面内review preview、reloadでの初期化を追加 |
