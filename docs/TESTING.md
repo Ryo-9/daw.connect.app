@@ -156,9 +156,12 @@ workflow は `contents: read` だけを許可し、`actions/checkout@v7` と `ac
 
 - GitHub Actionsは `.github/workflows/ci.yml` の `PR Quality Checks` で実行する
 - Node.js `24` と npm cache を使用する
+- root `package-lock.json`と`infra/package-lock.json`の両方をnpm cache keyへ含め、各packageで個別に`npm ci`する
+- 独立`infra/` packageは`npm run check`でTypeScript build、Vitest、`--no-lookups`のoffline CDK synthを実行する
+- infra checkはAWS credentialを必要とせず、AWS lookup、resource作成、CDK bootstrap / deployを行わない
 - workflow へ秘密情報や本番接続を追加しない
 - 20 分の timeout と同一 PR の古い実行キャンセルを設定する
-- `npm ci`、lint、Component test、build、Chromium smoke E2Eを順に実行する
+- root `npm ci`、infra `npm ci` / check、lint、Component test、build、Chromium smoke E2Eを1つのrequired jobで順に実行する
 - full browser matrix は定期または手動 workflow として分離する
 
 ## BRIDGE-008 の実装範囲
