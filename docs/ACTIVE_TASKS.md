@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-003B | CDK Repository Foundation | Codex | 作業中 | `chore/cloud-003b-cdk-repository-foundation` | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-10 | 未作成 | AWS CDK + TypeScriptのoffline repository foundation。AWS接続・resource・bootstrap・deployなし |
+| CLOUD-003B-CI | Infrastructure CI Integration | Codex | 作業中 | `chore/cloud-003b-infra-ci` | `.github/workflows/ci.yml`、`docs/TESTING.md`、作業状態文書 | 2026-09-10 | 未作成 | Node.js 24の既存Quality checksにinfra build / test / offline synthを追加。AWS接続なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-003B | 完了 | Codex | `chore/cloud-003b-cdk-repository-foundation` / #25 | 2026-09-10 | 独立`infra/` package、空Stack、offline test / synthをmainへマージ済み。AWS接続・resource作成なし |
 | HOST-001 | 完了 | Codex | `docs/host-001-private-alpha-hosting-decision` / #24 | 2026-09-10 | Vercel ProをPrivate Alpha primary hosting candidateとしてmainへマージ済み。契約・project・deploymentなし |
 | CLOUD-002 | 完了 | Codex | `cloud/cloud-002-foundation-decision` / #23 | 2026-09-10 | account / environment、IaC、credential、cost、rollback方針をmainへマージ済み。AWS接続・resource作成なし |
 | CLOUD-001 | 完了 | Codex | `cloud/cloud-001-phase2-mvp-plan` / #22 | 2026-09-10 | 2026年末Private AlphaのCloud MVP architectureとhuman gateをmainへマージ済み。AWS resource作成なし |
