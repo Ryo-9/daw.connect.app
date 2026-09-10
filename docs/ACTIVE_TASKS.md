@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-003C-PREP | AWS nonprod readiness checkpoint and repository state sync | Codex | レビュー待ち | `docs/cloud-003c-prep-checkpoint` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | #27 | 人間から確認されたnonprod readinessと次のHuman Gateを、機密識別子なしで同期。AWS接続・resource変更なし |
+| CLOUD-003C-REVIEW | CDK bootstrap resource, cost, and permission review | Codex | レビュー待ち | `docs/cloud-003c-bootstrap-review` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 未作成 | 現行bootstrap resource、cost driver、temporary permission、execution policy、OIDC原則を公式資料でreview。actual bootstrapは未承認 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-003C-PREP | 完了 | Codex | `docs/cloud-003c-prep-checkpoint` / #27 | 2026-09-11 | 人間確認済みのnonprod readinessとactual bootstrap前のHuman Gateを機密識別子なしでmainへ同期。AWS接続・resource変更なし |
 | CLOUD-003B-CI | 完了 | Codex | `chore/cloud-003b-infra-ci` / #26 | 2026-09-10 | Node.js 24の既存`Quality checks`へinfra build / test / offline synthを統合してmainへマージ済み。AWS credential・OIDC・resource操作なし |
 | CLOUD-003B | 完了 | Codex | `chore/cloud-003b-cdk-repository-foundation` / #25 | 2026-09-10 | 独立`infra/` package、空Stack、offline test / synthをmainへマージ済み。AWS接続・resource作成なし |
 | HOST-001 | 完了 | Codex | `docs/host-001-private-alpha-hosting-decision` / #24 | 2026-09-10 | Vercel ProをPrivate Alpha primary hosting candidateとしてmainへマージ済み。契約・project・deploymentなし |

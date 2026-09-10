@@ -769,6 +769,131 @@ CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、per
 
 CLOUD-003C-PREPでは上記の調査、権限設計、OIDC / IAM変更、bootstrap、deployを実施しません。CLOUD-003自体は未完了で、actual bootstrapはHuman Gateによりblockされたままです。
 
+### CLOUD-003C-REVIEW: CDK bootstrap resource / cost / permission review
+
+調査日: 2026-09-11
+
+この節は、repositoryで固定しているAWS CDK v2のCLIと、調査日時点のAWS公式資料に基づく実行前レビューです。bootstrap templateはCDKの更新で変わるため、実際の実行直前に、使用するCLIが生成するtemplate、公式ドキュメント、対象Regionの価格を再確認します。このレビューはAWSへの接続、権限付与、resource作成、bootstrapまたはdeployの承認ではありません。
+
+#### Current default bootstrap components
+
+標準のmodern bootstrapは通常`CDKToolkit`というCloudFormation stackを作成し、次のresourceを管理します。resourceはbootstrap時に作成されますが、asset保存や各roleの実利用は後続deploy時に発生します。
+
+| Component | Bootstrapで作成 | 主な責務 | 後続deployでの利用 |
+| --- | --- | --- | --- |
+| CloudFormation bootstrap stack（通常`CDKToolkit`） | Yes | bootstrap resourceの構成と更新を管理 | template更新、drift / rollback / deletion境界の基準 |
+| S3 file asset bucket | Yes | CloudFormation templateとfile assetのstaging | deploy前にFile Publishing role経由でassetを保存 |
+| ECR container asset repository | Yes | container image assetのstaging | container assetがあるdeployでImage Publishing role経由で利用 |
+| CloudFormation execution role | Yes | application stackをCloudFormationが実行する際の権限 | 後続stackの作成・更新・削除で利用 |
+| Deployment action / deploy role | Yes | CDK deploymentをCloudFormationへ渡す | 後続deploy時に利用 |
+| File publishing role | Yes | S3 file assetを公開する | file assetを含むdeploy時に利用 |
+| Image publishing role | Yes | ECR image assetを公開する | container assetを含むdeploy時に利用 |
+| Lookup role | Yes | CDK context lookupを限定的に行う | lookupを必要とするsynth / deployで利用。現在のoffline stackではlookupを使わない |
+| SSM bootstrap version parameter | Yes | bootstrap template versionをtoolingが確認する | 後続deploy時の互換性確認に利用 |
+
+現行の標準bootstrapを「customer-managed KMS keyを必ず自動作成する」と説明してはいけません。現在のCLIではcustomer-managed key作成は標準ではなく、`--bootstrap-customer-key`を明示した場合に作成候補となります。`--bootstrap-kms-key-id`は既存keyを指定する別optionです。StreamBandではどちらも未選択・未承認で、このレビューではkeyを作りません。
+
+次はdefault bootstrapの構成外です。
+
+- GitHub Actions OIDC provider、GitHub用deployment role、repository secret / variable
+- Cognito、Lambda、API Gateway、DynamoDB、application asset bucket、CloudWatch alarm
+- AWS Budget（既存の月額USD 10 Budgetは人間側monitoring checkpointであり、bootstrap resourceではない）
+- cross-account trust、permissions boundary、customer-managed KMS key
+- CDK stack termination protection。CLI optionで明示する候補であり、defaultで有効と仮定しない
+
+#### Cost review
+
+価格はRegion、保存量、request、data transfer、option、将来のdeploy内容で変わります。次の表は課金保証ではなく、実行前に監視すべきdriverです。
+
+| Component | Default | Likely billing driver | Idle-cost behavior | 増加要因 / cleanup |
+| --- | --- | --- | --- | --- |
+| CloudFormation `CDKToolkit` stack | Yes | 標準AWS resource provider自体には追加料金なし。配下resourceの料金は別 | stackの存在だけを理由に「全体が無料」とは扱わない | third-party extensionはdefault外。削除前にasset store、依存stack、termination protectionを確認 |
+| S3 asset bucket | Yes | 保存bytes、request、retrieval / data transfer等 | 空または小容量ならdriverは小さいが、無料保証はしない | file asset、古いversion、request、転送で増加。current templateのlifecycleとretentionを実行前に確認し、依存assetを先に消さない |
+| ECR asset repository | Yes | image storage、data transfer | imageがなければstorage driverは限定的だが、無料保証はしない | container assetと転送で増加。untagged image lifecycleと参照中imageを確認してcleanup |
+| 5 IAM rolesと関連policy | Yes | IAM自体は追加料金なし | direct baseline chargeなし | 金額より権限のblast radiusが主要risk。削除前にdeploy / CloudFormation利用を停止 |
+| SSM bootstrap version parameter | Yes | 標準Parameter Store parameter / standard throughputは追加料金なし | defaultの標準parameterはdirect baseline chargeなし | advanced parameterやhigher throughputはdefault外で有料候補 |
+| Customer-managed KMS key | No | keyの保持とAPI request | 作成すれば使用量が少なくてもkeyの料金driverになり得る | `--bootstrap-customer-key`等を明示した場合だけ候補。不要なkeyを作らず、既存key参照時も削除影響をreview |
+
+S3 / ECRの保存assetとrequestは、空のskeleton stackをbootstrapするだけの場合より、実際のapplication deploy開始後に増えます。AWS CDKにはunused assetを整理する明示的なgarbage collection機能がありますが、削除操作なので別task / reviewなしに実行しません。月額USD 10 Budgetは早期警告のmonitoringであり、hard spending capでもresourceの自動停止保証でもありません。
+
+#### Bootstrap identity permissions
+
+AWS公式CDK guideがbootstrap実行identityに最低限必要として列挙するaction familyは、`cloudformation:*`、`ecr:*`、`ssm:*`、`s3:*`、`iam:*`（対象`Resource: *`）です。これはbootstrap resourceとroleを作成・更新するための強い権限で、StreamBandのleast-privilege policyとして承認済みという意味ではありません。
+
+- 現在のlocal sign-in permissionは意図的に限定されており、bootstrapには不足している状態を維持する
+- long-lived access keyを追加せず、temporary sessionを前提候補とする
+- bootstrap用のtemporary elevated permissionは、正確なaction / resource / durationを別Human Gateで提示して承認を得る
+- bootstrap後はtemporary elevated human permissionを外せる運用を設計する
+- repository、PR、GitHub Secretsへhuman credentialを保存しない
+
+このPRはpolicyをAWSへ作成・適用しません。公式の広いaction familyはreview inputであり、そのままcopyして付与する実行指示ではありません。
+
+#### CloudFormation execution policy risk
+
+標準bootstrapでは、`--cloudformation-execution-policies`を指定しない場合、CloudFormation execution roleへ`AdministratorAccess`が使われ、後続deployが広い管理権限で実行され得ることをAWS CDK CLI documentationが明記しています。これはbootstrap identityのtemporary permissionとは別の、bootstrap後もdeployに影響するpermission boundaryです。
+
+- broad execution policyは将来のCDK stack追加を通しやすい一方、誤ったtemplateや侵害されたdeploymentのblast radiusを大きくする
+- narrowly scoped managed policyはriskを下げる一方、新しいresource typeを追加するたびにdeploy failureとpolicy reviewが必要になり得る
+- `--cloudformation-execution-policies`にはmanaged policy ARNを渡せるが、account固有ARNと実policyはこのdocsへ記録せず、別Human Gateで提示する
+- cross-account trustを追加する場合、trusted principalがexecution policy相当の権限を得られるため、今回は設定しない
+
+Decision Gate: **CloudFormation execution policy must be separately approved before bootstrap.** `AdministratorAccess`も代替policyも、このtaskでは選択・適用しません。
+
+#### GitHub Actions OIDC review（implementationなし）
+
+OIDC deployment roleはhuman bootstrap permissionとは別の設計対象です。将来実装する場合のsecurity baseline候補は次のとおりです。
+
+- GitHub OIDCを使い、長期AWS access keyをGitHubへ保存しない
+- AWS STS向けaudienceを`sts.amazonaws.com`へ制限する
+- trust policyのsubjectを意図したGitHub organization / repositoryへ制限する
+- branchまたはGitHub environment条件を、実用上可能な範囲でwildcardより狭くする
+- OIDC roleのpermissionはdeployに必要な範囲へ限定し、bootstrap用human permissionと共有しない
+- deployment gateにはGitHub environment protectionを検討する
+
+このPR後もOIDCは未実装です。workflow、GitHub Actions permission、IAM provider / role、secret / variableを変更しません。
+
+#### Pre-bootstrap Human Gate checklist
+
+以下を一式として人へ提示し、明示承認を得るまでbootstrapを実行しません。
+
+1. **Target**: StreamBand `nonprod`、Region `ap-northeast-1`。repositoryへaccount IDを書かず、実行者が外部の安全な手順で対象を照合する
+2. **Proposed command — not executed**:
+
+   ```text
+   cd infra
+   npx cdk bootstrap aws://<NONPROD_ACCOUNT_ID>/ap-northeast-1 \
+     --profile streamband-nonprod \
+     --termination-protection \
+     --cloudformation-execution-policies <HUMAN_APPROVED_MANAGED_POLICY_ARN>
+   ```
+
+   placeholderを実値へ置換する方法、使用CLI version、generated templateを実行直前にreviewする
+3. **Expected resource categories**: `CDKToolkit` stack、S3 asset bucket、ECR asset repository、CloudFormation execution / deploy / file publishing / image publishing / lookup roles、SSM bootstrap version parameter
+4. **Bootstrapper permission**: temporary session、承認済みaction / resource / duration、実行後の権限撤去方法
+5. **CloudFormation execution policy**: `AdministratorAccess`を暗黙採用せず、選ぶmanaged policy、必要範囲、failure trade-offを別承認する
+6. **GitHub OIDC status**: not implemented。human bootstrapとOIDC provider / deployment roleは別task / approvalとする
+7. **Billing drivers**: S3 / ECR storage・request・transfer、optional KMS、将来deployによるasset増加。最新のTokyo Region pricingとBudget通知を直前確認する
+8. **Rollback / deletion**: CloudFormation rollbackとdata / asset restoreは別物。termination protection、retained asset、依存stack、cleanup手順を確認する
+9. **Data boundary**: bootstrapには未公開楽曲、production data、application assetを投入しない
+10. **Explicit approval**: 上記command、resource、permission、execution policy、cost、rollbackを提示後、人の明示承認があるまで実行禁止
+
+`AUTH-001`その他の実装taskは、必要なfoundation gateが完了するまでblockしたままにします。CLOUD-003 actual bootstrapは未承認です。
+
+#### Official references（2026-09-11確認）
+
+- [AWS CDK: Bootstrapping environments](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+- [AWS CDK: `cdk bootstrap` command](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-bootstrap.html)
+- [AWS CDK: Deploy applications](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html)
+- [AWS CDK CLI default bootstrap template](https://github.com/aws/aws-cdk-cli/blob/main/packages/aws-cdk/lib/api/bootstrap/bootstrap-template.yaml)
+- [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
+- [Amazon ECR pricing](https://aws.amazon.com/ecr/pricing/)
+- [AWS CloudFormation pricing](https://aws.amazon.com/cloudformation/pricing/)
+- [AWS Systems Manager pricing](https://aws.amazon.com/systems-manager/pricing/)
+- [AWS IAM FAQ](https://aws.amazon.com/iam/faqs/)
+- [AWS KMS pricing](https://aws.amazon.com/kms/pricing/)
+- [AWS IAM: Create a role for an OIDC identity provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)
+- [AWS Security Blog: Use IAM roles to connect GitHub Actions to AWS](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/)
+
 ### Official references（2026-09-10確認）
 
 - [AWS CDK supported Node.js versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html)
