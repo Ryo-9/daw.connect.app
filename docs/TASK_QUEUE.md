@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-10 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）、core API / persistence boundary（PR #21）、Phase 2 Cloud MVP architecture plan（PR #22）、Cloud foundation decision（PR #23）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はHOST-001として、Next.js Private Alpha hostingの第一候補とfallbackをdocs上で比較しています。
+2026-09-10 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）、core API / persistence boundary（PR #21）、Phase 2 Cloud MVP architecture plan（PR #22）、Cloud foundation decision（PR #23）、Private Alpha hosting decision（PR #24）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCLOUD-003Bとして、AWSに接続しないCDK + TypeScript repository foundationを構築しています。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-003 | Nonprod AWS Foundation Bootstrap | CLOUD-002 / HOST-001のhuman review後だけ開始。account security、cost visibility、short-lived access、OIDC、IaC bootstrapを小さく構築 |
+| 1 | CLOUD-003B | CDK Repository Foundation | `infra/`の独立package、空Stack、offline test / synthだけを構築。AWS接続・resource・bootstrapなし |
 | 2 | AUTH-001 | Private Alpha authentication prototype | CLOUD-003後。controlled user、email verification、session、password resetを最小実装する候補 |
 | 3 | CLOUD-DATA-001 | Metadata access pattern / physical design | DynamoDBのkey、index、transaction、PITR、restoreを実装前にreviewする |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -36,7 +36,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 ## Cloud Implementation Lane
 
-2026年末Private Alphaへ向けた候補です。CLOUD-001 / CLOUD-002は完了し、HOST-001でWeb hosting候補を比較しています。後続taskはそれぞれhuman approval、専用branch、lock、PRを必要とします。
+2026年末Private Alphaへ向けた候補です。CLOUD-001 / CLOUD-002 / HOST-001は完了し、CLOUD-003を人間側account準備、repository foundation、将来bootstrapへ分割しています。後続taskはそれぞれhuman approval、専用branch、lock、PRを必要とします。
 
 既存Core LaneのAuth / DB / Storage / Monitoring候補と目的が重なる項目は、このCloud critical pathと二重に実装しません。CLOUD-002で既存候補との対応を確認し、後続task IDとscopeを一つに統合してから着手します。
 
@@ -44,8 +44,11 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | --- | --- | --- | --- |
 | CLOUD-001 | P0 | Phase 2 Cloud MVP Architecture Plan | 完了（PR #22）。2 user / 1 private BandのAuth、API、metadata、private Asset、monitoring、cost、recovery、critical pathをdocs化。resource作成なし |
 | CLOUD-002 | P0 | Cloud foundation / environment / IaC decision | 完了（PR #23）。account分離、Region、IaC、credential、naming、cost、rollback、destroyの方針をdocs化。resource作成なし |
-| HOST-001 | P0 | Next.js Private Alpha hosting decision | 作業中。Vercel Pro primary、Amplify conditional fallback、AWS-native last resortをcompatibility、security、cost、rollbackで比較。deploymentなし |
-| CLOUD-003 | P0 | Nonprod AWS Foundation Bootstrap | CLOUD-002 / HOST-001承認後の初AWS resource task候補。account security、Budgets、human access、GitHub OIDC、IaC bootstrap、nonprod foundationを段階実行 |
+| HOST-001 | P0 | Next.js Private Alpha hosting decision | 完了（PR #24）。Vercel Pro primary candidate、Amplify conditional fallback、AWS-native last resortを比較。契約・project・deploymentなし |
+| CLOUD-003 | P0 | Nonprod AWS Foundation Bootstrap | 進行中。CLOUD-003A account readinessは人間側で完了、CLOUD-003B repository foundationは作業中、CLOUD-003C実AWS bootstrapは別Human Gate待ち |
+| CLOUD-003A | P0 | Nonprod account readiness | 人間側で完了報告済み。StreamBand用nonprod account作成とroot MFA設定を確認。識別子・credentialはrepositoryへ保存しない |
+| CLOUD-003B | P0 | CDK Repository Foundation | 作業中。AWS CDK + TypeScriptの`infra/`、空Stack、offline unit test / synthのみ。AWS接続・resource作成なし |
+| CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 未承認。最初のAWS接続、CDK bootstrap、cost / access foundationは別Human Gateと専用taskでのみ実施 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001 | P0 | Private Alpha authentication prototype | Cognito候補。public self-sign-upなしのcontrolled user、verification、session、resetを検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | access patternからDynamoDB key / index / transaction候補をreview。PostgreSQL fallback条件も確認 |
@@ -149,6 +152,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| HOST-001 | #24 | 2026-09-10 | Vercel Pro primary candidate、Amplify conditional fallback、AWS-native last resortを比較。hosting接続・deploymentなし |
 | CLOUD-002 | #23 | 2026-09-10 | account / environment分離、CDK / TypeScript推奨、short-lived credential、cost、destroy、rollback、drift方針を文書化。AWS接続・resource作成なし |
 | CLOUD-001 | #22 | 2026-09-10 | 2 user / 1 private BandのPhase 2 Cloud MVP target、security、cost、recovery、critical pathを文書化。AWS resource作成なし |
 | DATA-002 | #21 | 2026-09-09 | Song / Version / Comment / Proposal / Assetのcore API boundary、authorization、validation、競合、冪等性、upload lifecycleを文書化 |
