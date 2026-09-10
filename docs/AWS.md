@@ -724,6 +724,22 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 
 人間側から、StreamBand専用nonprod AWS accountの作成とroot MFA設定完了が報告されています。この確認はAWS APIで再取得せず、account identifier、root email、支払い情報、MFA情報、credentialをrepositoryへ保存しません。既存の別用途AWS account / resourceは対象外です。
 
+### CLOUD-003C-PREP: Nonprod readiness checkpoint（human-confirmed）
+
+次の事実は人間側で確認済みとして記録します。このrepository同期ではAWSへ接続せず、command outputやcredential由来の識別子を再取得・保存しません。
+
+- StreamBand専用のnonprod AWS accountが存在し、root MFAが設定されている
+- 月額USD 10のAWS Budgetがmonitoring用に作成されている。Budgetは通知のための仕組みであり、利用を自動停止するhard spending capではない
+- setup / local development専用のhuman IAM userが存在し、そのIAM userにMFAが設定されている
+- long-lived access keyは作成していない
+- localでは`aws login`によるtemporary CLI authenticationに成功し、profile名は`streamband-nonprod`、選択Regionは`ap-northeast-1`である
+- localで`aws sts get-caller-identity --profile streamband-nonprod`の成功を確認済み。ただしoutput、account number、ARNその他のcredential由来識別子は記録しない
+- 現在のIAM permissionはlocal sign-in supportへ意図的に限定されており、AWS administrationまたはbootstrapに必要なpermissionが準備済みとは扱わない
+- このcheckpointではapplication AWS resourceを作成していない
+- CDK bootstrap / deployと、それに必要な権限変更は未承認のまま維持する
+
+この記録は人間から報告されたreadinessの状態同期であり、AWS account、IAM、Budget、CLI認証をCodexが検証または変更したことを意味しません。
+
 ### CLOUD-003B: CDK repository foundation
 
 CLOUD-003Bで許可されるのは、AWSに接続しないrepository toolchainだけです。
@@ -742,6 +758,16 @@ CLOUD-003Bで許可されるのは、AWSに接続しないrepository toolchain�
 ### CLOUD-003C: First AWS connection / bootstrap（pending Human Gate）
 
 CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、permission、cost、rollbackを再確認したうえで最初のAWS接続とnonprod bootstrapを行う将来taskです。CLOUD-003Bの承認には含まれず、明示的な別Human Gateが必要です。Private Alphaや本物の未公開曲も対象にしません。
+
+実際の`cdk bootstrap`より前に、別のhuman-gated taskで次を順番に行います。
+
+1. 現行AWS CDKが作成するbootstrap resourceと、課金され得るcomponent / 保存量 / requestを公式情報で再確認する
+2. bootstrap時だけ使用する最小限で実用的なtemporary permission pathを定義し、通常のlocal sign-in permissionと分離する
+3. GitHub Actions OIDCとdeployment roleのtrust / permission案はbootstrap permissionと分けてreviewする
+4. 作成予定resource、対象account / Region、必要permission、rollback / removal境界を実行前に人へ提示する
+5. 提示内容に対する明示的なhuman approvalを得た後だけ`cdk bootstrap`を実行する
+
+CLOUD-003C-PREPでは上記の調査、権限設計、OIDC / IAM変更、bootstrap、deployを実施しません。CLOUD-003自体は未完了で、actual bootstrapはHuman Gateによりblockされたままです。
 
 ### Official references（2026-09-10確認）
 

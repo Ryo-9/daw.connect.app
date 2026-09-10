@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-026 | CLOUD-003B-CI | Codex | `.github/workflows/ci.yml`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `chore/cloud-003b-infra-ci` | 2026-09-10 | PR マージまたは作業中止 | Node.js 24の既存Quality checksへinfra offline checkを追加。AWS credential・OIDC・resource操作は対象外 |
+| LOCK-027 | CLOUD-003C-PREP | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-003c-prep-checkpoint` | 2026-09-11 | PR マージまたは作業中止 | 人間確認済みのAWS nonprod readinessと次のHuman Gateを機密識別子なしで同期。AWS接続・resource変更は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-026 | CLOUD-003B-CI | Codex | `.github/workflows/ci.yml`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #26。mainへのマージを確認して解除 |
 | LOCK-025 | CLOUD-003B | Codex | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #25。mainへのマージを確認して解除 |
 | LOCK-024 | HOST-001 | Codex | `docs/HOSTING.md`、`docs/ARCHITECTURE.md`、`docs/AWS.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #24。mainへのマージを確認して解除 |
 | LOCK-023 | CLOUD-002 | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #23。mainへのマージを確認して解除 |
