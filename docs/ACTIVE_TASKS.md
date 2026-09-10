@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-003C-PREP | AWS nonprod readiness checkpoint and repository state sync | Codex | レビュー待ち | `docs/cloud-003c-prep-checkpoint` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 未作成 | 人間から確認されたnonprod readinessと次のHuman Gateを、機密識別子なしで同期。AWS接続・resource変更なし |
+| CLOUD-003C-PREP | AWS nonprod readiness checkpoint and repository state sync | Codex | レビュー待ち | `docs/cloud-003c-prep-checkpoint` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | #27 | 人間から確認されたnonprod readinessと次のHuman Gateを、機密識別子なしで同期。AWS接続・resource変更なし |
 
 ## 完了・中止履歴
 
