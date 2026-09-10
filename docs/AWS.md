@@ -360,7 +360,7 @@ retention期間、法的削除、account削除、backupからの消去はTBDで�
 
 ### Web hosting decision
 
-Next.js web applicationのremote hostingはPrivate Alphaのblocking deployment decisionです。HOST-001ではVercel Proを第一候補、AWS Amplify HostingをNext.js 16 support確認後の条件付きfallback、AWS-native custom Next.jsをlast resortとして提案します。いずれもhuman approval待ちで、account接続・deploymentは行っていません。詳細は[HOSTING.md](HOSTING.md)を参照します。
+Next.js web applicationのremote hostingはPrivate Alphaのblocking deployment decisionです。HOST-001 / PR #24でVercel Proをprimary candidate、AWS Amplify HostingをNext.js 16 support確認後の条件付きfallback、AWS-native custom Next.jsをlast resortとして承認しました。候補承認に契約、account接続、project、料金発生、deploymentは含まれません。詳細は[HOSTING.md](HOSTING.md)を参照します。
 
 | criterion | Vercel | AWS Amplify Hosting | AWS-native custom Next.js |
 | --- | --- | --- | --- |
@@ -391,8 +391,8 @@ CLOUD-002で、初心者の運用負荷、data resource保護、preview / plan�
 1 task = 1 small PRを維持し、前段のsecurity / data gateが通るまで後段を開始しません。
 
 1. `CLOUD-002` Cloud foundation / account・environment・IaC decision、pricing estimate、rollback（完了・PR #23）
-2. `HOST-001` Next.js Private Alpha hosting decision（今回の提案。deployは別task）
-3. `CLOUD-003` nonprod account security、cost visibility、short-lived access、OIDC、IaC bootstrap
+2. `HOST-001` Next.js Private Alpha hosting decision（PR #24で候補承認済み。deployは別task）
+3. `CLOUD-003` account readiness、offline repository foundation、将来のnonprod bootstrapを別gateに分割
 4. `AUTH-001` Cognito authentication prototype（controlled user、verification、session、reset）
 5. `CLOUD-DATA-001` DynamoDB access pattern / physical design、PITR / restore plan
 6. `AUTHZ-001` Band Membershipとcapability matrix
@@ -458,7 +458,7 @@ CLOUD-001 review後、次は人間承認済みのplanning baselineです。
 - local、AWS nonprod、Private Alphaを分け、本物の未公開曲を入れる前にPrivate Alpha accountをnonprodから分離する
 - CloudFront、WebSocket、server-side transcodingをDEFERし、Companion App / VST3 Bridgeは2027年以降へ分離する
 
-CLOUD-002で新しく提案するAWS CDK + TypeScript、`infra/`配置、credential、naming / tagging、destructive operation、bootstrap手順は、PR reviewによるhuman approval待ちです。今回はAWSへ接続せず、account、IAM、OIDC、bootstrap resourceを含むresourceを1つも作りません。
+CLOUD-002で提案したAWS CDK + TypeScriptと`infra/`配置は、CLOUD-003Bでrepository foundationの範囲に限って人間承認されました。credential、naming / tagging、destructive operation、bootstrap手順の実AWS適用は引き続き別Human Gateです。CLOUD-002ではAWSへ接続せず、account、IAM、OIDC、bootstrap resourceを含むresourceを1つも作りませんでした。
 
 ### AWS account strategy
 
@@ -491,7 +491,7 @@ CLOUD-002で新しく提案するAWS CDK + TypeScript、`infra/`配置、credent
 
 ### IaC options
 
-IaCは必須ですが、tool adoptionと最初のbootstrapはまだ未承認です。
+IaCは必須です。AWS CDK + TypeScriptのtool adoptionとoffline repository foundationはCLOUD-003Bで承認され、最初のAWS接続とbootstrapはまだ未承認です。
 
 | criterion | AWS CDK + TypeScript | Terraform | OpenTofu | CloudFormation direct |
 | --- | --- | --- | --- | --- |
@@ -510,7 +510,7 @@ IaCは必須ですが、tool adoptionと最初のbootstrapはまだ未承認で�
 | vendor coupling | AWS / CloudFormationへのcouplingが強い | languageはcross-cloudだがAWS resource定義は移植不能 | 同左。tool migrationにもstate検証が必要 | AWSへのcouplingが最も直接的 |
 | tool cost | tool自体よりbootstrap / deployed resource / CIのcostを確認 | CLIとoptional managed backend / runnerのcostを確認 | CLIとremote backend / runnerのcostを確認 | deployed resource / CIのcostを確認 |
 
-#### Recommendation: AWS CDK + TypeScript（human approval pending）
+#### Decision: AWS CDK + TypeScript（offline foundation approved）
 
 StreamBandはAWS-onlyのsmall serverless architectureで、applicationとteam skillがTypeScript中心です。CDKなら言語を増やさず、CloudFormation stackをstate / deployment単位に使えるため、2人のteamが別途remote state backendとlockingを運用する範囲を減らせます。construct-level diffだけで安全と判断せず、synthesized template、security change、replacement、CloudFormation change setをreview対象にします。
 
@@ -520,7 +520,7 @@ CDKはdeploy前にaccount / Region単位のbootstrapが必要で、S3 / ECR / IA
 
 ### Future repository layout
 
-第一候補はrepository rootの`infra/`です。今回はdirectoryもpackageも作りません。
+repository rootの`infra/`を採用します。CLOUD-003Bでapplicationから独立したpackage、空Stack、offline test / synthを作成し、root packageやworkspaceには追加しません。
 
 ```text
 infra/
@@ -683,18 +683,18 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 
 ### Boundaries with following tasks
 
-- `HOST-001`: Vercel / Amplify Hosting / AWS-native Next.js hostingを決める。hosting由来のOIDC、domain、secret、rollback条件をCLOUD-003前に連携する
+- `HOST-001`: PR #24でVercel Pro primary candidateを承認済み。hosting由来のOIDC、domain、secret、rollbackの実設定は別task / gateとする
 - `AUTH-001`: Cognito User Pool、app client、session integrationを設計・実装する。CLOUD-002では作らない
 - `CLOUD-DATA-001`: DynamoDBのtable数、partition / sort key、index、transaction、PITRを決める
 - `AUTHZ-001`: Band Membership capability matrixとserver authorization testを決める
 - `STORAGE-001`: S3 bucket名、opaque object key詳細、MIME / size、lifecycle、versioning、retention、presigned accessを決める
-- `CLOUD-003`: 最初のAWS接続 / resource作成task候補。CLOUD-002 / HOST-001の承認前には開始しない
+- `CLOUD-003`: Aは人間側account readiness、Bはoffline repository foundation、Cは別Human Gate後の最初のAWS接続 / bootstrapとして分割する
 
 ### Human approval gates
 
 - AWS account作成、AWS Organizations / management model
 - real unreleased dataをPrivate Alpha accountへ初めて投入すること
-- AWS CDK + TypeScriptの採用と`infra/`package作成
+- AWS CDK + TypeScriptと`infra/`packageはoffline foundationまで承認済み。AWS接続を伴う変更は別Human Gate
 - 最初のCDK bootstrap、bootstrap trust / execution policy、最初のAWS deployment
 - GitHub OIDC trustとdeploy role、Private Alpha workflow / environment access
 - root / recovery / billing / security setting変更
@@ -717,6 +717,37 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 - [OpenTofu state encryption](https://opentofu.org/docs/language/state/encryption/)
 - [AWS tagging best practices](https://docs.aws.amazon.com/tag-editor/latest/userguide/best-practices-and-strats.html)
 - [AWS cost allocation tags](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+
+## CLOUD-003: Nonprod Foundation Bootstrap
+
+### CLOUD-003A: Account readiness（human-side completed）
+
+人間側から、StreamBand専用nonprod AWS accountの作成とroot MFA設定完了が報告されています。この確認はAWS APIで再取得せず、account identifier、root email、支払い情報、MFA情報、credentialをrepositoryへ保存しません。既存の別用途AWS account / resourceは対象外です。
+
+### CLOUD-003B: CDK repository foundation
+
+CLOUD-003Bで許可されるのは、AWSに接続しないrepository toolchainだけです。
+
+- AWS CDK + TypeScriptを`infra/`の独立npm packageとして配置する
+- `StreamBandNonprodFoundation`をenvironment-agnosticな空Stackとして生成する
+- Node.js 24を標準とし、CDK App / Stack生成、resource 0件、nonprod境界、account / Region未bindingをoffline unit testで確認する
+- `cdk synth --no-lookups`でcredentialなしのoffline synthを行い、`cdk.out/`はcommitしない
+- application `src/**`、root package、既存GitHub Actionsは変更しない。infra CI integrationは別taskで判断する
+- AWS account ID、credential、private dataをcode、docs、test、outputへ含めない
+
+2026-09-10時点の公式AWS CDKサポート表ではNode.js 24がサポート対象です。CDK CLIと`aws-cdk-lib`は同一versionを仮定せず、library release時のCLIまたは新しいCLIが互換という公式方針に従ってpackage lockで固定します。
+
+この段階ではS3、ECR、IAM、OIDC、Budgets、SNS、CloudWatch、Cognito、Lambda、API Gateway、DynamoDBを定義しません。AWS connection、API call、bootstrap、deploy、diff、destroyも行いません。そのためAWS runtime resourceとAWS runtime costは0です。
+
+### CLOUD-003C: First AWS connection / bootstrap（pending Human Gate）
+
+CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、permission、cost、rollbackを再確認したうえで最初のAWS接続とnonprod bootstrapを行う将来taskです。CLOUD-003Bの承認には含まれず、明示的な別Human Gateが必要です。Private Alphaや本物の未公開曲も対象にしません。
+
+### Official references（2026-09-10確認）
+
+- [AWS CDK supported Node.js versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html)
+- [AWS CDK versioning and Toolkit compatibility](https://docs.aws.amazon.com/cdk/v2/guide/versioning.html)
+- [AWS CDK CLI lookup option](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd.html)
 
 ## 利用候補
 

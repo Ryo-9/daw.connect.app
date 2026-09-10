@@ -78,7 +78,7 @@
 以下のservice方向はCLOUD-001 / PR #22 review後の人間承認済みplanning baselineです。現在の実装事実ではなく、resource作成、credential設定、application integration、deploymentは未実施で、それぞれ人の承認と専用taskを必要とします。
 
 ```text
-Next.js Web Hosting (Vercel Pro candidate / human approval pending)
+Next.js Web Hosting (Vercel Pro approved candidate / connection not approved)
           |
           v
 API Gateway HTTP API
@@ -121,9 +121,9 @@ CloudFrontはPrivate Alphaの実測でS3 short-lived accessにlatency / cache / 
 
 本物の未公開曲を入れる前に、Private Alphaをnonprodと別AWS accountへ分離することを推奨します。同一accountを続ける場合はhuman risk acceptanceを必須とし、data、IAM、resource、budgetを混在させません。
 
-### Web hosting target（HOST-001 proposal）
+### Web hosting target（HOST-001 approved candidate）
 
-HOST-001では、**Vercel Proを第一候補**、**AWS Amplify Hostingを条件付きfallback**として提案します。これは人間承認待ちで、account接続、project、domain、credential、deploymentは未実施です。比較とsecurity / release gateの詳細は[HOSTING.md](HOSTING.md)を参照します。
+HOST-001 / PR #24で、**Vercel ProをPrivate Alpha primary hosting candidate**、**AWS Amplify Hostingを条件付きfallback**として承認しました。候補承認は契約、account接続、project、domain、credential、料金発生、deploymentの承認ではなく、これらは未実施です。比較とsecurity / release gateの詳細は[HOSTING.md](HOSTING.md)を参照します。
 
 - VercelはNext.jsのverified adapterで、Next.js `16.3.0`へのcompatibility riskと2人teamの運用負荷を抑えやすい
 - Vercel Hobbyはpersonal / non-commercial用途に限定されるため、Private Alphaの既定案にしない
@@ -136,16 +136,16 @@ Vercel Proのbase / usage costはPrivate Alphaの通常目標を超える可能�
 
 ### Foundation / Infrastructure as Code boundary
 
-CLOUD-002ではAWS CDK + TypeScriptを第一候補として提案し、Terraform / OpenTofu / CloudFormation directと比較します。CDKは現行TypeScript skillを再利用し、CloudFormation stackをstate / deployment境界にできる点を優先しますが、tool採用、`infra/` package、CDK bootstrapはhuman approval待ちです。
+CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infra/` packageにapplication sourceと分離したtoolchainを置きます。現時点の`StreamBandNonprodFoundation`はresourceを定義しない空Stackで、unit testと`--no-lookups`のoffline synthだけを対象とします。
 
 - environment: `local`、AWS `nonprod`、`private-alpha`だけを初期境界とする
 - account: 本物の未公開曲を入れる前にnonprodとPrivate Alphaを別AWS accountへ分ける
 - credential: local humanはIAM Identity Center等のshort-lived session、GitHub ActionsはOIDC AssumeRoleを第一候補とし、long-lived access keyを使わない
 - deployment: nonprod / Private Alphaのrole、stack、approvalを分離し、Private Alphaのunattended destroyを禁止する
 - rollback: application、infrastructure、data recoveryを分け、IaC rollbackをuser data restoreと見なさない
-- source layout: repository rootの`infra/`を候補とし、app packageや`src/**`と分離する。CLOUD-002では作成しない
+- source layout: repository rootの`infra/`をapp packageや`src/**`と分離する。root npm workspaceやroot dependencyには含めない
 
-account、IAM / OIDC、bootstrap resource、stack、workflowは未作成です。詳細は[AWS.md](AWS.md)のCLOUD-002章を参照します。
+AWSへの接続、account binding、IAM / OIDC、Budgets、bootstrap resource、deployed stack、workflowは未作成です。最初のAWS接続とbootstrapはCLOUD-003Cの別Human Gateです。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003B章を参照します。
 
 ## 自動テスト
 

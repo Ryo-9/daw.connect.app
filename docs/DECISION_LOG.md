@@ -26,8 +26,8 @@
 | DEC-011 | 2026-09-09 | Phase 1の中心review flowを定義する | 提案中 | Song Detail / 制作review | - |
 | DEC-012 | 2026-09-09 | Core API / persistence boundaryを実装前にcontract化する | 提案中 | API / persistence設計 | - |
 | DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 承認済み | Cloud architecture / Phase 2 | - |
-| DEC-014 | 2026-09-10 | Phase 2 Cloud foundation / IaC policyを定める | 提案中 | AWS account / IaC / deployment safety | - |
-| DEC-015 | 2026-09-10 | Private AlphaのNext.js hosting候補を定める | 提案中 | Web hosting / deployment | - |
+| DEC-014 | 2026-09-10 | Phase 2 Cloud foundation / IaC policyを定める | 承認済み | AWS account / IaC / deployment safety | - |
+| DEC-015 | 2026-09-10 | Private AlphaのNext.js hosting候補を定める | 承認済み | Web hosting / deployment | - |
 
 ---
 
@@ -205,34 +205,36 @@
 ## DEC-014: Phase 2 Cloud foundation / IaC policyを定める
 
 - 日付: 2026-09-10
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（CLOUD-002）
+- 承認者: 人間側（CLOUD-003B依頼で承認範囲を明示）
 - 承認済み前提: DEC-013のAWS serverless target、Tokyo Region第一候補、CloudFront / WebSocket / transcodingのDEFER、real unreleased data投入前のnonprod / Private Alpha account分離、cost guardrailを維持する。
-- IaC推奨案: AWS CDK + TypeScriptを第一候補とする。現行のTypeScript skillを再利用し、AWS-onlyのsmall architectureをCloudFormation stackで管理して、別remote state backendの運用を増やさないため。採用と最初のbootstrapはhuman approval待ち。
-- Repository候補: rootの`infra/`をapp `src/**`から分け、独立packageとして小さく開始する。directory / packageはCLOUD-002では作成しない。
+- IaC決定: AWS CDK + TypeScriptを採用し、現行のTypeScript skillを再利用してAWS-onlyのsmall architectureをCloudFormation stackで管理する。CLOUD-003Bで承認された範囲は、root appから分離した`infra/` package、空Stack、offline test、`--no-lookups` synthまで。
+- Repository境界: rootの`infra/`をapp `src/**`から分けた独立packageとして小さく開始する。npm workspace化、monorepo tool、root package依存は追加しない。
 - Account / environment: `local`、AWS `nonprod`、`private-alpha`を初期境界とする。nonprodとPrivate Alphaは別accountを推奨し、Private Alpha account未準備なら本物のdata投入をblockする。
 - Credential候補: local humanはIAM Identity Center等のshort-lived session、GitHub Actionsはrepository / environmentを限定したOIDC AssumeRoleとする。long-lived access key、共有credential、root daily useを禁止する。
 - Change safety候補: naming / tagでproject・environment・purposeを識別し、Private Alphaのdestroy、replacement、protection disable、data migrationを通常deployから分離してhuman approvalを要求する。
 - Rollback境界: application rollback、CloudFormation / infrastructure rollback、DynamoDB / S3等のdata recoveryを別手順にする。IaC rollbackはuser data restoreではない。
 - Drift方針候補: managed resourceはreviewed IaCをsource of truthとし、Console emergency changeは記録後に専用task / PRでreconcileする。
-- 次のresource境界: `HOST-001`でhostingを決定後、最初のAWS接続 / resource作成を`CLOUD-003`候補へ分離する。CLOUD-002ではAWS connection、account / IAM / OIDC / bootstrap / stack作成を行わない。
-- Human approval待ち: CDK採用、`infra/`作成、AWS account / Organizations model、root security、OIDC trust、bootstrap policy、first deploy、destructive gate、exact budget threshold / recipient。
+- 次のresource境界: CLOUD-003Cを最初のAWS接続 / bootstrap候補として分離する。actual AWS connection、account確認、IAM / OIDC、Budgets、CDK bootstrap / deploy、resource作成はCLOUD-003Bの承認外で、別Human Gateが必要。
+- Human approval待ち: AWS Organizations model、OIDC trust、bootstrap policy、first AWS connection / deploy、destructive gate、exact budget threshold / recipient。AWS CDK + TypeScript、`infra/`、offline test / synthのみ承認済み。
 - 見直し条件: multi-cloud要件、既存Terraform estate、CDKで未対応のresource、team運用負荷、state / rollback事故、hosting decisionとの不整合が判明した場合。
 - 関連: CLOUD-002、CLOUD-003候補、HOST-001、[AWS.md](AWS.md)、[ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## DEC-015: Private AlphaのNext.js hosting候補を定める
 
 - 日付: 2026-09-10
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（HOST-001）
-- Primary候補: Vercel Pro。Next.jsのverified adapter、PR Preview、staged promotion、rollbackを使い、Next.js `16.3.0`のcompatibilityと2人teamの運用単純性を優先する。
+- 承認者: 人間側（PR #24のreview / merge）
+- Primary候補: Vercel ProをPrivate Alpha primary hosting candidateとして承認する。Next.jsのverified adapter、PR Preview、staged promotion、rollbackを使い、Next.js `16.3.0`のcompatibilityと2人teamの運用単純性を優先する。
 - Fallback候補: AWS Amplify Hosting。ただしAWS公式managed SSR supportが現時点でNext.js 15までのため、Next.js 16 official supportまたは必要機能のPoC成功までdeploy-readyとしない。hosting都合だけのNext.js downgradeは行わない。
 - Last resort: AWSのsingle Node.js / Docker self-hosting。Vercel / Amplifyが不適合な場合だけ別taskでcost、reverse proxy、cache、version skew、rollback、operationsを設計する。
 - Security境界: hosting protectionはdefense in depthとし、private dataはCognito identityとLambda側Band authorizationで保護する。Previewはsynthetic dataだけに接続し、production client bundle / public configへsecretやprivate dataを含めない。
 - Release候補: protected Previewと`Quality checks`後、review済みimmutable commitをstaged productionからhumanが明示promoteする。main mergeだけでPrivate Alpha custom domainへ自動公開しない候補とする。
 - Cost: Vercel Hobbyはpersonal / non-commercial用途に限定されるため既定にしない。Vercel Pro base / usage / add-onは接続前にcurrent priceで再見積もりし、Private Alpha通常目標超過のhuman acceptanceを必要とする。
 - Portability: business rule、application authorization、Asset accessをAPI Gateway / Lambda側に保ち、standard Next.js buildとstable custom domain / API contractを維持する。
-- 未決事項: provider採用、account / project / team、billing owner、production protection、custom domain、Cognito callback / CORS、region latency、log retention、first deployment、rollback drill。
+- 未決事項: Vercel契約、account / project / team、billing owner、料金発生、production protection、custom domain、Cognito callback / CORS、region latency、log retention、first deployment、rollback drill。候補承認は接続・契約・deploymentの承認ではない。
 - 実装状態: docs-only。hosting account / project / GitHub App / domain / credential / deployment、AWS resource、runtime / package / config変更はない。
 - 関連: HOST-001、CLOUD-002、CLOUD-003候補、[HOSTING.md](HOSTING.md)、[ARCHITECTURE.md](ARCHITECTURE.md)、[AWS.md](AWS.md)
 

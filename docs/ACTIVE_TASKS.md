@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| HOST-001 | Next.js Private Alpha Hosting Decision | Codex | 作業中 | `docs/host-001-private-alpha-hosting-decision` | `docs/HOSTING.md`、`docs/ARCHITECTURE.md`、`docs/AWS.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-10 | 未作成 | Vercel / Amplify / AWS-nativeを比較するdocs-only判断。hosting接続・deploymentなし |
+| CLOUD-003B | CDK Repository Foundation | Codex | 作業中 | `chore/cloud-003b-cdk-repository-foundation` | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-10 | 未作成 | AWS CDK + TypeScriptのoffline repository foundation。AWS接続・resource・bootstrap・deployなし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| HOST-001 | 完了 | Codex | `docs/host-001-private-alpha-hosting-decision` / #24 | 2026-09-10 | Vercel ProをPrivate Alpha primary hosting candidateとしてmainへマージ済み。契約・project・deploymentなし |
 | CLOUD-002 | 完了 | Codex | `cloud/cloud-002-foundation-decision` / #23 | 2026-09-10 | account / environment、IaC、credential、cost、rollback方針をmainへマージ済み。AWS接続・resource作成なし |
 | CLOUD-001 | 完了 | Codex | `cloud/cloud-001-phase2-mvp-plan` / #22 | 2026-09-10 | 2026年末Private AlphaのCloud MVP architectureとhuman gateをmainへマージ済み。AWS resource作成なし |
 | DATA-002 | 完了 | Codex | `data/data-002-core-api-boundary` / #21 | 2026-09-09 | Core collaboration API / persistence boundary草案をmainへマージ済み。runtime実装なし |

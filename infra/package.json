@@ -1,0 +1,25 @@
+{
+  "name": "streamband-infra",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "synth": "cdk synth --no-lookups --quiet",
+    "check": "npm run build && npm run test && npm run synth"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.268.0",
+    "constructs": "10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.4",
+    "aws-cdk": "2.1141.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}
