@@ -113,6 +113,10 @@ AUTH-001実装時は、既存のUI smokeとは別に、次を必須test contract
 
 - valid login、invalid password、unknown accountのnon-enumerating response
 - invitation-gated signup、verified email、14-day expiry、revoke / decline / inviter capability loss、explicit acceptance
+- `PENDING → DECLINED`を保存し、validな`DECLINED`を本人がexplicit re-acceptすると`ACCEPTED`になる
+- `DECLINED`がexpired、inviter revoked、inviter capability lost、invalid / replacedの場合はre-acceptをdenyする
+- `あとで決める`はinvitation stateを変更せず、re-acceptでも全server validationを再実行する
+- Membershipはinitial accept / re-acceptのvalidation成功時だけ作成する
 - open public signup、link-click-only Membership creation、invalid role、Owner invitationを拒否する
 - password reset後のall-session invalidationと、8文字 + uppercase / lowercase / number policy
 - 12-hour idle / 7-day absolute session、active renewal、expired screenからsafe route復帰、explicit logout時のhome復帰

@@ -1452,11 +1452,23 @@ Invitation minimum contract:
 1. invitationはverified email addressに結びつけ、予測不能tokenとserver-stored digest / stateを持つ候補とする
 2. initial expiryは**14日**。accept時にserverがtoken、expiry、revocation、email一致、inviterのcurrent ACTIVE Membershipとinvite capabilityを再検証する
 3. link clickやCognito User作成だけではMembershipを作らない。本人がBand名、inviter、roleを確認してexplicit acceptした時だけ作成する
-4. `あとで決める`はstateを変えず、期限内のdeclineは本人が実行できる。decline、inviter revoke、expiry後は同じinvitationを復活させず、新規発行を必要とする
+4. `あとで決める`はstateを変えない。本人のdeclineで`PENDING → DECLINED`とするが、expiry前・未revoke・inviter capability有効・verified email一致・その他validation成功なら、本人の明示操作で`DECLINED → ACCEPTED`へ変更できる
 5. Cognito User、private auth-subject mapping、invitation、BandMembershipは別record / transitionとして扱い、partial failureをreconcileする
 6. default invited roleは`Editor`。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待できる。Editor / Commenter / Guestは招待不可
 7. Owner roleを通常invitationで付与せず、AUTHZ-001のownership transfer専用flowを使う
 8. unknown / invalid / expired / revoked invitationはBandやaccountの存在を漏らさないsafe errorにする
+
+Invitation decision state:
+
+| current | explicit action / event | result | reversibility |
+| --- | --- | --- | --- |
+| `PENDING` | あとで決める | `PENDING` | state変更なし |
+| `PENDING` | 本人が辞退 | `DECLINED` | expiry前かつ未revoke / validなら本人が再accept可能 |
+| `DECLINED` | やっぱり参加する | `ACCEPTED` + Membership create | accept時に全条件をserver-sideで再検証 |
+| `PENDING / DECLINED` | inviter revoke / replacement invalidation | `REVOKED / INVALIDATED` | 同じinvitationでは不可逆。新規発行が必要 |
+| `PENDING / DECLINED` | expiry到達 | `EXPIRED` | 同じinvitationでは不可逆。新規発行が必要 |
+
+`DECLINED`画面では「この招待は辞退済みです」と`やっぱり参加する`を表示できます。再accept時もlink knowledgeや過去のvalidationを信用せず、token、expiry、revoke / replacement、verified email、inviterのcurrent ACTIVE Membership / invite capability、target Band / roleを再検証します。成功したexplicit acceptだけがBandMembershipを作ります。Inviter revoke、expiry、capability loss、invalid / replaced invitationではdenyし、新しいinvitationを必要とします。
 
 AWS current guidanceではCognito self-service sign-upを有効にするとinternet上の誰でもsign upできます。Managed Loginだけでinvitation tokenをsignupへ安全にbindできると仮定しません。Pre-sign-up validation、StreamBand server-mediated registration、separate app-client / entryなどのexact mechanismは**UNRESOLVED implementation gate**です。Human-approved signup UXをadministrator-created userへ戻して解決しません。`AdminCreateUser` temporary-password flowは、将来のemergency / operator fallbackとして必要性を別reviewしますがprimary flowではありません。
 
@@ -1799,6 +1811,8 @@ Recovery候補:
 
 - valid login、wrong password、unknown accountのnon-enumerating outward response
 - invitation-gated signup、verified email、explicit acceptance、14-day expiry、revoke / decline / inviter capability loss
+- `PENDING → DECLINED`、validな`DECLINED → ACCEPTED`、expired / revoked / capability-lost / invalidated re-accept deny
+- `あとで決める`がstateを変えず、re-acceptで全server validationを再実行し、成功時だけMembershipを作る
 - link click / Cognito User creationだけではMembershipを作らず、default roleがEditor、Owner invitationを拒否する
 - open public signupを拒否し、invite-only gateを迂回できない
 - verification required、password creation、password reset後のall-session invalidation

@@ -911,7 +911,7 @@ Browser
 - Cookie mutationはsynchronizer CSRF token + exact Origin / Host validationを必要とし、SameSiteだけに依存しない
 - localStorage、sessionStorage、URL、HTML、logへtoken、authorization code、session ID、client secretを保存しない
 
-Invitation acceptanceは、予測不能token、14-day expiry、verified email、revoke / decline state、inviterのcurrent capabilityをserver-sideで再検証します。Link clickだけでMembershipを作らず、本人がBand名、inviter、roleを確認してacceptした時だけ作成します。Default roleはEditor、OwnerはAdmin以下、AdminはEditor以下を招待でき、Owner roleはownership transfer flowだけで扱います。Managed Loginとinvite gateのexact integrationは未解決で、admin-created primary UXへ戻しません。
+Invitation acceptanceは、予測不能token、14-day expiry、verified email、revoke / replacement state、inviterのcurrent capabilityをserver-sideで再検証します。Link clickだけでMembershipを作らず、本人がBand名、inviter、roleを確認してacceptした時だけ作成します。`PENDING → DECLINED`は本人操作ですが、expiry前・未revoke・inviter capability有効・verified email一致・その他validation成功なら、本人の明示的な`DECLINED → ACCEPTED`を許可します。`あとで決める`は`PENDING`を維持します。Revoke / expiry / invalidationは同一invitationで不可逆です。再acceptも全validationを再実行し、成功時だけMembershipを作ります。Default roleはEditor、OwnerはAdmin以下、AdminはEditor以下を招待でき、Owner roleはownership transfer flowだけで扱います。Managed Loginとinvite gateのexact integrationは未解決で、admin-created primary UXへ戻しません。
 
 ### Authentication endpoints and session behavior candidates
 

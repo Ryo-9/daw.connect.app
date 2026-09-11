@@ -160,7 +160,7 @@ Login / signup / invitation / reset / logout、Cognito、session / device、emai
 - 招待された人はBand名、inviter、roleを確認し、accept / あとで決める / declineを選ぶ
 - accept時にserverがtoken、expiry、revoke、email一致、inviter権限を再検証してからMembershipを作成する
 
-Link clickだけではMembershipを作りません。Decline、inviter revoke、expiry後は同じinvitationを復活させず、新規発行を必要とします。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待でき、Editor以下はinvite不可です。Owner roleは通常invitationで付与せず、ownership transfer専用flowを使います。
+Link clickだけではMembershipを作りません。`あとで決める`は`PENDING`のままです。辞退すると`DECLINED`になりますが、expiry前・未revoke・inviter capability有効・verified email一致・その他server validation成功なら、本人は「この招待は辞退済みです」画面の`やっぱり参加する`から明示的に再acceptできます。再acceptでも全条件を再検証し、成功時だけMembershipを作ります。Inviter revoke、expiry、capability loss、invalid / replaced invitationではacceptできず、新規発行が必要です。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待でき、Editor以下はinvite不可です。Owner roleは通常invitationで付与せず、ownership transfer専用flowを使います。
 
 ## 5. 楽曲作成
 
