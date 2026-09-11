@@ -270,6 +270,22 @@
 - 実装状態: docs-only proposal。DynamoDB table、PITR、GSI、IAM、API、repository code、AWS resourceは未作成
 - 関連: CLOUD-DATA-001、DATA-001、DATA-002、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[AWS.md](AWS.md)
 
+## DEC-018: Band authorizationをrole bundleとserver capabilityで判定する
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（AUTHZ-001）
+- Role model: Cloud MVPのBandMembership roleを`Owner / Admin / Editor / Commenter / Guest`へ統一する。roleはclient-side hierarchyではなく、serverがoperation capabilityへ展開する固定bundleとする
+- Verification: identity解決後、canonical resourceからstored Band IDをderiveし、base tableのACTIVE BandMembershipをstrong readしてからcapability、ownership、state、revisionを評価する。GSI、URL、client role、cached UI、object key、opaque IDはauthorizationにしない
+- Membership invariant: 各Bandに最低1人のACTIVE Ownerを残す。Owner transferはatomic、AdminはOwner / Admin peerを変更せず、removed memberは次requestからdenyする
+- Collaboration boundary: CommenterはCommentとProposal review / non-final Holdまで、Editor以上はSong / Version / Asset / Proposalとfinal Decisionを扱う。Guestはsame-Bandの限定read-only。Audit readと他人Comment moderationはOwner / Adminに限定する
+- Comment rule: own Comment bodyのeditはserver timeで15分、own tombstoneは時間制限なし、他人本文のeditは禁止し、Owner / Adminだけが理由付きtombstone moderationを行う
+- Non-destructive rule: Proposal Decisionはappend-only recordとsummary stateを更新するが、SOURCE_MIDI、PROPOSAL_MIDI、DAW、SongVersionを変更しない。HOLDはfinal Decisionを作らずREVIEWINGを維持する
+- Error / audit: 未認証401、same-Band capability不足403、hidden / cross-Band 404、stale / current-state conflict 409、input validation 422とする。member / ownership、archive、Asset deletion、Proposal Decision、moderationをsafe AuditEvent対象にする
+- 実装状態: docs-only proposal。Cognito、API、DynamoDB、S3、IAM、AWS resource、runtime authorization codeは未実装
+- 見直し条件: friend testでroleが細かすぎる、Guest accessが広すぎる、separation-of-dutiesが必要、moderation / invitation / account recovery要件が加わる、Private Alpha security reviewでdeny境界が変わる場合
+- 関連: AUTHZ-001、DATA-002、CLOUD-DATA-001、[API.md](API.md)、[DATABASE.md](DATABASE.md)
+
 ---
 
 ## 新規決定テンプレート

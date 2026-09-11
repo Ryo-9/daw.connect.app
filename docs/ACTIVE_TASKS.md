@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-DATA-001 | Metadata persistence physical design | Codex | レビュー待ち | `docs/cloud-data-001-dynamodb-design` | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #30 | Cloud MVPのDynamoDB key、GSI、access pattern、transaction、PITR / restoreを設計。AWS resource作成なし |
+| AUTHZ-001 | Band membership authorization and capability matrix | Codex | レビュー待ち | `docs/authz-001-capability-matrix` | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #31 | 5 roleのcapability、ownership、cross-Band protection、audit、future test contractを設計。AWS resource作成なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-DATA-001 | 完了 | Codex | `docs/cloud-data-001-dynamodb-design` / #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、transaction、concurrency、PITR / restoreを設計しmainへマージ済み。AWS resource作成なし |
 | CLOUD-003C-DECISION | 完了 | Codex | `docs/cloud-003c-bootstrap-decision` / #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定しmainへマージ済み。actual bootstrapは別Human Gateで未承認 |
 | CLOUD-003C-REVIEW | 完了 | Codex | `docs/cloud-003c-bootstrap-review` / #28 | 2026-09-11 | 現行CDK bootstrap resource、cost、permission、execution policy、OIDC原則をAWS公式資料でreviewしmainへマージ済み。AWS接続・変更なし |
 | CLOUD-003C-PREP | 完了 | Codex | `docs/cloud-003c-prep-checkpoint` / #27 | 2026-09-11 | 人間確認済みのnonprod readinessとactual bootstrap前のHuman Gateを機密識別子なしでmainへ同期。AWS接続・resource変更なし |

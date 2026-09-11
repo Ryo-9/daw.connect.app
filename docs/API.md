@@ -395,18 +395,9 @@ runtime validation libraryは未決定です。現在packageに新しいvalidati
 
 ### Authorization boundary
 
-現在の`Member.part`は音楽上の担当であり、access roleではありません。DATA-001の`owner / manager / contributor / viewer`候補と、`Owner / Admin / Editor / Commenter / Guest`という別候補にも差があるため、role名と権限は未確定です。API contractではrole名よりcapabilityをserver側で評価する候補とします。
+現在の`Member.part`は音楽上の担当であり、access roleではありません。AUTHZ-001ではCloud MVPのroleを`Owner / Admin / Editor / Commenter / Guest`へ統一し、roleを直接if文で比較するのではなく、後段のcapability matrixをserver contractとして評価します。
 
-| Operation | Owner/Admin-like | Editor-like | Commenter-like | Guest-like |
-| --- | --- | --- | --- | --- |
-| Song update | candidate | candidate | no | no |
-| Version create | candidate | candidate | no | no |
-| Comment create | candidate | candidate | candidate | TBD / default no |
-| Proposal create | candidate | candidate | TBD | no |
-| Proposal Decision | candidate | candidate | TBD | no |
-| Upload / Asset access | candidate | kind別candidate | upload no / read TBD | default no |
-
-これは採用済みpermission matrixではありません。すべてのrequestでserverがsessionからactorを決め、対象Band Membership、capability、resourceのBand ownershipを確認します。UIでbuttonが見えること、clientがroleやuser IDを送ること、object keyを知っていることは権限の証明になりません。
+すべてのrequestでserverがsessionからactorを決め、対象Band Membership、capability、resourceのBand ownershipを確認します。UIでbuttonが見えること、clientがroleやuser IDを送ること、object keyやopaque IDを知っていることは権限の証明になりません。
 
 ### Information leakage
 
@@ -554,11 +545,11 @@ envelope採用自体は未決定ですが、UIが少なくともfield error、un
 | status候補 | code例 | 用途 |
 | --- | --- | --- |
 | `400` | `MALFORMED_REQUEST` | JSON等の構文・transport上の不正 |
-| `422` | `VALIDATION_ERROR`, `ANCHOR_MISMATCH`, `INVALID_STATE_TRANSITION` | field / relation / state validation |
+| `422` | `VALIDATION_ERROR`, `ANCHOR_MISMATCH` | field / relation / format validation |
 | `401` | `UNAUTHENTICATED` | 有効なsessionがない |
 | `403` | `FORBIDDEN` | resource存在をactorが既知で、operationだけ許可されない場合の候補 |
 | `404` | `NOT_FOUND` | 対象なし、または他Band resourceを秘匿する場合 |
-| `409` | `REVISION_CONFLICT`, `IDEMPOTENCY_KEY_REUSED` | stale update、同時Decision、key再利用 |
+| `409` | `REVISION_CONFLICT`, `STATE_CONFLICT`, `INVALID_STATE_TRANSITION`, `IDEMPOTENCY_KEY_REUSED` | stale update、同時Decision、現在stateから不可能な遷移、key再利用 |
 | `413` | `FILE_TOO_LARGE` | upload metadata / 実objectが上限超過 |
 | `429` | `RATE_LIMITED` | abuse / burst control。retry情報は安全な範囲で返す |
 | `500` | `INTERNAL_ERROR` | 予期しないserver failure。詳細はclientへ返さない |
@@ -619,11 +610,11 @@ Composer exports Preview / MIDI from the DAW
 
 ## DATA-002 explicit non-goals
 
-この草案では次を実装・採用決定しません。
+DATA-002の草案では次を実装・採用決定しませんでした。AUTHZ-001は後段でauthorization contractだけを具体化しますが、runtime実装は引き続き行いません。
 
 - API、Next.js Route Handler、Server Action、別Backend
 - DB、ORM、schema、migration、DB製品
-- authentication、authorization、Cognito、session、cookie
+- authentication、authorization実装、Cognito、session、cookie
 - AWS、S3 bucket、Lambda、API Gateway、object storage provider
 - file upload / download、presigned URL、malware scan
 - localStorage、実永続化、secret / `.env`、infrastructure as code
@@ -637,10 +628,249 @@ Composer exports Preview / MIDI from the DAW
 
 - API 方式、URL / 関数命名、バージョニング
 - 認証とセッション、CSRF 対策
-- ロール別の権限マトリクス
+- AUTHZ-001のrole / capabilityをapplication policyへ安全にmappingする方法
 - 入力スキーマ、最大文字数、レート制限
 - ページング、検索、並び替え
 - 更新競合、冪等性、トランザクション
 - キャッシュと再検証
 - 監査ログ、監視、アラート
 - API テストと権限境界テスト
+
+## AUTHZ-001: Band Membership authorization contract
+
+### Status and principles
+
+この章はCloud MVPのserver-side authorization契約です。設計日: 2026-09-11。認証、Cognito、API、IAM、DynamoDB、S3は未実装で、AWS resourceも作成していません。
+
+- authorization単位はBandごとの`BandMembership`であり、Cognito groupや音楽上のpartではない
+- roleは権限の強弱を単純比較する数値階層ではなく、serverがcapabilityへ展開する固定bundleとする
+- すべてのcapabilityは、明示がない限り**同じBandのACTIVE Membership**を必須とする
+- creator / authorは一部の「自分のresource」操作を狭めるconditionであり、作成後の恒久的な管理権限ではない
+- UI visibility、GSI result、URLのBand ID、client role、cached state、object key、opaque resource IDをauthorizationに使わない
+- denyを既定とし、role / state / ownership / relationshipのいずれかを確認できなければfail closedとする
+
+### Role definitions
+
+| Role | Meaning | Explicit boundary |
+| --- | --- | --- |
+| `Owner` | Bandの最上位authority。所有権移譲、Band archive / restore、Owner / Admin境界を管理する | 最後のACTIVE Ownerを失わせられない。routine AWS / billing権限とは無関係 |
+| `Admin` | Band metadataと大部分のmember / collaboration contentを管理する | Bandを所有せず、Ownerの変更・排除・所有権移譲はできない |
+| `Editor` | Song、Version、Asset、MIDI Proposal等の制作collaboration contentを作成・更新する | member管理、Band ownership、他人Commentのmoderation、Audit閲覧はできない |
+| `Commenter` | Version / Proposalをreviewし、Commentと非finalなHold / Reviewingを扱う | Song / Version / Asset / final Proposal Decisionを変更しない |
+| `Guest` | ACTIVE Membershipを持つ限定read-only participant | write、Audit閲覧、private admin metadata閲覧は行わない |
+
+### Capability matrix legend
+
+- `A`: role bundleとして許可。表のstate / relationship conditionは引き続き必要
+- `C`: ownership、target role、state等の追加条件を満たす場合だけ許可
+- `D`: deny
+- `S`: application serviceだけが実行し、人間roleへ直接公開しない
+- `Same Band`は全行で必須。例外はserver自身が書くAuditEventだけだが、そのeventにもderived `bandId`が必要
+- `Failure`の`404`はmissing / inactive membership / cross-Band秘匿、`403`は同じBand内でcapability不足、`409`はrevision / current state / invariant conflictを表す。未認証は全行で`401`
+
+#### Band and Membership
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `band:read` | A | A | A | A | A | 必須 | ACTIVE Membership。ARCHIVEDも同じmemberはread可 | No | 404 |
+| `band:update` | A | A | D | D | D | 必須 | ACTIVE Band、`expectedRevision` | No | 403 / 409 |
+| `band:archive` | A | D | D | D | D | 必須 | ACTIVE Band、`expectedRevision` | **Yes** | 403 / 409 |
+| `band:restore` | A | D | D | D | D | 必須 | ARCHIVED Band、`expectedRevision` | **Yes** | 403 / 409 |
+| `membership:list` | A | A | A | A | A | 必須 | safe profile projectionだけを返す | No | 404 |
+| `membership:add` | A | C | D | D | D | 必須 | target Userをserver解決。OwnerはAdmin以下、AdminはEditor / Commenter / Guestだけを付与。Owner追加はtransfer flowのみ | **Yes** | 403 / 409 / 422 |
+| `membership:change-role` | C | C | D | D | D | 必須 | OwnerはAdmin / Editor / Commenter / Guest間、AdminはEditor / Commenter / Guest間だけ変更可。Owner変更はtransfer flow。target revision必須 | **Yes** | 403 / 409 |
+| `membership:remove` | C | C | D | D | D | 必須 | Ownerはlast Owner以外、AdminはEditor / Commenter / Guestだけ。他人をremove | **Yes** | 403 / 409 |
+| `membership:transfer-ownership` | A | D | D | D | D | 必須 | actorがACTIVE Owner、targetがACTIVE member。promote + optional actor demoteをatomicに行う | **Yes** | 403 / 409 |
+| `membership:remove-self` | C | C | C | C | C | 必須 | actor自身だけ。sole ACTIVE Ownerは禁止 | **Yes** | 409 |
+| `membership:remove-last-owner` | D | D | D | D | D | 必須 | 常にdeny。別Owner作成 / transferが先 | **Yes (attempt)** | 409 |
+
+Adminは自分をOwnerへ昇格できず、Owner / 他Adminのrole変更・removeもできません。Owner roleを持つmemberの追加は一般`membership:add`ではなく、existing Ownerが明示するownership transfer / co-owner approval flowだけを使います。MVPでco-ownerを許可する場合も、最低1人のACTIVE Owner invariantを変えません。
+
+#### Song and Version
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `song:create` | A | A | A | D | D | 必須 | ACTIVE Band。initial Versionとatomic create | No | 403 / 409 / 422 |
+| `song:read` | A | A | A | A | A | 必須 | stored Song.bandIdを使用。archived itemもdirect read可 | No | 404 |
+| `song:update` | A | A | A | D | D | 必須 | non-archived Song、`expectedRevision`。creator条件なし | No | 403 / 409 |
+| `song:archive` | A | A | A | D | D | 必須 | non-archived Song、`expectedRevision` | **Yes** | 403 / 409 |
+| `song:restore` | A | A | A | D | D | 必須 | archived Song、`expectedRevision` | **Yes** | 403 / 409 |
+| `version:create` | A | A | A | D | D | 必須 | non-archived Song、verified same-Song Assets、`expectedSongRevision` | **Yes** | 403 / 409 / 422 |
+| `version:read` | A | A | A | A | A | 必須 | stored Version → Song → Band chain一致 | No | 404 |
+| `version:list` | A | A | A | A | A | 必須 | parent Song access。pagination必須 | No | 404 |
+| `version:update-limited-metadata` | A | A | A | D | D | 必須 | label / noteだけ。sequence、assets、creator、createdAt、basedOnはimmutable。`expectedRevision` | **Yes** | 403 / 409 / 422 |
+
+Version creatorは特別なauthorizationを持ちません。Versionのdelete / rewriteはMVP capabilityに含めず、DAW反映後の新Versionを明示作成します。
+
+#### Asset
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `asset:request-upload` | A | A | A | D | D | 必須 | ACTIVE Song、same-Song target、kind / quota / metadata validation | No | 403 / 409 / 422 |
+| `asset:complete-upload` | C | C | C | D | D | 必須 | actorがupload intent / Asset creator、state=PENDING/VERIFYING、object verification、revision一致 | No | 403 / 409 / 422 |
+| `asset:access` | A | A | A | A | A | 必須 | canonical Assetが`AVAILABLE`、stored Band / Song / Version chain一致 | access log候補 | 404 / 409 |
+| `asset:request-delete` | A | A | C | D | D | 必須 | Owner/Adminはsame-Band Asset。Editorは自分のPENDING / FAILED staging Assetだけ。AVAILABLE Version AssetはEditor不可 | **Yes** | 403 / 409 |
+
+upload completeのOwner/Admin overrideはMVPでは設けません。開始actorが不在になったorphan uploadは、別のrecovery command / taskで処理し、他人のuploadを通常completeしません。短時間instructionを発行するたびにauthorizationを再確認します。
+
+#### Comment
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `comment:create` | A | A | A | A | D | 必須 | accessible Version、valid Anchor。authorはserver決定 | No | 403 / 409 / 422 |
+| `comment:read` | A | A | A | A | A | 必須 | Version chain一致。tombstone本文は返さない | No | 404 |
+| `comment:edit-own` | C | C | C | C | D | 必須 | actor=author、作成後15分以内、not tombstoned、bodyだけ、`expectedRevision` | No | 403 / 409 |
+| `comment:edit-others` | D | D | D | D | D | 必須 | author attributionを保つため常にdeny | No | 403 |
+| `comment:tombstone-own` | C | C | C | C | D | 必須 | actor=author、not tombstoned、`expectedRevision`。時間制限なし | No | 403 / 409 |
+| `comment:moderate-others` | A | A | D | D | D | 必須 | 他人Commentをtombstone化するだけ。本文を書き換えない。reason category必須 | **Yes** | 403 / 409 |
+
+MVPのedit windowはserver timeで15分です。期限後は元Commentを残して新しいCommentで訂正します。moderatorも他人の本文を編集できず、必要な場合だけtombstoneにします。PITR / backup内の保持と法的削除は別runbookです。
+
+#### MIDI Proposal and Decision
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `proposal:create` | A | A | A | D | D | 必須 | source Version / SOURCE_MIDIとseparate PROPOSAL_MIDI Assetがsame Band / Song、AVAILABLE | No | 403 / 409 / 422 |
+| `proposal:submit` | C | C | C | D | D | 必須 | actor=creator、status=DRAFT、`expectedRevision` | No | 403 / 409 |
+| `proposal:read` | A | A | A | A | A | 必須 | stored source Version / Asset chain一致 | No | 404 |
+| `proposal:withdraw-own` | C | C | C | D | D | 必須 | actor=creator、status=DRAFT / SUBMITTED / REVIEWING、`expectedRevision` | **Yes** | 403 / 409 |
+| `proposal:review` | A | A | A | A | D | 必須 | status=SUBMITTED / REVIEWING。review feedbackはCommentとして保存 | No | 403 / 409 |
+| `proposal:accept` | A | A | A | D | D | 必須 | status=SUBMITTED / REVIEWING、`expectedRevision`、append final Decision | **Yes** | 403 / 409 |
+| `proposal:partial-accept` | A | A | A | D | D | 必須 | status=SUBMITTED / REVIEWING、partial detail必須、`expectedRevision` | **Yes** | 403 / 409 / 422 |
+| `proposal:reject` | A | A | A | D | D | 必須 | status=SUBMITTED / REVIEWING、`expectedRevision`、append final Decision | **Yes** | 403 / 409 |
+| `proposal:hold` | A | A | A | A | D | 必須 | SUBMITTED→REVIEWINGまたはREVIEWING維持。final Decision itemを作らない | status変更時のみ | 403 / 409 |
+
+Proposal creatorであること自体はfinal Decision権限を生みません。一方、MVPではEditor capabilityを持つactorをcreatorという理由だけでdecisionから除外しません。Decision actorとproposal creatorを記録し、必要ならPrivate Alpha reviewでseparation-of-dutiesを追加します。
+
+`ACCEPT / PARTIAL / REJECT`はProposal summary stateとappend-only Decisionを同じtransactionで更新しますが、SOURCE_MIDI、PROPOSAL_MIDI、DAW、SongVersionを変更しません。`HOLD`はfinal Decisionではなく`REVIEWING`の維持です。作曲者がDAWへ明示反映し、Preview / MIDIをexportした後、別の`version:create`で次Versionを作ります。
+
+#### Audit
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Same Band | Ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `audit:write-system` | S | S | S | S | S | derived必須 | application serviceだけ。actorは認証contextから設定 | n/a | client callは403 |
+| `audit:read` | A | A | D | D | D | 必須 | sanitized Band-scoped page、pagination。raw payloadなし | read access log候補 | 403 / 404 |
+
+### Server-trusted ownership rules
+
+| Resource | Trusted ownership / relationship | Creator-specific exception |
+| --- | --- | --- |
+| Band | canonical Band IDとACTIVE Owner Membership | `createdBy`はaudit情報で、現在のOwner authorityを決めない |
+| Song | canonical `Song.bandId` | creator条件なし。role capabilityで管理 |
+| SongVersion | canonical `bandId + songId`とparent Song | creator条件なし。limited metadataだけ更新可 |
+| Comment | canonical `bandId + songId + versionId`、`authorUserId` | authorだけ15分edit / anytime tombstone。moderatorは本文を編集しない |
+| Asset | canonical `bandId + songId + versionId?`、state、`createdBy` | creatorだけupload complete。Editorのdelete requestはown stagingだけ |
+| MidiProposal | canonical `bandId + songId + sourceVersionId + sourceMidiAssetId + proposalAssetId` | creatorだけsubmit / withdraw。final Decisionはrole capability |
+| ProposalDecision | parent Proposalからderived Band / Song / Version、server actor、append-only | creator ownershipなし。client supplied `decidedBy/At`を無視 |
+
+client submitted `ownerId`、`authorId`、`createdBy`、`decidedBy`、`bandId`はauthorityとして採用しません。source MIDIはcanonical Assetを読み、`kind=SOURCE_MIDI`、`state=AVAILABLE`、source Versionとsame Band / Songであることを検証します。Proposal Assetは別ID / objectの`PROPOSAL_MIDI`で、same Band / Song contextを満たさなければ422または秘匿404で拒否します。
+
+### Common membership verification algorithm
+
+すべてのprotected operationは次の順序を共有します。
+
+1. authentication layerでidentityを確認する。失敗は401
+2. auth subjectからinternal Userをserver側で解決する
+3. target canonical resourceをserver側で取得する
+4. resourceに保存されたrelationshipからBand IDをderiveする
+5. base tableから`BandMembership`をstrongly consistent readする
+6. Membershipが`ACTIVE`であることを要求する
+7. role bundleをcapabilityへ展開し、対象operationを評価する
+8. ownership、parent chain、resource state、allowed transitionを評価する
+9. revision / idempotency condition付きreadまたはwriteを実行する
+10. 必須operationではsafe `AuditEvent`を同じtransactionまたは整合するserver flowで出す
+
+一覧GSIやclient cacheで候補を見つけても、protected detail / mutation / Asset instructionの直前にこのsequenceを行います。Membership remove後はold page、old role表示、stale session、過去URLを持っていても、次requestのstrong readで拒否します。
+
+### Cross-Band protection and denial logging
+
+- URL Bandとcanonical resourceのBandが違う、parent Song / Version / Asset chainが違う、Membershipがmissing / inactiveの場合はfail closedとする
+- 他Band resourceの存在を漏らさないため、missing resourceとcross-Band / inactive Membershipは外向き`404 NOT_FOUND`へ統一する候補を維持する
+- ACTIVE same-Band memberにresourceを示した後、operation capabilityだけ不足する場合は`403 FORBIDDEN`
+- internal denial logはsafe reason category、request ID、opaque actor / resource ID、resultだけを候補とする
+- Song title、Comment body、filename、object key、signed URL、MIDI content、token、credential、authentication payloadをdenial log / AuditEventへ入れない
+- repeated sensitive denial、forged Band chain、role escalation attemptだけをrate-limit / deduplicateしてsecurity event候補にし、通常404を無制限に記録しない
+
+### Membership mutation invariants
+
+- Bandごとに最低1人の`ACTIVE Owner`を常に残す
+- ownership transferはtargetのACTIVE Membershipと両Membership revisionを確認し、target promoteとactor demote候補を`TransactWriteItems`でatomicにする
+- sole Ownerのremove / self-remove / demote / suspendと、last Ownerを失わせるBandMembership transactionはcondition failureにする
+- actorはclient payloadで自分のroleを変更できない。Adminは自分をOwnerへpromoteできず、Owner / Admin peerを変更・removeできない
+- stale member管理画面は`expectedRevision` conflictとして409を返し、最新Membershipを再読込させる
+- Membership removeを成功させた後、GSIやcacheのeventual resultが残っていてもstrong base-table readを正とし、protected accessを即時denyする
+
+### Asset authorization sequence
+
+upload request、upload complete、download/access instruction、delete requestは別capabilityです。各requestで次を再確認します。
+
+1. canonical Assetまたはtarget Song / Versionを取得する
+2. stored `bandId / songId / versionId` chainを検証する
+3. ACTIVE Membershipをstrong readする
+4. operation capabilityとcreator conditionを評価する
+5. Asset state、revision、kind、source/proposal relationshipを検証する
+6. serverだけがshort-lived instructionを発行またはstate transitionする
+
+S3 object keyを知ること、expiredでないpresigned URLを過去に得たこと、GSIにAssetが見えることは新しいaccess authorizationではありません。long-lived URLをDynamoDBへ保存せず、`storageObjectKey`を通常のclient responseへ出しません。
+
+### Error mapping
+
+| Outcome | HTTP / code | Rule |
+| --- | --- | --- |
+| identity missing / invalid | `401 UNAUTHENTICATED` | resource lookup detailを返さない |
+| ACTIVE same-Band memberだがcapability不足 | `403 FORBIDDEN` | resource存在を既に知るcontextだけで使用 |
+| missing、cross-Band、inactive / removed Membership、hidden resource | `404 NOT_FOUND` | 原因を外向きに区別しない |
+| stale revision、last Owner invariant、edit window終了、allowed operationのcurrent state不一致 | `409 REVISION_CONFLICT` / `STATE_CONFLICT` | latestを再読込。自動上書きしない |
+| payload / enum / relationship formatが不正 | `422 VALIDATION_ERROR` | field error。存在秘匿が優先する場合は404 |
+| rate / abuse control | `429 RATE_LIMITED` | safe retry metadataだけを返す |
+
+invalid transitionは、payload自体が有効でも現在stateから実行できないため**409**へ統一します。422は現在stateに依存しないfield / format / same-Band内relationship validationに使います。
+
+### AuditEvent matrix
+
+| Event | Required | Minimum safe fields |
+| --- | --- | --- |
+| Membership add / role change / remove / self-remove | Yes | actor ID、Band ID、target Membership ID、action、before/after role/status code、time、request ID、result |
+| Ownership transfer / rejected last-Owner attempt | Yes | actor / target Membership ID、action、result / reason category、time、request ID |
+| Band archive / restore | Yes | actor ID、Band ID、action、revision、time、request ID、result |
+| Song archive / restore | Yes | actor ID、Band / Song opaque ID、action、revision、time、request ID、result |
+| Asset deletion request / result | Yes | actor ID、Band / Song / Asset opaque ID、kind code、state transition、time、request ID |
+| Proposal final Decision | Yes | actor ID、Band / Song / Proposal / Decision opaque ID、decision code、revision、time、request ID |
+| Proposal withdraw / Hold state change | Yes | actor / Proposal opaque ID、state transition、time、request ID |
+| Moderate another user's Comment | Yes | moderator ID、Comment opaque ID、reason category、time、request ID。本文なし |
+| Security-sensitive denial | Conditional | reason category、request ID、opaque IDs、time、result。rate-limit / deduplicate |
+
+AuditEventへComment body、Song / Band title、filename、object key、signed URL、token、credential、raw authentication claim、MIDI / audio contentを保存しません。Audit readはOwner / Adminだけへsanitized pageを返し、Audit自体もprivate Band dataとして扱います。
+
+condition failureでtransaction自体が成立しないrejected last-Owner attemptは、失敗したtransactionへAudit itemを混在させず、拒否後にrate-limitされたserver security eventとして別途記録します。監査記録の失敗を理由に禁止操作を許可することはありません。
+
+### Mandatory future server tests
+
+| Test contract | Required assertion |
+| --- | --- |
+| role matrix | critical capabilityを5 roleすべてでparameterized testし、allow / conditional / denyが表と一致する |
+| removed Membership | removal後の次requestがGSI / cache状態に関係なく404で拒否される |
+| cross-Band ID | 他BandのSong / Version / Asset / Proposal IDを指定しても404で存在情報を返さない |
+| forged Band ID | payload / URLのBand IDを書き換えてもcanonical resource chainとの差で拒否される |
+| Comment ownership | authorは15分以内edit可能、他人editは全role deny、Owner/Admin moderationはtombstone + Auditのみ |
+| source MIDI integrity | Proposal create / decide後もSOURCE_MIDI Asset ID / object / stateが不変 |
+| Decision / Version separation | Accept / Partial / Reject transactionがSongVersionを作成しない |
+| last Owner | remove / demote / self-removeの全経路でsole ACTIVE Ownerを失わせない |
+| stale revision | Song、Membership、Comment、Proposalのold revision writeが409になりsilent overwriteしない |
+| Asset access | ACTIVE MembershipとAVAILABLE stateを毎回要求し、removed member / wrong Version / wrong Bandを拒否する |
+| GSI is not authorization | forged / stale index resultだけではprotected read、write、signed instructionを許可しない |
+| Proposal role split | Commenterはreview / Hold可能だがfinal Decision不可、GuestはProposal readだけ |
+| Audit sanitation | required eventが作られ、本文、title、filename、object key、URL、tokenを含まない |
+
+### AUTHZ-001 compact contract
+
+- Role model: `Owner / Admin / Editor / Commenter / Guest`はcapability bundleであり、client側の数値hierarchyではない
+- Common algorithm: identity → canonical resource → stored Band → strong ACTIVE Membership → capability → ownership / state → conditional operation → safe Audit
+- Ownership invariant: creatorは恒久authorityではない。author / uploader / proposal creator条件は明示したown-resource operationだけ
+- Membership invariant: ACTIVE Ownerを最低1人残し、transferはatomic、removed memberは次requestからdeny
+- Transition invariant: Proposal DecisionはSOURCE_MIDIを上書きせずVersionを作らない。HOLDはfinal Decisionでない
+- Comment rule: own body editは15分、own tombstoneは時間制限なし、他人本文のeditは禁止、Owner/Adminだけmoderation tombstone可
+- Error contract: unauthenticated 401、same-Band capability不足403、hidden / cross-Band 404、stale / invalid current state 409、input validation 422、rate limit 429
+- Audit: member / ownership、archive / restore、Asset delete、Proposal state / Decision、other-user moderationを必須にし、private contentを複製しない
+- Future tests: role matrix、cross-Band、last Owner、removed member、revision、Asset、Comment、Proposal non-destructive boundaryを実装merge gateにする
+- Deferred: Cognito session、formal invitation、exact capability code implementation、cache invalidation、MFA、break-glass support、Private Alpha separation-of-dutiesは後続task / human review
