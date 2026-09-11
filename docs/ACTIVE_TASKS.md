@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| COLLAB-001-DESIGN | Band membership lifecycle / Activity Status / Notification UX | Codex | レビュー待ち | `docs/collab-001-membership-notification-design` | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-11 | 未作成 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerをdocs化。runtime / physical DB変更なし |
+| COLLAB-001-DESIGN | Band membership lifecycle / Activity Status / Notification UX | Codex | レビュー待ち | `docs/collab-001-membership-notification-design` | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-11 | #36 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerをdocs化。runtime / physical DB変更なし |
 
 ## 完了・中止履歴
 

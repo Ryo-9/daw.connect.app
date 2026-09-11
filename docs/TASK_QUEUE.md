@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-11 時点で、CREATIVE-001-DESIGN / PR #35までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCOLLAB-001-DESIGNで、Band leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / CenterのUX contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
+2026-09-11 時点で、CREATIVE-001-DESIGN / PR #35までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCOLLAB-001-DESIGN / PR #36で、Band leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / CenterのUX contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | COLLAB-001-DESIGN | Membership lifecycle / Activity Status / Notification UX | レビュー待ち。Leave / remove、Owner invariant、Activity Status、preset / frequency / Quiet Hours / Center / deep link / retentionをdocs化。Runtime / provider / physical DB変更なし |
+| 1 | COLLAB-001-DESIGN | Membership lifecycle / Activity Status / Notification UX | レビュー待ち（PR #36）。Leave / remove、Owner invariant、Activity Status、preset / frequency / Quiet Hours / Center / deep link / retentionをdocs化。Runtime / provider / physical DB変更なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。CLOUD-003の必要なfoundation execution gate完了後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -93,7 +93,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | レビュー待ち。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
+| COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | レビュー待ち（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
 | COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
 | NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | Security / direct / ordinary category、preset、digest、retry、provider比較を設計。Email / push provider採用とresource作成は別Human Gate |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
