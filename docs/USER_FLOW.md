@@ -107,14 +107,31 @@ Preview → Comment → Proposal → Decisionのreviewを行う
 
 ## 2. アカウント作成
 
-目的: 安全に利用を開始する。
+目的: 将来、安全に利用を開始する。一般公開時のself-service account creationは未確定です。
 
-- メールアドレスなど必要最小限の情報を入力する
-- 利用規約とプライバシーポリシーを確認する
-- 本人確認が必要な方式では案内に従う
-- 登録後、初期設定またはダッシュボードへ移動する
+最初のcontrolled friend testではpublic self-signupを提供せず、administrator-controlled Cognito user creationだけを候補とします。既知の2人へ初回案内を送り、temporary password変更とverified email確認を完了した後、private auth-subject mappingと明示的なBandMembershipがある人だけがBandへ進みます。大規模な招待automation、利用規約同意画面、public signupは後続taskです。
 
-例外として、期限切れの招待、登録済みメール、確認失敗時の案内を用意します。
+### Controlled friend-test authentication flow（AUTH-001-DESIGN）
+
+```text
+operator-controlled user preparation
+→ Cognito Managed Login
+→ temporary password change / verified email check
+→ Authorization Code + PKCE callback
+→ same-origin BFF creates opaque HttpOnly session
+→ internal User mapping
+→ ACTIVE BandMembership check
+→ dashboard / allowed Band
+```
+
+- sign in: userはemail aliasを入力する。unknown account / wrong passwordは存在を区別しないgeneric errorにする
+- verification / first login: unverified、temporary-password、reset-required状態では通常sessionを作らず、必要なchallengeだけへ案内する
+- forgot password: Managed Loginからresetを要求し、deliveryされたcodeとnew passwordで完了後に再loginする
+- session expiry: idle 30分 / absolute 8時間候補を超えたら再loginへ案内し、入力中の未保存内容を自動送信しない
+- sign out: BFF session破棄、refresh revoke、cookie削除、Cognito logoutを行う候補
+- Membership removal: Cognito accountが有効でも、removed Bandは次requestのstrong Membership checkで拒否する
+
+Login / reset / logout、Cognito、session、email deliveryはまだ未実装です。localhost、nonprod、Private Alphaはcallback / client / sessionを分離し、wildcard callbackやtokenのlocalStorage保存を行いません。
 
 ## 3. バンド作成
 

@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-DESIGN | GitHub Actions OIDC deployment trust design | Codex | レビュー待ち | `docs/cloud-oidc-001-deployment-trust` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #33 | nonprod GitHub Environment、OIDC trust、CDK role delegation、PR safety、revocationを設計。実装なし |
+| AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | Codex | レビュー待ち | `docs/auth-001-cognito-session-design` | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 未作成 | controlled Cognito user、Managed Login、BFF session、cookie / CSRF、reset / logout境界を設計。実装なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-OIDC-001-DESIGN | 完了 | Codex | `docs/cloud-oidc-001-deployment-trust` / #33 | 2026-09-11 | GitHub Environment限定OIDC trust、CDK role delegation、PR safety、revocation contractを設計しmainへマージ済み。OIDC / IAM / workflow実装なし |
 | STORAGE-001-DESIGN | 完了 | Codex | `docs/storage-001-private-asset-design` / #32 | 2026-09-11 | private Preview / MIDIのbucket、encryption、opaque key、upload / access、retention、recovery contractを設計しmainへマージ済み。AWS resource作成なし |
 | AUTHZ-001 | 完了 | Codex | `docs/authz-001-capability-matrix` / #31 | 2026-09-11 | Band Membership role、capability、ownership、cross-Band protection、audit / test contractを設計しmainへマージ済み。AWS resource作成なし |
 | CLOUD-DATA-001 | 完了 | Codex | `docs/cloud-data-001-dynamodb-design` / #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、transaction、concurrency、PITR / restoreを設計しmainへマージ済み。AWS resource作成なし |

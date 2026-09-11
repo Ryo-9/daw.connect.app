@@ -169,7 +169,7 @@ CLOUD-001 reviewではPrivate Alphaのlow fixed costとserverless運用を優先
 
 ## 将来的な認証候補
 
-CLOUD-001 reviewではAmazon Cognito User PoolをPrivate Alphaのprimary targetとする方向が人間承認されました。Auth.js、Clerk、Supabase Authなどは、Cognitoの要件適合性やhosting方式に問題が判明した場合の比較候補です。resourceとintegrationは未実装で、AUTH-001の検証とhuman reviewを経て確定します。
+CLOUD-001 reviewではAmazon Cognito User PoolsをPrivate Alphaのprimary targetとする方向が人間承認されました。AUTH-001-DESIGNでは、controlled user、Cognito Managed Login、Authorization Code + PKCE、Vercel上のsame-origin confidential BFF、server-side token/session、opaque HttpOnly cookieをWeb MVPの具体候補として選択しました。これは提案中の設計であり、resourceとintegrationは未実装です。Auth.js、Clerk、Supabase Authなどは、CognitoやBFF構成に要件不適合が判明した場合の再検討候補です。
 
 比較項目:
 
@@ -180,6 +180,22 @@ CLOUD-001 reviewではAmazon Cognito User PoolをPrivate Alphaのprimary target�
 - Next.js との統合、テスト、移行性
 
 認証だけでなく、「誰がどのバンド・楽曲へアクセスできるか」という認可を別に設計します。
+
+```text
+Browser
+→ same-origin BFF session
+→ Cognito authentication
+→ internal User mapping
+→ canonical resource
+→ strong ACTIVE BandMembership
+→ server capability authorization
+```
+
+- Cognito `sub`、email、groupをStreamBand public User IDやBand roleにしない
+- access / ID / refresh tokenはbrowser JavaScriptへ渡さず、cookieにはopaque session IDだけを置く候補
+- BandMembership removalはCognito accountを削除せず、次のprotected requestで即時denyする
+- Companion / native clientは将来別のpublic app clientをreviewし、Web BFF client secretやcookieを共有しない
+- local / nonprod / Private Alphaのidentity resource、callback、session namespaceを分離する
 
 ## Phase 2の AWS target
 
@@ -211,11 +227,11 @@ CLOUD-001 reviewではAmazon Cognito User PoolをPrivate Alphaのprimary target�
 
 - Node.js のローカル標準運用バージョンと更新方針（CI は `24`）
 - Level 2 / 3のテスト構成、カバレッジ運用
-- DynamoDBのphysical table / key / index、transaction、migration / export方式
-- Cognitoのapp integration、セッション方式、招待フロー
-- ロールと操作権限の詳細
-- API Gateway + Lambda contractとNext.js側BFF / direct access境界
-- S3 bucket / object key、上限、許可形式、プレビュー方式
+- DynamoDBの実resource、migration / export、restore運用
+- Cognito / BFFのsession store、token encryption、runtime service identity、client secret管理、callback実値
+- public invitation / self-signup、Private Alpha MFA / recovery、account deletion / export
+- API Gateway + LambdaとBFF間のruntime credential、token validation / revocation実装
+- S3実resource、Private Alpha encryption / retention、scan、multipart
 - Vercel Proの採用、account / project境界、current cost、production protection / promotion方式。AmplifyのNext.js 16 support
 - CDK採用、account bootstrap、deployment方式
 - ログ保持期間、alarm threshold、backup / restore detail

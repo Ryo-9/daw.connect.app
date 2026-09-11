@@ -882,3 +882,68 @@ condition failureでtransaction自体が成立しないrejected last-Owner attem
 - Audit: member / ownership、archive / restore、Asset delete、Proposal state / Decision、other-user moderationを必須にし、private contentを複製しない
 - Future tests: role matrix、cross-Band、last Owner、removed member、revision、Asset、Comment、Proposal non-destructive boundaryを実装merge gateにする
 - Deferred: Cognito session、formal invitation、exact capability code implementation、cache invalidation、MFA、break-glass support、Private Alpha separation-of-dutiesは後続task / human review
+
+## AUTH-001-DESIGN: Authentication and browser-session boundary
+
+### Selected Web MVP contract
+
+AUTH-001-DESIGN（2026-09-11）は、Amazon Cognito User Poolsをauthentication provider候補とし、Vercel上のsame-origin BFFがOAuth tokenをserver-sideで保持する構成を推奨します。これはcontractであり、Cognito、BFF、session store、API integrationは未実装です。
+
+```text
+Browser
+→ opaque HttpOnly session cookie
+→ same-origin BFF
+→ server-side Cognito access token
+→ AWS API authentication
+→ private auth-subject mapping
+→ internal User
+→ canonical resource
+→ strong ACTIVE BandMembership
+→ AUTHZ-001 capability
+```
+
+- Sign-inはhidden opaque Cognito username + verified email alias。Cognito `sub`はprivate mapping keyで、public User IDやBand roleではない
+- Userはadmin-controlled creationだけで開始し、public self-signupを無効化する
+- Login UIはCognito Managed Login、Authorization Code + PKCE S256を使用し、Implicit grantを無効化する
+- Web app clientはconfidential client候補。client secret、access / ID / refresh tokenをbrowserへ返さない
+- access / ID tokenは1時間、refresh tokenは24時間、BFF sessionはidle 30分 / absolute 8時間を初期候補とする
+- Browser cookieはopaque IDだけを持つ`__Host-`、Secure、HttpOnly、SameSite=Strict、Path=/、Domainなしとする
+- Cookie mutationはsynchronizer CSRF token + exact Origin / Host validationを必要とし、SameSiteだけに依存しない
+- localStorage、sessionStorage、URL、HTML、logへtoken、authorization code、session ID、client secretを保存しない
+
+### Authentication endpoints and session behavior candidates
+
+Exact URLやNext.js実装方式はAUTH-001 implementation taskで決めますが、transportに関係なく次の責務を維持します。
+
+| Boundary | Required behavior |
+| --- | --- |
+| login start | OAuth transactionをserver-side作成し、state、nonce、PKCE verifierをshort-lived recordへbindする |
+| callback | exact callback origin、state、PKCE、nonce、issuer、token typeを検証してからBFF sessionを作る |
+| current session | browserへsafe internal User summaryだけを返し、Cognito token / `sub` / provider lookup keyを返さない |
+| refresh | BFFだけがrotation付きrefresh tokenを使用し、failure / disabled / mapping mismatchでsessionを破棄する |
+| logout | CSRF-protected POSTでBFF sessionを破棄し、refresh revoke、cookie expiry、Cognito logoutを行う候補 |
+| forgot password | outward responseを正規化し、verification codeとnew passwordをprovider flowで確認する |
+| protected proxy | fixed API host / route / methodだけへaccess tokenをforwardし、client supplied URLを拒否する |
+
+### Error and authorization separation
+
+| Outcome | Outward behavior candidate |
+| --- | --- |
+| wrong credential / unknown account | account存在を区別しないgeneric failure |
+| verification / temporary-password / reset required | challenge context内だけで必要な次stepを表示し、通常sessionは作らない |
+| expired / revoked BFF session | `401`相当。cookieをclearし再loginへ案内 |
+| Cognito unavailable | retryable service error + request ID。private provider detailは返さない |
+| valid Cognito identity but no internal mapping | application accessを拒否し、generic controlled-support state |
+| valid account but Membership removed | authenticationは維持可能だが、Band resourceはAUTHZ-001のhidden `404`候補でdeny |
+
+Cognito authentication successはSong / Version / Assetへのauthorizationではありません。APIはverified auth subjectからinternal Userを解決し、canonical resourceとstrong ACTIVE BandMembershipを毎回確認します。Clientが送るemail、User ID、`sub`、Band ID、roleをauthorityとして信用しません。
+
+### Environment and implementation gates
+
+- local、nonprod、Private Alphaでuser pool / app client / callback / logout origin / session namespaceを分離する
+- localhost callbackはlocalだけ。cloud callbackはHTTPSのexact allowlistで、wildcard Preview URLを登録しない
+- Private Alphaへnonprod client、secret、callback、sessionを再利用しない
+- server-side session store、encryption / TTL / revocation index、client secret storage / rotation、Vercel-to-AWS runtime identityは実装前に別途確定する
+- Cognito User Pool、user、client、domain、callback、secret、session store、AWS resourceはAUTH-001-DESIGNでは作成しない
+
+詳細なaccount state、password / MFA、cookie / CSRF、reset / revocation、logging、future test contractは[AWS.md](AWS.md)のAUTH-001-DESIGN節を正とします。

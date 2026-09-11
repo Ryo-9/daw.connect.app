@@ -28,6 +28,12 @@
 | DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 承認済み | Cloud architecture / Phase 2 | - |
 | DEC-014 | 2026-09-10 | Phase 2 Cloud foundation / IaC policyを定める | 承認済み | AWS account / IaC / deployment safety | - |
 | DEC-015 | 2026-09-10 | Private AlphaのNext.js hosting候補を定める | 承認済み | Web hosting / deployment | - |
+| DEC-016 | 2026-09-11 | Dedicated nonprodのCDK bootstrap permission planを定める | 提案中 | AWS bootstrap / temporary privilege | - |
+| DEC-017 | 2026-09-11 | Cloud MVP metadataをOn-Demand single-tableで設計する | 提案中 | DynamoDB physical design | - |
+| DEC-018 | 2026-09-11 | Band authorizationをrole bundleとserver capabilityで判定する | 提案中 | Authorization / BandMembership | - |
+| DEC-019 | 2026-09-11 | Private Assetをenvironment単位のS3 bucketと短命instructionで扱う | 提案中 | S3 / Asset security | - |
+| DEC-020 | 2026-09-11 | nonprod deployment trustをGitHub Environment限定OIDCへ分離する | 提案中 | AWS deployment identity / GitHub | - |
+| DEC-021 | 2026-09-11 | Controlled Cognito userとBFF Web sessionを採用候補とする | 提案中 | Authentication / Web session | - |
 
 ---
 
@@ -316,6 +322,24 @@
 - Human Gate: provider、audience、immutable subject、role名、exact trust / permission、session、workflow trigger、Environment protection、revocationを実装前に提示して明示承認を得る
 - 見直し条件: GitHub OIDC subject customization / immutable format変更、CDK bootstrap template / qualifier / role変更、container asset導入、deploymentが1時間を超える、Private Alpha開始、GitHub plan制約が判明した場合
 - 関連: CLOUD-OIDC-001-DESIGN、CLOUD-003C-REVIEW、CLOUD-003C-DECISION、DEC-014、DEC-016、[AWS.md](AWS.md)、[TESTING.md](TESTING.md)
+
+## DEC-021: Controlled Cognito userとBFF Web sessionを採用候補とする
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（AUTH-001-DESIGN）
+- Identity: Amazon Cognito User Poolsをplanned providerとし、hidden opaque username + verified email aliasを選ぶ。Cognito `sub`はprivate auth mappingにだけ使用し、emailやprovider IDをpublic User ID / ownership keyにしない
+- User creation: 最初の2 userはadministrator-controlled creationとし、public self-registrationを無効化する。temporary passwordは1日候補で初回変更を必須とし、verified recipientだけ通常accessへ進める
+- Login: Cognito Managed Login + Authorization Code + PKCE S256を選び、Implicit grantを無効化する。custom password formとpublic invitation automationはDEFERする
+- Web session: Vercel上のsame-origin confidential BFFがCognito tokenをserver-sideで保持し、browserへopaque `__Host-` Secure / HttpOnly / SameSite=Strict session cookieだけを返す。tokenをlocalStorageへ保存しない
+- Lifetime candidate: access / ID token 1時間、refresh token 24時間 + rotation、BFF session idle 30分 / absolute 8時間。Managed Loginの1時間cookie behaviorを考慮する
+- CSRF / XSS: cookie mutationはsynchronizer token + Origin / Host、OAuthはstate / nonce / PKCEを検証する。HttpOnlyだけでXSSを防げるとは扱わず、untrusted collaboration textを安全にrenderする
+- Authorization: authentication successだけではBand resourceを許可せず、verified subject → internal User → canonical resource → strong ACTIVE BandMembership → AUTHZ-001 capabilityを毎request評価する。Membership removalにCognito deletionを使わない
+- MFA: synthetic-data nonprod friend testではDEFERし、Private Alpha real-data前にTOTP / recovery / costをfresh human reviewする。nonprod方針をPrivate Alphaへ自動継承しない
+- Environment: local / nonprod / Private Alphaでuser pool、app client、callback / logout origin、session namespaceを分離し、wildcard callbackとnonprod client再利用を禁止候補とする
+- 実装状態: docs-only proposal。Cognito、user、domain、app client、secret、callback、BFF、session store、AWS resource、runtime / package / configは未実装
+- Human Gate: server-side session store / encryption / revocation、client secret管理、callback実値、runtime identity、token validation、MFA、cost、recoveryを実装前にreviewする。AUTH-001 runtimeはCLOUD-003C foundation execution gate後の別task
+- 関連: AUTH-001-DESIGN、AUTHZ-001、CLOUD-DATA-001、HOST-001、CLOUD-OIDC-001-DESIGN、[AWS.md](AWS.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 
