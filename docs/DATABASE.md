@@ -112,6 +112,7 @@
 | ReviewRequest | Versionの確認依頼 | `id`, `songVersionId`, `requestedBy`, `status`, `dueAt?`, `createdAt`, `closedAt?` |
 | ReviewResponse | reviewerごとの回答 | `id`, `reviewRequestId`, `reviewerId`, `status`, `commentId?`, `createdAt`, `updatedAt` |
 | Task | 制作TODO | `id`, `songId`, `songVersionId?`, `songPartId?`, `assigneeMembershipId?`, `title`, `description?`, `status`, `priority?`, `dueAt?`, `createdBy`, `createdAt`, `updatedAt`, `completedAt?` |
+| CreativeItem（論理contract） | UI上のMemo / Idea / Taskを同じCreative Boardで扱う概念。物理entity構成は未決定 | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision候補 |
 | PresenceSession | online表示の一時session候補 | `id`, `bandId`, `songId?`, `userId`, `connectedAt`, `lastSeenAt`, `expiresAt` |
 | CallSession | 将来通話を採用した場合の最小session metadata | `id`, `bandId`, `songId?`, `providerRef?`, `startedBy`, `startedAt`, `endedAt?` |
 | DawBridgeSource | 将来Bridgeを採用した場合の参照metadata | `id`, `songId`, `songVersionId?`, `dawName`, `projectFingerprint?`, `bridgeVersion`, `capturedAt`, `capabilities` |
@@ -157,7 +158,9 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 | Comment type | `discussion`, `review_feedback`, `decision_reference` | 位置はComment Anchorで別管理する |
 | Anchor type | `version`, `time`, `musical_position`, `track` | `timeMs`とbar/beat/tickの整合ruleが必要 |
 | Review request status | `open`, `changes_requested`, `approved`, `closed` | reviewer個別回答と全体statusの集約ruleが必要 |
-| Task status | `todo`, `in_progress`, `completed`, `cancelled` | 現在の3状態とのmappingを定義する |
+| Creative item kind | `MEMO`, `IDEA`, `TASK` | user-facing modelは3種類。順序を強制せず相互変換可能 |
+| Task status | `OPEN`, `IN_PROGRESS`, `DONE`, `CANCELED` | UIは未対応 / 対応中 / 完了 / 不要にする。DONEからreopen可能 |
+| Task priority | `NORMAL`, `IMPORTANT` | 2段階だけ。NORMALはprimary UIで強調しない |
 | Decision status | `proposed`, `decided`, `superseded` | CommentやMemo本文だけで確定扱いにしない |
 
 ## Version naming草案
@@ -176,6 +179,52 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 - track anchorはSongTrack IDを使い、画面上の表示名を参照keyにしない
 - position付きCommentは必ず対象Versionを持ち、別versionへ暗黙に引き継がない
 - AnchorなしのSong全体Commentも許容する
+
+## CREATIVE-001 conceptual model（physical designは未変更）
+
+CREATIVE-001-DESIGNでは「創作を管理せず、創作を支える」をproduct contractとし、Memo / Idea / Taskを同じCreative Boardで扱います。この章はdomain relationship候補であり、CLOUD-DATA-001のsingle-table key、`ScopeIndex`、transaction matrixを変更しません。独立itemの永続化は後続physical-design taskまでdeferします。
+
+### Creative item semantics
+
+- `MEMO`: 思いつき / 提案の段階。具体化や実行判断は不要
+- `IDEA`: 具体化した案だが、実行は未確定
+- `TASK`: 実行すると決めたこと。未完了でもVersion作成をblockしない
+- kindは`MEMO ↔ IDEA ↔ TASK`で相互変更でき、変換履歴を残すかは実装gate
+- 一般的なProposal kindは作らない。`MidiProposal`は再生・比較可能なMIDI Assetを持つ別domain entity
+- MidiProposalのRejectは関連Creative itemを削除せず、Proposal DecisionはSOURCE_MIDI / SongVersionを変更しない
+
+Taskだけがoptionalにsingle `assigneeMembershipId`、`NORMAL / IMPORTANT`、calendar `dueDate`、`OPEN / IN_PROGRESS / DONE / CANCELED`、`completedBy / completedAt / completedVersionId?`候補を持ちます。Assignee離脱時はTaskを保持してunassignedへ戻す候補です。期限超過はderived displayであり、state mutationではありません。DONEはreopenでき、CANCELEDのuser-facing labelは「不要にする」です。
+
+### Origin, current target, and Comment link
+
+```text
+CreativeItem
+├── Song（required）
+├── originAnchor?（作成時のVersion / Track / point / range。履歴として保持）
+├── currentTargetAnchor?（後のVersionで追う場合にuserが明示）
+├── sourceCommentId?（Comment → Task）
+└── assigneeMembershipId?（Taskのみ、0..1）
+```
+
+- old VersionのComment / Creative item Anchorをnew Versionへ自動remapしない
+- originが`V1 / 2:14`、current targetが`V2 / 3:02`になっても、元位置を上書きしない
+- TaskをVersionごとに自動duplicateせず、Current Songのoutstanding projectionが過去Version由来itemを横断表示する
+- Comment → Taskは元Commentを保持して相互linkし、同一Commentからのaccidental duplicateをidempotency / conditional uniqueness候補で防ぐ
+- direct Task createでは`sourceCommentId`もAnchorも不要で、Song-levelを許容する
+
+### Anchor dimensions
+
+Creative item / Commentで共有するAnchor候補は、Version、timeline `timeMs`、bar / beat、Trackと、point / rangeです。Position / Trackを外すことで`Version + Track + range → Version + Track → Version → Song`と同じitemのscopeを自然に広げます。
+
+- point: `timeMs`またはbar / beatの一点
+- range: `startTimeMs/endTimeMs`またはstart/end bar / beat
+- time、bars / beats、Trackはそれぞれoptional。ただしposition付きAnchorはVersion必須
+- Anchor relationshipは常にsame Song / Bandでserver validationし、client supplied IDをauthorityにしない
+- PPQ、拍子変更、duration照合、Track physical entity、range field shapeは実装gate
+
+### Retention and authorization boundary
+
+Creative itemはprivate Band dataです。Protected operationはcanonical itemからBandをderiveし、strong ACTIVE BandMembershipと将来承認するcreative capabilityを必須にします。Creatorは恒久authorityではありません。Own Task delete、shared / other-created itemの「不要にする」、Owner / Admin moderation、hard delete / tombstone、AuditEventはAUTHZ / data implementation gateで決めます。本文、Song title、Anchor detailをsecurity denial logへ複製しません。
 
 ## file / object storage境界
 
@@ -278,7 +327,7 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - Membership変更、Proposal Decision、Song archive、Asset削除等に限定した`AuditEvent`
 - authentication subjectからUserを引くlookup recordと、二重送信を防ぐidempotency record
 
-`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
+`CreativeItem`（Memo / Idea / Task）、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
 
 ### Single-tableを選ぶ理由
 
@@ -471,7 +520,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 - Auth provider、session、招待、capability policyの実装mapping
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
-- Memoを1件にするかcategory別・revision別にするか
+- Memo / Idea / Taskをsingle physical CreativeItemにするか既存SongMemo / Taskへ分けるか、kind変換履歴、outstanding projection、origin / current target Anchor、Comment linkのkey / index / transaction
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲

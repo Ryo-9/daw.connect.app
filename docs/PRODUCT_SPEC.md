@@ -30,7 +30,7 @@ DAW Connect App は、バンドや音楽制作チームが DAW の外側で共�
 
 ## MVP の目的
 
-共同制作の情報を「バンド → 楽曲」の単位に整理し、メンバーが迷わず確認・更新できる基本体験を検証します。DAW 連携や高度な同期よりも、少人数チームの日常的な制作管理がシンプルになることを優先します。
+共同制作の情報を「バンド → 楽曲」の単位に整理し、メンバーが迷わず確認・更新できる基本体験を検証します。DAW 連携や高度な同期よりも、少人数チームの日常的な制作を邪魔せず支えられることを優先します。
 
 MVP の成功判断では、少なくとも次を確認します。
 
@@ -38,6 +38,41 @@ MVP の成功判断では、少なくとも次を確認します。
 - メモ、コメント、TODO の置き場所が明確である
 - タイムスタンプコメントによって修正箇所を共有できる
 - スマートフォンでも主要情報の閲覧と基本操作ができる
+
+## 創作を管理せず、創作を支える
+
+StreamBandはproject management appではありません。作者やBand memberの「こうしたい」「試してみたい」「今はこれが良いと思う」「後で考え直したい」という創作意図を記録・共有し、制作上の負荷を減らし、見えづらい制作の歩みを可視化する補助appです。音楽上の判断は感性やその時の気持ちで変わり得るため、systemが正しい制作手順や完了を強制しません。
+
+- 未完了Taskや未確認Commentを理由にSong / SongVersionの作成をblockしない
+- Task完了率をproductivity scoreとして扱わず、義務を強調する表示をprimary UXにしない
+- Memo / Idea / Taskは直接作成でき、相互に変更できる。Taskも完了後のreopenや「不要にする」を許す
+- 過去VersionのComment / AnchorはそのVersionの履歴として残し、新Versionへ自動remapしない
+- 過去Version由来の未対応項目はCurrent Songから横断確認できるが、確認や処理を強制しない
+- notificationやcreative itemの到着でplaybackを止めたり、modalを自動表示したり、autosave等でeditingをblockしたりしない
+- creative metadataは必要な時だけ前面へ出し、music / compositionそのものを常にprimaryとする
+
+### Creative item
+
+ユーザー向けのcreative itemは次の3種類に絞ります。これは順序ではなく、その時点での意図の明確さを表すため、どこからでも作成・相互変更できます。
+
+| 種類 | 意味 | 例 |
+| --- | --- | --- |
+| Memo | 提案・思いつきの段階で、具体化も実行判断もしていない | ラスサビ、何か変化が欲しい |
+| Idea | ある程度具体化したが、実行は確定していない | ラスサビだけ3度上のハモりを追加する案 |
+| Task | 実際にやると決めたこと | ラスサビのハモりを作成する |
+
+一般的な`Proposal`を第四のcreative stateにはしません。既存のMIDI Proposalは、実際に再生・比較できる別MIDI Asset / proposal dataであり、Ideaとは別conceptです。Rejectしても関連Ideaを自動削除せず、SOURCE_MIDIを上書きせず、DecisionからVersionを自動生成しません。
+
+### 軽量Taskと制作の歩み
+
+- Task stateはユーザー向けに`未対応 / 対応中 / 完了`、内部候補を`OPEN / IN_PROGRESS / DONE / CANCELED`とする。`CANCELED`の表示は「不要にする」を推奨する
+- assigneeは任意の1人だけ。未指定はBand共有、離脱時はTaskを残してassigneeなしへ戻す候補とする
+- priorityは`normal / important`の2段階で、通常は表示を強めずimportantだけを軽く強調する
+- due dateは任意の日付で、defaultは期限なし。期限超過は表示してもstateを自動変更せず、制作をblockしない
+- DONEは別member approvalなしで設定でき、いつでもreopenできる。必要な確認はComment / mention / review requestを使う
+- primary progress表示は完了率ではなく、Current Version、最近変わったこと、考えていること、制作中の内容を示す
+
+Taskのhard delete / tombstone、completion metadata、assignee離脱処理、Memo / Idea / Taskの物理保存形式は実装前のdata / authorization gateで決めます。
 
 ## 主要機能
 
@@ -51,8 +86,8 @@ MVP の成功判断では、少なくとも次を確認します。
    - 楽曲単位の意見交換と履歴確認を行う
 5. タイムスタンプコメント
    - 音源上の時刻とコメントを対応付ける
-6. パート別 TODO
-   - 担当パート、担当者、状態、期限などを管理する
+6. Creative Board / 軽量Task
+   - Memo / Idea / Taskを同じ場所で扱い、必要な場合だけ担当、状態、期限を添える
 7. ファイル共有の準備
    - MIDI / 音源の表示、分類、アップロード導線を設計する
 8. バージョン管理の準備

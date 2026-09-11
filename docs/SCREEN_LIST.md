@@ -21,7 +21,7 @@
 | 楽曲作成 | `/bands/lumen-echo/songs/new` | Phase 1非保存フォーム。画面内previewのみ |
 | 楽曲編集 | `/songs/afterglow/edit` | Phase 1非保存フォーム。元mock dataは変更しない |
 | 楽曲メモ | `/songs/afterglow#memo` | 楽曲詳細内に表示 |
-| パート別 TODO | `/songs/afterglow#tasks` | 楽曲詳細内に表示 |
+| パート別 TODO | `/songs/afterglow#tasks` | 現行mock。将来のCreative Board / Task contractは未実装 |
 | コメント / タイムスタンプ | `/songs/afterglow#comments` | 楽曲詳細内に表示 |
 | ファイル共有 | `/songs/afterglow#files` | 楽曲詳細内に表示。保存処理なし |
 
@@ -115,6 +115,8 @@
 - Preview → Comment → MIDI Proposal → Decision → Versionを一つの制作review flowとして示し、各stepから既存sectionへ移動できる
 - CommentはVersion / bar / beat / time / trackの文脈を表示し、Original MIDIとProposalは別データとして明示する
 - DecisionはPhase 1の無効なmock操作で、DAW自動反映やVersion自動作成を行わない
+- 将来はCreative BoardでMemo / Idea / Taskを同じsurfaceに置き、過去Version由来の未対応itemをCurrent Songから任意に確認できる
+- Anchor markerとFocus Modeはuser-controlledな表示候補で、playback停止、modal、Version作成blockを行わない
 - モバイルでは情報をタブまたはセクションで整理する
 - 初期優先度: 高
 
@@ -136,10 +138,13 @@
 - Phase 1 では時刻入力とモック音源で体験を検証する
 - 初期優先度: 高
 
-### 18. TODO 画面
+### 18. Creative Board / 軽量Task画面
 
-- 楽曲内の TODO をパート、担当者、状態、期限で管理する
-- 一覧と作成 / 編集フォームを含む
+- Memo / Idea / Taskを同じ制作ボードで軽く区別し、すべて / 種類 / 要対応をfilterする
+- Taskは任意のsingle assignee、important、calendar due date、Anchorを持てるが、未完了でも制作をblockしない
+- CommentからTaskへlinkでき、Version originと任意のcurrent targetを分けて表示する
+- Timeline annotationを隠すFocus Modeを選べるが、dataを削除せずsystemが自動で切り替えない
+- Exact route / component / persistenceは未実装で、現行`#tasks` mockをこのtaskでは変更しない
 - 初期優先度: 高
 
 ### 19. ファイル一覧・共有画面
