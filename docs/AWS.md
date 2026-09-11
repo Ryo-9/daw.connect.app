@@ -193,7 +193,7 @@ Private Alphaの推奨候補はDynamoDB On-Demandです。2 userの予測困難�
 
 #### Asset kind
 
-- `PREVIEW_AUDIO`: userがDAWからreview用にexportした音声
+- `AUDIO_PREVIEW`: userがDAWからreview用にexportした音声
 - `STEM_AUDIO`: optional。Private Alpha初期はSHOULD LATER
 - `SOURCE_MIDI`: 特定Versionのread-only source
 - `PROPOSAL_MIDI`: SOURCE_MIDIとは別のproposal Asset
@@ -205,23 +205,20 @@ Private Alphaの推奨候補はDynamoDB On-Demandです。2 userの予測困難�
 
 - account / bucket levelのBlock Public Accessを有効にし、public ACL / public bucket policyを許可しない
 - bucket / objectはprivate、ownershipはserver-managed
-- 保存時暗号化とHTTPS通信を必須baselineとし、default encryption / key管理方式はSTORAGE-001で確定する
+- 保存時暗号化とHTTPS通信を必須baselineとし、nonprodはSTORAGE-001-DESIGNでSSE-S3を選択した。Private Alphaはreal data前に再reviewする
 - upload request前とdownload/access発行前にauthentication、Membership、capability、Asset ownershipを確認する
 - upload / access instructionは対象key・method・期限を限定し、短時間だけ有効にする
 - object keyはopaque Asset IDを中心にserverが生成する
 - original filename、client MIME、extension、sizeを信用せず、upload completeでobject metadata、size、detected type、checksum候補を検証する
-- complete前のobjectをVersionへ公開せず、failed / quarantined stateではaccessを拒否する
+- complete前のobjectをVersionへ公開せず、`AVAILABLE`以外のstateではaccessを拒否する
 - signed URL、credential、private object keyをDBのpublic view、log、PR、docsへ記録しない
 - membership変更後も既発行URLが期限までは使えるriskを抑えるため、短いexpiryを選ぶ
 - incomplete multipart uploadとorphan staging objectに期限 / cleanupを設ける
 
-object keyの形は次を候補とし、最終形はSTORAGE-001で決めます。
+STORAGE-001-DESIGNではobject keyを次の候補へ具体化しました。
 
 ```text
-environment/
-opaque-band-id/
-opaque-song-id/
-opaque-asset-id
+<environment>/assets/<asset-kind>/<asset-id>/<object-id>
 ```
 
 email、real name、未公開Song title、secret project name、original filenameをkeyへ直接入れません。
@@ -685,9 +682,9 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 
 - `HOST-001`: PR #24でVercel Pro primary candidateを承認済み。hosting由来のOIDC、domain、secret、rollbackの実設定は別task / gateとする
 - `AUTH-001`: Cognito User Pool、app client、session integrationを設計・実装する。CLOUD-002では作らない
-- `CLOUD-DATA-001`: DynamoDBのtable数、partition / sort key、index、transaction、PITRを決める
-- `AUTHZ-001`: Band Membership capability matrixとserver authorization testを決める
-- `STORAGE-001`: S3 bucket名、opaque object key詳細、MIME / size、lifecycle、versioning、retention、presigned accessを決める
+- `CLOUD-DATA-001`: PR #30でDynamoDB physical designを完了。resource implementationはfoundation gate後
+- `AUTHZ-001`: PR #31でBand Membership capability matrixとserver authorization test contractを完了。runtime implementationは別task
+- `STORAGE-001-DESIGN`: private bucket、opaque key、MIME / size、state、lifecycle、Versioning、short-lived accessをreview中。S3 / IAM / API実装は`STORAGE-001`へ分離
 - `CLOUD-003`: Aは人間側account readiness、Bはoffline repository foundation、Cは別Human Gate後の最初のAWS接続 / bootstrapとして分割する
 
 ### Human approval gates
@@ -1072,6 +1069,274 @@ human performs one approved bootstrap
 - [AWS CDK supported Node.js versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html)
 - [AWS CDK versioning and Toolkit compatibility](https://docs.aws.amazon.com/cdk/v2/guide/versioning.html)
 - [AWS CDK CLI lookup option](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd.html)
+
+## STORAGE-001-DESIGN: Private Preview / MIDI storage contract
+
+### Status and scope
+
+設計日: 2026-09-11。この章はCloud MVPの事前設計であり、S3 bucket、IAM、API、Lambda、KMS key、CORS、lifecycle、AWS resourceは作成していません。AWS接続、CDK bootstrap / deployも行っていません。実装はCLOUD-003 foundation execution gateと本設計のhuman review後に、別taskで行います。
+
+初回friend testの対象は次の3 kindだけです。
+
+- `AUDIO_PREVIEW`: DAWからuserが書き出した軽量review音源。server transcodingなし
+- `SOURCE_MIDI`: 特定Versionに対応するread-only source
+- `PROPOSAL_MIDI`: SOURCE_MIDIとは別Asset / objectの提案
+
+Stemはdata model上の将来候補に残しますが、最初のupload flowからはDEFERします。DynamoDBはAsset metadataだけを保持し、binaryはprivate S3へ置きます。Proposal DecisionはSOURCE_MIDI / PROPOSAL_MIDIを上書きせず、SongVersionも自動作成しません。
+
+### Bucket model and environment boundary
+
+| Option | Benefit | Cost / risk | Decision |
+| --- | --- | --- | --- |
+| environmentごとに1 private bucket | IAM、CORS、Versioning、lifecycle、monitoring、restore drillを一組で理解でき、3 kindをopaque prefixで分離できる | bucket内policy mistakeのblast radiusは同environment全Assetへ及ぶ | **MVP採用候補** |
+| asset classごとに複数bucket | kindごとのpolicy / lifecycleを物理分離できる | bucket、IAM、alarm、recovery、CORSが増え、2 user規模では運用負担が大きい | 見送り |
+
+nonprodとPrivate Alphaは別AWS account / environmentで、bucketも共有しません。candidate physical nameは`streamband-<environment>-assets-<opaque-suffix>`です。suffixはglobal uniqueness用のrandom / deployment identifierであり、account ID、email、Band / Song名を使いません。実bucket名はresource作成taskでcurrent naming ruleとcollisionを確認して決めます。
+
+### Public access and encryption baseline
+
+後続IaCでは次をdefault任せにせず、意図として明示します。
+
+- S3 Block Public Accessの4設定をすべて有効化する
+- S3 Object Ownershipを`Bucket owner enforced`とし、ACLを無効化する
+- public ACL、public bucket policy、website hosting、anonymous accessを作らない
+- bucket policyで`aws:SecureTransport=false`をdenyし、HTTPSだけを許可する
+- upload / accessはserver authorization後のshort-lived instructionだけとする
+- access roleは必要なbucket / prefix / operationへ限定し、clientへAWS credentialを渡さない
+
+| Encryption option | Benefit | Cost / operation | Nonprod decision |
+| --- | --- | --- | --- |
+| SSE-S3 | S3がkey管理を担当し、default encryptionと単純なIAMで開始できる | customer-managed key policy / key feeを増やさない。S3自体のstorage / request費用は残る | **採用候補** |
+| SSE-KMS customer-managed key | key policy、audit、rotation / disable等をより明示的に制御できる | KMS key / requestのcost、key policy、grant、recovery、disable事故の運用が増える | nonprodでは見送り。Private Alpha前に再review |
+
+nonprodの保存時暗号化は**SSE-S3**を選び、bucket default encryptionとして明示します。S3は現在すべてのnew objectを暗号化し、SSE-S3がdefaultですが、review可能性のためIaCにも意図を残します。friend test / synthetic data段階でcustomer-managed KMS keyのkey fee、key policy、recovery burdenを増やしません。Private AlphaがSSE-S3を継承するとは決めず、real unreleased music投入前にthreat model、key control、costを再reviewします。
+
+### Opaque object key
+
+candidate convention:
+
+```text
+<environment>/assets/<asset-kind>/<asset-id>/<object-id>
+```
+
+synthetic examples:
+
+```text
+nonprod/assets/audio-preview/ast_demo_01/obj_demo_01
+nonprod/assets/source-midi/ast_demo_02/obj_demo_02
+nonprod/assets/proposal-midi/ast_demo_03/obj_demo_03
+```
+
+- key componentはserver生成のopaque stable IDとsafe kind codeだけにする
+- Band名、Song title、version label、user email / name、original filename、secret project nameを含めない
+- keyはinternal storage locatorで、Asset public IDでも認可情報でもない
+- bucket名、key、S3 version IDを通常のclient DTO / logへ出さない
+- original filenameはsanitized表示metadataとしてDynamoDBへ分離する
+- 1 Asset = 1 unique keyとし、reuseしない。SigV4のconditional `If-None-Match: *`をupload instructionへ含め、既存current objectへのwriteを拒否する候補
+
+S3 Versioningはrecovery defenseであり、同じkeyへ通常上書きするapplication version管理ではありません。SOURCE_MIDI更新が必要なら、新しいAsset / keyと明示SongVersionを作ります。
+
+### Formats and application limits
+
+| Kind | Initial application limit | Accepted declaration | Required content evidence |
+| --- | ---: | --- | --- |
+| `AUDIO_PREVIEW` | **80 MiB** | `.mp3` + `audio/mpeg`、`.wav` + `audio/wav`。`audio/x-wav`はlegacy declarationとして受けてもverified MIMEは`audio/wav`へ正規化 | MP3 frame / ID3またはRIFF/WAVEのbounded signature check |
+| `SOURCE_MIDI` | **10 MiB** | `.mid` / `.midi`、`audio/midi` / `audio/x-midi`候補 | Standard MIDI Fileの`MThd` headerとbounded structure check |
+| `PROPOSAL_MIDI` | **10 MiB** | SOURCE_MIDIと同じ | Standard MIDI File。SOURCE_MIDIとはdifferent Asset ID / key必須 |
+
+これらはS3 hard limitではなく、初期friend test用のconservative application limitです。実測した曲長、sample rate、upload time、costをreviewして変更します。nonprod Bandのstored current + retained bytes上限は**2 GiB候補**とし、upload request時のdeclared sizeとserver-side usage projectionで早期拒否します。quotaはbilling hard capではなく、concurrent upload / Versioning分もmonitoringで確認します。
+
+extensionまたはMIMEだけではcontentを証明できません。client申告、signed request header、S3 metadata、checksum、bounded magic / header checkを照合します。StreamBandを一般file hostingにせず、archive、executable、DAW project、plugin binary、任意documentを許可しません。server-side transcoding、waveform生成、MIDI編集 / 実行は行いません。
+
+### Upload state machine
+
+`UPLOADING`は採用しません。browserからS3への進捗はclient-localであり、serverが正確に保証できないためです。
+
+| Current | Trigger / actor | Next | Rule |
+| --- | --- | --- | --- |
+| none | authorized upload request / server | `PENDING_UPLOAD` | metadata、opaque key、expiry、expected SHA-256を作成 |
+| `PENDING_UPLOAD` | upload complete / original uploader | `VERIFYING` | `expectedRevision`とidempotencyをconditional check |
+| `VERIFYING` | server verifier success | `AVAILABLE` | object / key / size / checksum / signature / relationship一致 |
+| `VERIFYING` | deterministic mismatch / expiry | `FAILED` | access不可。safe reason categoryだけ保存 |
+| `PENDING_UPLOAD` | cancel / expiry reconciliation | `DELETION_REQUESTED` | objectが存在しても公開しない |
+| `FAILED` | authorized cleanup | `DELETION_REQUESTED` | 同じkeyへretryせずnew Assetを作る |
+| `AVAILABLE` | AUTHZ-001 delete request | `DELETION_REQUESTED` | 直ちにnew access instructionをdeny |
+| `DELETION_REQUESTED` | reconciler confirms object cleanup / retention handling | `DELETED` | metadata tombstoneとauditを保持 |
+
+`AVAILABLE`、`FAILED`、`DELETED`からupload stateへ戻しません。retryはnew Asset / object keyです。Proposal Decisionはこのstate machineを変更しません。
+
+### Upload request contract
+
+serverはinstruction発行前に次を順に確認します。
+
+1. identityをauthenticateしinternal Userを解決する
+2. canonical Song / optional Versionを取得し、stored Band relationshipをderiveする
+3. base tableからACTIVE Membershipをstrong readする
+4. AUTHZ-001の`asset:request-upload` capabilityを確認する
+5. kindが3種類のallowlist内で、Version / Proposal intentと矛盾しないことを確認する
+6. declared size、extension、MIME、SHA-256形式、filename length / control character / path segmentを検証する
+7. application limitとnonprod Band quota候補を確認する
+8. `clientOperationId`のidempotencyとduplicate intentを確認する
+9. serverがopaque Asset ID / object keyを生成し、`PENDING_UPLOAD` metadataをconditional createする
+10. key、`PUT`、content type、SHA-256 header、`If-None-Match: *`、expiryを限定したinstructionを返す
+
+upload instructionのinitial lifetimeは**15分**です。original filenameはpath separator、control character、bidi制御文字等を除去 / 正規化し、表示用として長さを制限します。key生成には一切使いません。Asset author / createdAt / key / initial stateはserverが決めます。
+
+### Upload complete and verification
+
+complete requestは`assetId`、`expectedRevision`、`clientOperationId`を受け、checksumやidentityをclientだけから確定しません。
+
+- canonical Asset、stored Band / Song / Version、upload intent actorを取得する
+- ACTIVE Membershipと`asset:complete-upload`を再確認し、AUTHZ-001どおりoriginal uploaderだけを許可する
+- state=`PENDING_UPLOAD`、instruction expiry、revision、idempotencyを確認して`VERIFYING`へconditional updateする
+- S3側のexpected exact keyへ`HEAD`相当確認を行い、object存在、actual size、signed content type、stored checksumを取得する
+- persisted expected SHA-256とS3 verified checksumを同じalgorithmで照合する。ETagは特にmultipart時にfull-object hashとは限らないためchecksumに使わない
+- bounded range / safe parser候補でMP3、WAV、Standard MIDI Fileのsignatureを確認し、uploaded contentを実行しない
+- Asset kind、Band / Song / Version、proposal source / target relationshipを再検証する
+- success時だけconditionalに`AVAILABLE`へし、verified size / MIME / checksum / timeをserver fieldへ保存する
+
+同じoperationと同じinputのcomplete retryは同じresultを返します。異なるinputで同じidempotency keyを使う場合は409です。missing object、wrong key、oversize、checksum / signature mismatch、expired intentは`AVAILABLE`にせず`FAILED`またはretriable verification errorにし、別objectを代替表示しません。
+
+S3 / networkの一時errorは直ちにdeterministic `FAILED`へせず、`VERIFYING`のままbounded retry候補とします。retry上限後もobject状態を確定できない場合はaccessを拒否したままoperator reconciliationへ送り、成功を推測しません。
+
+S3 object作成とDynamoDB updateはatomicではありません。objectだけ存在する場合はprivate orphanとしてreconciliation対象、metadataだけ`AVAILABLE`でobjectがない場合はaccessをfail closedしてoperator investigation対象にします。reconcilerはAsset IDとsafe reasonだけを扱い、filename / title / URLをlogへ出しません。
+
+### Short-lived access and residual risk
+
+upload instructionは15分、download / Preview access instructionは**5分**をinitial candidateとします。underlying role credentialがそれより先に切れればinstructionも先に失効し得ます。
+
+すべてのnew access requestで:
+
+1. identityをauthenticateする
+2. canonical Assetを取得する
+3. stored Band / Song / Version chainをderive / validateする
+4. ACTIVE Membershipをbase tableでstrong readする
+5. `asset:access` capabilityを確認する
+6. state=`AVAILABLE`を要求する
+7. exact key / `GET` / 5分に限定したinstructionを発行する
+
+removed memberへ新規instructionを出しません。ただし、すでに発行されたURLは取り消し可能なsessionではなくbearer capabilityとして最長5分利用され得ます。短いexpiry、HTTPS、ログ非記録でriskを限定し、即時revocationが必須になる場合はserver proxy / CloudFront等を別decisionで再評価します。expired URLは自動更新せず、application authorizationを再実行します。URL、signature、query string、keyをDB、analytics、error reportへ永続化しません。
+
+### CORS contract
+
+browser direct upload / accessを採用する場合だけ、bucket CORSを次へ限定します。
+
+- `AllowedOrigins`: review済みのexact nonprod / Private Alpha web origin。wildcard禁止
+- `AllowedMethods`: `PUT`, `GET`, `HEAD`だけ。browser / S3仕様上不要なmethodは削る
+- `AllowedHeaders`: `Content-Type`、`If-None-Match`、`x-amz-checksum-sha256`等、実装で実際に署名するheaderだけ。包括的wildcardは避ける
+- `ExposeHeaders`: UIがverificationに必要な`ETag` / checksum response headerだけ
+- `MaxAgeSeconds`: initial **300秒**
+
+CORSはbrowser policyでありauthorizationではありません。origin追加、custom domain、Vercel Preview originの扱いはhosting / Auth integration taskで明示reviewし、任意PR Preview originをwildcardで許可しません。
+
+### Versioning, retention, and lifecycle
+
+- **nonprod**: S3 Versioningを最初のstorage implementation候補で有効化し、synthetic dataによるrestore / delete-marker drillを行う。unique key + conditional writeがprimary overwrite preventionで、Versioningはrecovery defense
+- **Private Alpha candidate**: Versioningを有効化する。ただしreal data投入前にretention、cost、delete permission、recovery runbookを別Human Gateで再承認する
+- simple deleteはversioned bucketでdelete markerを作り、current keyが404相当になる。過去versionの物理削除とは別操作
+- SOURCE_MIDI immutabilityはapplication / IAM / conditional writeで守り、Versioningがあるからoverwrite可とはしない
+- SongVersionとS3 object versionは別概念。S3 version IDをcollaboration version labelに使わない
+
+lifecycle candidate:
+
+| Target | nonprod candidate | Private Alpha candidate |
+| --- | --- | --- |
+| incomplete multipart upload | multipart導入時は7日後abort | 同じ候補。導入前に確認 |
+| `PENDING_UPLOAD / FAILED` orphan object | reconcilerが`CleanupEligible`相当へしたobjectだけ7日後cleanup候補 | automatic cleanup期間を別承認。初期はoperator review優先 |
+| `DELETION_REQUESTED` current object | application cleanupがretention / audit確認後にdelete marker作成 | immediate physical purgeなし。human-approved retention後 |
+| noncurrent versions | synthetic nonprodで30日候補をrestore drill後に判断 | 初期auto-expirationなし。実測costとrecovery要件後に決定 |
+| delete markers | orphan / version整合を確認してcleanup候補 | auto removalなしから開始 |
+
+bucket-wide current object expirationは設定しません。未公開音源へaggressive lifecycleを適用せず、Private Alphaのnoncurrent version / physical purgeは別human approvalとします。lifecycleはmetadata stateを直接読めないため、serverが安全にcleanup eligibilityを確定しない限りprefix / tagだけで削除しません。
+
+### Multipart decision
+
+初期上限がPreview 80 MiB、MIDI 10 MiBのため、MVPは**single-part conditional PUT**で開始します。AWSは一般に100 MB以上でmultipartをbest practiceとするため、上限を100 MB以上へ上げる、mobile / slow networkでretry costが問題になる、または実測でupload reliabilityが不足した場合にmultipartを別taskで追加します。未使用でも将来の安全策として、multipart導入時は7日後の`AbortIncompleteMultipartUpload`を必須にします。
+
+### Validation and malware boundary
+
+audio / MIDIはuntrusted inputです。MVPはallowlist kind、size、declared MIME / extension、SHA-256、S3-side checksum、bounded file signatureを検証します。MIDI eventやaudio codecをserverで実行・演奏・変換せず、uploaded fileをshell / plugin / DAWへ渡しません。browser responseはattachment / mediaとして安全なContent-TypeとContent-Dispositionをserver側metadataから決め、user filenameをheaderへ未escapeで入れません。
+
+malware scan、deep codec validation、archive bomb対策、moderationはwider beta前のrisk review候補です。MVPで専用scan serviceを採用したと偽らず、実装まで「checksum一致 = safe content」と説明しません。
+
+### Logging and privacy
+
+safe log / metric candidate:
+
+- request ID、opaque Asset ID、operation、result、state transition
+- size class（exact sizeが不要ならbucket化）、kind code、safe error category、latency
+- Band / Songのopaque IDはincident investigationに必要な最小範囲だけ
+
+記録禁止:
+
+- presigned / signed URL、query string、storage object key、bucket名が不要なapplication log
+- original filename、Band / Song title、Comment本文、audio / MIDI content
+- token、credential、authorization header、session、secret、client-local path
+
+access log / CloudTrail data event等はsecurity value、volume、cost、retentionをimplementation taskで比較し、無期限・全payload loggingを既定にしません。
+
+### Cost drivers and recovery boundary
+
+S3はfreeを保証しません。主なdriverはstored bytes、PUT / GET / HEAD / LIST等のrequest、internet data transfer、Versioningのnoncurrent object、lifecycle / retrieval class、orphan / failed upload、将来SSE-KMSを選ぶ場合のKMS key / requestです。current Tokyo Region pricing、free tier、tax、transfer条件はresource作成直前にAWS公式pricingで再確認します。USD 10 Budgetはmonitoringでありhard capではありません。
+
+DynamoDB PITRはS3 objectを復旧せず、S3 VersioningはDynamoDB Asset metadataを復旧しません。restore drillは次の両方向を含めます。
+
+- objectあり + metadataなし: private orphanとして公開せず、checksum / ownershipを照合してrecoverまたはcleanup
+- metadataあり + objectなし: accessをfail closedし、別objectで代替せず、Versioning / backupからisolated recovery
+- DynamoDB new-table restore後: Asset relationshipとS3 object / versionをreconcileし、authorization test後だけtraffic切替
+- S3 restore後: current metadata state、checksum、Band / Song / Version relationshipを再検証
+
+### Mandatory future tests
+
+- bucket / accountのBlock Public AccessとBucket owner enforced / ACL disabledをIaC assertionで確認する
+- public policy / ACLを作れず、HTTP transportがdenyされる
+- unauthorized、removed member、cross-Band、forged Asset / Band chainでinstructionを発行しない
+- `PENDING_UPLOAD / VERIFYING / FAILED / DELETION_REQUESTED / DELETED`へaccessを出さない
+- oversize、unsupported MIME / extension / signature、wrong key、wrong size、checksum mismatchを`AVAILABLE`にしない
+- conditional uploadがexisting key overwriteを拒否する
+- SOURCE_MIDIを同じkeyへ上書きせず、PROPOSAL_MIDIがdistinct Asset / objectになる
+- Proposal DecisionがS3 object / Asset association / SongVersionを変更しない
+- complete retryがidempotentで、異なるpayloadのkey reuseを409にする
+- signed URL / object key / filename / title / tokenがDB・response identity・logへ残らない
+- delete request直後からnew accessをdenyし、physical cleanup後もmetadata tombstoneを保持する
+- exact CORS origin / method / headerだけを許可し、wildcard originを拒否する
+- DynamoDB-only / S3-only failureとrestore reconciliationをsynthetic dataで検証する
+
+### Compact storage contract
+
+| Item | Decision candidate |
+| --- | --- |
+| bucket | environmentごとに1 private bucket。nonprod / Private Alphaは別account / bucket |
+| encryption | nonprodはexplicit SSE-S3。customer-managed KMSなし。Private Alphaは再review |
+| key | `<environment>/assets/<kind>/<asset-id>/<object-id>`、opaque unique IDs、conditional no-overwrite |
+| kinds | `AUDIO_PREVIEW / SOURCE_MIDI / PROPOSAL_MIDI`。Stem deferred |
+| formats | Preview MP3 / WAV、MIDIはStandard MIDI Fileだけ |
+| limits | Preview 80 MiB、各MIDI 10 MiB、nonprod Band 2 GiB候補 |
+| state | `PENDING_UPLOAD → VERIFYING → AVAILABLE / FAILED → DELETION_REQUESTED → DELETED`。retryはnew Asset |
+| expiry | upload 15分、download / Preview 5分 |
+| authorization | canonical Asset chain + strong ACTIVE Membership + AUTHZ capability + current stateをrequestごとに確認 |
+| CORS | exact origins、PUT / GET / HEAD、必要headerのみ、300秒。wildcard originなし |
+| Versioning | nonprodでrestore drill、Private Alphaでもenable candidate。normal app versioningには使わない |
+| lifecycle | current objectのbucket-wide expiryなし。orphan / noncurrent purgeはstate確認とHuman Gate |
+| multipart | 初期はsingle-part PUT。100 MB以上 / reliability要件で再評価 |
+| logs | request ID / opaque Asset ID / safe categoryのみ。URL / key / filename / content / secretなし |
+| recovery | DynamoDB PITRとS3 Versioningを別々にrestoreし、metadata / objectをreconcile |
+| implementation | AWS foundation gate後の別task。S3 / IAM / API / runtimeは未実装 |
+
+### Official references（2026-09-11確認）
+
+- [S3 Block Public Access](https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html)
+- [S3 Object Ownership and disabled ACLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/about-object-ownership.html)
+- [SSE-S3 default encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/specifying-s3-encryption.html)
+- [S3 presigned URL expiration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)
+- [S3 conditional writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html)
+- [S3 checksum validation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/checking-object-integrity-upload.html)
+- [S3 CORS elements](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ManageCorsUsing.html)
+- [S3 Versioning delete markers](https://docs.aws.amazon.com/AmazonS3/latest/userguide/DeleteMarker.html)
+- [S3 multipart upload](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html)
+- [Abort incomplete multipart upload lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpu-abort-incomplete-mpu-lifecycle-config.html)
+- [S3 security best practices](https://docs.aws.amazon.com/AmazonS3/latest/userguide/security-best-practices.html)
+- [S3 pricing](https://aws.amazon.com/s3/pricing/)
 
 ## 利用候補
 

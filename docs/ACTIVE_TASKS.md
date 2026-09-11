@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUTHZ-001 | Band membership authorization and capability matrix | Codex | レビュー待ち | `docs/authz-001-capability-matrix` | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #31 | 5 roleのcapability、ownership、cross-Band protection、audit、future test contractを設計。AWS resource作成なし |
+| STORAGE-001-DESIGN | Private Preview / MIDI storage contract | Codex | レビュー待ち | `docs/storage-001-private-asset-design` | `docs/API.md`、`docs/DATABASE.md`、`docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 作成予定 | private S3候補のbucket、encryption、upload / access、retention、recovery contractを設計。AWS resource作成なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| AUTHZ-001 | 完了 | Codex | `docs/authz-001-capability-matrix` / #31 | 2026-09-11 | Band Membership role、capability、ownership、cross-Band protection、audit / test contractを設計しmainへマージ済み。AWS resource作成なし |
 | CLOUD-DATA-001 | 完了 | Codex | `docs/cloud-data-001-dynamodb-design` / #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、transaction、concurrency、PITR / restoreを設計しmainへマージ済み。AWS resource作成なし |
 | CLOUD-003C-DECISION | 完了 | Codex | `docs/cloud-003c-bootstrap-decision` / #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定しmainへマージ済み。actual bootstrapは別Human Gateで未承認 |
 | CLOUD-003C-REVIEW | 完了 | Codex | `docs/cloud-003c-bootstrap-review` / #28 | 2026-09-11 | 現行CDK bootstrap resource、cost、permission、execution policy、OIDC原則をAWS公式資料でreviewしmainへマージ済み。AWS接続・変更なし |

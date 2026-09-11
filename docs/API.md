@@ -139,9 +139,9 @@ Actor欄のcapability名とREST風URLは候補です。正式なrole / permissio
 | Create Comment | `POST /api/songs/{songId}/comments` | `comment:create` capability | Version ID、body、type、anchor、`clientOperationId` | Version / Track ownership、anchor、field | Comment + optional CommentAnchor | Comment view | 二重投稿、Version mismatch |
 | Create MIDI Proposal | `POST /api/songs/{songId}/midi-proposals` | `proposal:create` capability | source Version / MIDI Asset、proposal Asset、summary、`clientOperationId` | source/proposal ownership、kind、readiness | separate MidiProposal作成 | Proposal summary | 二重作成、source差替え |
 | Decide Proposal | `POST /api/midi-proposals/{proposalId}/decisions` | `proposal:decide` capability | decision、note、partial detail、`expectedRevision`、`clientOperationId` | current state、permission、revision、transition | Decision/Review record追加 + summary state更新候補 | Decision + current review state | 相反判断、二重決定 |
-| Upload Request | `POST /api/songs/{songId}/assets/upload-requests` | Asset種別に応じたcreate capability | kind、name、declared MIME、size、checksum、target refs、`clientOperationId` | permission、quota、kind、size、target ownership | pending Asset / upload intent候補 | short-lived upload instruction | retry、orphan intent |
-| Upload Complete | `POST /api/assets/{assetId}/complete` | upload owner + capability | checksum等、`clientOperationId` | object存在、owner、size、detected MIME、state | Assetをverified / failed等へ遷移 | sanitized Asset metadata | 二重complete、不完全object |
-| Asset Access | `GET /api/assets/{assetId}/access` | `asset:read` capability | Asset ID | auth、membership、ownership、Asset state | 原則なし。access audit候補 | short-lived access instructionまたはstream | membership変更、期限切れ |
+| Upload Request | `POST /api/songs/{songId}/assets/upload-requests` | `asset:request-upload` capability | kind、name、declared MIME、size、SHA-256 checksum、target refs、`clientOperationId` | permission、quota、kind、size、target ownership | `PENDING_UPLOAD` Asset / upload intent | 15分のshort-lived upload instruction | retry、orphan intent |
+| Upload Complete | `POST /api/assets/{assetId}/complete` | `asset:complete-upload` + upload owner | `expectedRevision`、`clientOperationId` | object存在、expected key、owner、size、checksum、bounded signature、state | `PENDING_UPLOAD → VERIFYING → AVAILABLE / FAILED` | sanitized Asset metadata | 二重complete、不完全object |
+| Asset Access | `GET /api/assets/{assetId}/access` | `asset:access` capability | Asset ID | auth、strong Membership、canonical ownership、`AVAILABLE` state | 原則なし。access audit候補 | 5分のshort-lived access instruction | membership変更、期限切れ |
 | Core Read | `GET /api/songs/{songId}`等 | resource read capability | ID、pagination / include候補 | auth、membership、ownership、limit | なし | bounded page projection | stale表示、過剰取得 |
 
 ## Write boundaries
@@ -322,10 +322,10 @@ Source MIDIは読み取り専用の参照で、Proposalはnew separate entity / 
 server checks候補:
 
 - source Version、source MIDI Asset、proposal Asset、Trackが同じSong / Bandに属する
-- source Assetのkindが`midi_source`相当、proposal Assetのkindが`midi_proposal`相当である
+- source Assetのkindが`SOURCE_MIDI`、proposal Assetのkindが`PROPOSAL_MIDI`である
 - source Assetをreadでき、proposal Assetを作成したactorに利用権限がある
 - proposal Assetがserver検証済みの`available`相当stateである
-- source Version / Assetがarchived、deleted、quarantinedでない
+- source Versionがarchivedでなく、source Assetが`AVAILABLE`である
 - range、title、summary、initial transitionをruntime validationする
 - `createdBy`、`createdAt`、initial statusはserverが設定する
 
@@ -388,7 +388,7 @@ TypeScript type、HTML属性、disabled button、client-side validationはsecuri
 - enum、format、unknown field、payload size
 - cross-field relationと同じSong / Version / Bandへの所属
 - authentication、active Membership、resource ownership、operation capability
-- current state、archived / deleted / quarantined状態、許可されたtransition
+- current state、archived / `FAILED` / `DELETION_REQUESTED` / `DELETED`状態、許可されたtransition
 - `expectedRevision`、`clientOperationId`、rate limit候補
 
 runtime validation libraryは未決定です。現在packageに新しいvalidation libraryを追加せず、実装taskで候補を比較します。
@@ -440,45 +440,53 @@ serverはactor + operation scope + keyの組み合わせを一定期間uniqueに
 Client selects a file
 → Upload Request
 → Server auth / membership / capability / metadata / quota validation
-→ pending Asset or upload intent + opaque object key
+→ Asset(PENDING_UPLOAD) + opaque object key
 → short-lived private upload instruction
-→ Client uploads directly to private object storage candidate
+→ Client uploads directly to private S3 candidate
 → Upload Complete
-→ Server verifies object, size, checksum, detected type, ownership, state
-→ optional future content inspection
-→ Asset becomes available, quarantined, or failed
+→ conditional transition to VERIFYING
+→ Server verifies object, size, checksum, bounded file signature, ownership, state
+→ Asset becomes AVAILABLE or FAILED
 ```
+
+STORAGE-001-DESIGNのMVP contractでは`UPLOADING`をserver stateにしません。browserからS3への転送進捗はclient-localで、serverが確実に知るのはupload instruction発行前の`PENDING_UPLOAD`とcomplete受付後の`VERIFYING`だけです。`FAILED`から同じkeyへ再uploadせず、新しいAsset / keyで再試行します。
 
 Upload Request input候補:
 
-- `kind`: `audio_preview | audio_stem | midi_source | midi_proposal | reference`候補
+- `kind`: `AUDIO_PREVIEW | SOURCE_MIDI | PROPOSAL_MIDI`
 - original filename（表示用。path / object keyに直接使用しない）
-- declared MIME、extension、`sizeBytes`、checksum候補
+- declared MIME、extension、`sizeBytes`、`checksumAlgorithm=SHA256`、checksum
 - Song ID、optional Version / Track / Proposal intent reference
 - `clientOperationId`
 
-server側で、kindごとのallowed MIME / extension、max size、Band quota、filename length、target ownership、upload期限を検証します。具体的なformat・容量は未決定です。client supplied MIME、extension、sizeだけを信用せず、complete時に実objectと照合します。
+serverはcanonical Song / Version、ACTIVE Membership、AUTHZ-001の`asset:request-upload`、kind、format、size、filename sanitation、Band使用量候補、target relationshipを検証します。初期application limitはPreview 80 MiB、各MIDI 10 MiB、nonprod Band合計2 GiB候補、upload instruction 15分です。これはS3 hard limitではなく、実測後に専用reviewで変更します。serverはAsset metadataとkeyを先に作り、key / method / checksum header / content type / expiryを限定したinstructionだけを返します。
 
-Upload Completeはobject存在、opaque keyとの一致、size、checksum、detected MIME、upload owner、expiry、current Asset stateを再検証します。二重completeはidempotentに同じ結果を返す候補です。不完全、期限切れ、checksum不一致、禁止typeは`available`にせず、failed / quarantined候補としてaccessを拒否します。
+Upload Completeはupload intentのactor、canonical relationship、`PENDING_UPLOAD` state、revision、idempotencyを確認して`VERIFYING`へconditional transitionします。その後、object存在、expected key、size、S3 checksum、signed content type、bounded signature（MP3 / WAV / Standard MIDI File）をstorage側から検証します。同じoperationの二重completeは同じresultを返し、mismatchは`FAILED`としてaccessを拒否してorphan reconciliation対象にします。ETagをcontent checksumとはみなしません。
 
 ### Object storage security
 
-- unreleased Songのobjectをpublic bucket / public URLにしない
+- unreleased Songのobjectをpublic bucket / public URLにしない。環境ごとに1つのprivate Asset bucketを使う候補
+- S3 Block Public Accessの4設定、Bucket owner enforced、ACLなし、HTTPS-only bucket policyをIaCで明示する
+- nonprodはSSE-S3を明示し、customer-managed KMS keyを作らない。Private Alphaはreal data投入前に再reviewする
 - read / writeのたびにauthentication、Band Membership、Asset ownership、current stateをserverで確認する
 - upload / download instructionは短時間だけ有効にし、DBやclient stateへ長期保存しない
-- object keyはserver生成のopaque IDを基にし、Band名、Song名、user email、original filename、secretを直接含めない
+- object keyはserver生成のopaque IDを基にし、Band名、Song名、user email、original filename、secretを直接含めない。新規writeは`If-None-Match: *`候補で既存key上書きを拒否する
 - original filenameとclient supplied MIMEを信用せず、表示時のescapeとcomplete時のserver検証を行う
 - private object key、provider credential、署名生成secretをclient responseやlogへ出さない
-- malware / content inspection、encryption、region、retention、provider、費用上限は将来のstorage設計で決める
-- S3は候補の一つにすぎず、DATA-002でAWS resourceを作成・採用しない
+- server-side transcodingとmalware scanning serviceはMVPへ追加せず、size / checksum / bounded signatureを先に実装する。uploaded contentをserverで実行しない
+- 具体的なbucket、IAM、API、S3 resourceは未作成で、actual implementationはAWS foundation execution gate後の別taskとする
 
 ### Asset access
 
-`GET /api/assets/{assetId}/access`は、権限確認後に短時間のdownload instructionを返す案と、server経由でstreamする案を比較するための候補です。どちらでもstable public URLは返しません。
+`GET /api/assets/{assetId}/access`は、AUTHZ-001の共通sequenceを通して5分有効のdownload / Preview instructionを返す候補です。stable public URLは返しません。
 
-- Membershipを外れたactor、別Bandのactor、deleted / quarantined Assetにはaccessを発行しない
-- browser cache、Content-Disposition、range request、Preview再生、download auditはprovider選定時に決める
+- canonical AssetからBand / Song / Versionをderiveし、strong readしたACTIVE Membership、`asset:access` capability、`AVAILABLE` stateを毎回確認する
+- Membershipを外れたactor、別Bandのactor、`FAILED / DELETION_REQUESTED / DELETED` Assetにはaccessを発行しない
+- 削除されたmemberへ新規instructionを発行しないが、既発行URLは最長5分残り得るresidual riskとして扱う
+- browser cache / Content-Disposition / range requestはimplementation taskでresponse testする
 - responseには表示用filename、sanitized MIME、size、expiry等の必要最小限だけを含める
+
+browser direct access用CORS候補は、review済みのexact app originだけ、`PUT / GET / HEAD`だけ、`Content-Type`、`If-None-Match`、必要なchecksum headerだけを許可します。Private Alphaでwildcard originを使わず、preflight cacheは初期300秒候補です。CORSはauthorizationではありません。
 
 ### UploadとVersion作成の関係
 

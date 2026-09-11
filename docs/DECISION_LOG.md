@@ -286,6 +286,21 @@
 - 見直し条件: friend testでroleが細かすぎる、Guest accessが広すぎる、separation-of-dutiesが必要、moderation / invitation / account recovery要件が加わる、Private Alpha security reviewでdeny境界が変わる場合
 - 関連: AUTHZ-001、DATA-002、CLOUD-DATA-001、[API.md](API.md)、[DATABASE.md](DATABASE.md)
 
+## DEC-019: Private Assetをenvironment単位のS3 bucketと短命instructionで扱う
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（STORAGE-001-DESIGN）
+- Bucket model: environmentごとに1つのprivate Asset bucketを使い、nonprodとPrivate Alphaは別account / bucketに分離する。S3 Block Public Accessの4設定、Bucket owner enforced / ACL disabled、HTTPS-onlyを明示する
+- Encryption: nonprodはSSE-S3を明示し、customer-managed KMS keyを作らない。Private Alphaはreal unreleased music投入前に別reviewする
+- Asset boundary: 初期kindを`AUDIO_PREVIEW / SOURCE_MIDI / PROPOSAL_MIDI`に限定し、binaryはS3、metadataはDynamoDBへ分離する。SOURCE_MIDIとPROPOSAL_MIDIはdistinct Asset / opaque keyで、Decisionは両objectもVersionも変更しない
+- Upload / access: unique keyへのconditional single-part PUT、SHA-256、size / MIME / bounded signature、`PENDING_UPLOAD → VERIFYING → AVAILABLE / FAILED`を使用する。upload instruction 15分、access instruction 5分とし、毎回canonical relationshipとstrong ACTIVE Membershipを確認する
+- Recovery: nonprodでS3 Versioningとsynthetic restore drillを行い、Private Alphaでもenable候補とする。DynamoDB PITRとS3 Versioningは別復旧手段で、metadata / object reconciliationが必要
+- Cost / retention: Preview 80 MiB、各MIDI 10 MiB、nonprod Band 2 GiBを初期application limit候補とする。bucket-wide current expirationは使わず、orphan / noncurrent physical cleanupはstate確認とHuman Gateを要求する
+- 実装状態: docs-only proposal。S3、IAM、API、Lambda、KMS、CORS、lifecycle、AWS resource、runtime upload / accessは未実装
+- 見直し条件: 100 MB以上、slow network、multi-part / resumable upload、Stem、scan、CloudFront、instant revocation、Private Alpha encryption / retention、実測costの要件が生じた場合
+- 関連: STORAGE-001-DESIGN、DATA-002、CLOUD-DATA-001、AUTHZ-001、[AWS.md](AWS.md)、[API.md](API.md)、[DATABASE.md](DATABASE.md)
+
 ---
 
 ## 新規決定テンプレート
