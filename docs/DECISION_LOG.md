@@ -254,6 +254,22 @@
 - 見直し条件: current CDK template / CLI変更、existing `CDKToolkit`検出、account / Region差異、KMS / trust差異、Private Alpha開始、real data投入、custom execution policyへ移行する時
 - 関連: CLOUD-003C-REVIEW、CLOUD-003C-DECISION、[AWS.md](AWS.md)
 
+## DEC-017: Cloud MVP metadataをOn-Demand single-tableで設計する
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（CLOUD-DATA-001）
+- Decision candidate: Cloud MVPのmetadataは`PK` / `SK`を持つOn-Demand DynamoDB single-tableと、user / Band / Song scopeの一覧に限定したsparse `ScopeIndex` 1本で開始する。GSIは`KEYS_ONLY`とし、authorizationには使わない
+- 採用理由: 2 user / 1 private Bandの小さく不規則なtrafficでcapacity planning、table別backup / alarm / IAM、cross-table restore coordinationを増やさず、key conventionとtransaction境界を一つに固定するため
+- Authorization: protected entityへ`bandId`と必要なparent IDを持たせるが、keyやclient入力を権限として扱わない。serverがbase tableのBandMembershipをstrong readし、resource relationshipとcapabilityを確認する
+- Non-destructive boundary: SOURCE_MIDIとPROPOSAL_MIDIは別Asset、ProposalDecisionはappend-only recordとsummary update、SongVersionはDAW反映後の別commandとする。DecisionからVersionを自動作成しない
+- Consistency: mutable itemはinteger `revision`と`expectedRevision`のconditional writeを使い、stale writeを409へmapする。Song + initial Version、Comment + Anchor、Proposal Decision、Version creation等は必要最小限の`TransactWriteItems`でatomicにする
+- Recovery: resource taskではPITR 35日を有効化し、Private Alpha前にsynthetic dataでnew-table restore drillを行う。DynamoDB PITRとS3 Versioning / object restoreを別責務として扱う
+- Cost: On-Demand、GSI 1本、small item、paginationを基本とし、binaryはprivate S3へ分離する。current Region pricingはresource作成直前に再確認し、freeを保証しない
+- 見直し条件: access pattern churn、ad-hoc relational query / reporting、complex constraint、100 item transaction / 400 KB item / hot partition、GSI cost、key modelの保守性が問題になった場合はmanaged PostgreSQLを再評価する
+- 実装状態: docs-only proposal。DynamoDB table、PITR、GSI、IAM、API、repository code、AWS resourceは未作成
+- 関連: CLOUD-DATA-001、DATA-001、DATA-002、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[AWS.md](AWS.md)
+
 ---
 
 ## 新規決定テンプレート

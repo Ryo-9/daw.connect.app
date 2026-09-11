@@ -2,9 +2,9 @@
 
 ## この文書の位置づけ
 
-この文書は、DATA-001で確認したPhase 1のmock dataと、Phase 2以降のcloud data model候補を分けて記録します。将来のDB/API実装に向けたレビュー資料であり、DB製品、ORM、table名、column、constraint、AWS/S3、認証方式の採用決定ではありません。
+この文書は、DATA-001で確認したPhase 1のmock data、DATA-002のAPI boundary、CLOUD-DATA-001のCloud MVP向けDynamoDB physical designを分けて記録します。CLOUD-DATA-001では物理モデルの推奨案を一つに絞りますが、AWS resource、DB/API実装、migration、実data投入は行いません。
 
-現在の正は `src/lib/mock-data.ts` と実際の画面です。以下のPhase 2案はすべて `候補` で、実装、migration、seed、実data投入、file uploadは行っていません。
+現在のruntimeの正は `src/lib/mock-data.ts` と実際の画面です。以下のPhase 2案とphysical designはreview対象であり、実装済みのschemaではありません。
 
 ## 変えてはいけないプロダクト境界
 
@@ -255,6 +255,204 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - transaction境界、partial failure、retry、audit event
 - clientへ返さないfieldと、権限不足/対象なしによる情報漏えい対策
 
+## CLOUD-DATA-001: Cloud MVP DynamoDB physical design
+
+### Statusと対象範囲
+
+調査日: 2026-09-11
+
+この章は、2 user / 1 private Bandのfriend testに必要なmetadata persistenceを、resource作成前に具体化した設計です。選択する形は、On-Demand capacityの**単一DynamoDB table + sparse GSI 1本**です。table名候補は`streamband-<environment>-metadata`、primary keyは`PK` / `SK`、GSIは`ScopeIndex`（`GSI1PK` / `GSI1SK`）とします。`<environment>`は`nonprod`または`private-alpha`で、実名・曲名・email等を含めません。
+
+この選択はphysical designのreview案であり、table、PITR、index、TTL、alarm、IAM、APIはまだ作成していません。CLOUD-003C actual bootstrapも別Human Gateのままです。
+
+### MVP persistence scope
+
+最初のsliceで永続化するのは次のentityと補助recordに限定します。
+
+- `User`、`Band`、`BandMembership`
+- `Song`、明示的に作る`SongVersion`
+- binary本体を含まない`Asset` metadata
+- `Comment`とVersion固定の`CommentAnchor`
+- source MIDIと別assetを参照する`MidiProposal`
+- append-onlyの`ProposalDecision`
+- Membership変更、Proposal Decision、Song archive、Asset削除等に限定した`AuditEvent`
+- authentication subjectからUserを引くlookup recordと、二重送信を防ぐidempotency record
+
+`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
+
+### Single-tableを選ぶ理由
+
+| 観点 | single-table採用理由 | small multi-tableを今回見送る理由 |
+| --- | --- | --- |
+| 小規模serverless | 1 tableのOn-Demandでcapacity管理を減らし、Lambdaから一貫したrepository boundaryを使える | table別capacityは不要でも、backup、alarm、IAM、restore、migrationの対象が増える |
+| authorization | protected itemへ`bandId`を持たせ、Membershipのbase-table `GetItem`と組み合わせる規則を統一できる | entity tableごとに所有scopeとread順序がばらつきやすい |
+| atomicity | Song + initial Version、Proposal + Decision summary、Membership + Auditを同一Regionの`TransactWriteItems`で扱える | 複数tableでもtransaction可能だが、最初のMVPでは運用対象を増やす利点が小さい |
+| recovery | 1 tableをPITRから隔離tableへ戻して整合確認しやすい | table間で同じ復旧時点を選び、cutoverを調整するrunbookが増える |
+| beginner maintainability | key prefix、1 GSI、access-pattern matrixを固定すれば、物理設定の数を小さくできる | entityごとの単純なkeyは理解しやすい一方、cross-table list、backup、policyの全体管理が増える |
+
+見直し条件は、access patternが頻繁に変わる、ad-hoc join / reporting / full-text searchが中心になる、relationship constraintをapplicationで安全に維持できない、transactionが100 item制限へ近づく、hot partitionやGSI costが実測で問題になる、またはteamがkey prefixを安全に保守できない場合です。その場合はmanaged PostgreSQLをfallbackとして再評価します。SQL migrationを伴う切替は別taskとし、DynamoDB itemをdomain DTOへ変換するrepository層からexportします。
+
+### Key convention
+
+- IDはserver生成のopaqueでimmutableな値とし、この文書の`b_demo_01`等はsynthetic exampleです。UUID / ULIDの最終選択は実装taskで固定します。
+- 時刻はserver生成UTC ISO 8601、sequenceと数値sort keyは固定幅zero-paddingを使います。
+- mutableな表示名、slug、original filenameをPK / SKへ使いません。
+- protected entityは`bandId`を必須とし、`songId` / `songVersionId`も関係に応じて重複保持します。このdenormalizationはclientを信用するためではなく、serverがcross-Band mismatchを検証するためです。
+- mutableなentityには`revision`を1から付け、更新ごとにconditional writeでincrementします。append-only itemはrevision不要です。
+
+| Entity / record | PK | SK | 主要fieldとrelationship | concurrency / status |
+| --- | --- | --- | --- | --- |
+| User | `USER#<userId>` | `PROFILE` | `entityType`, `userId`, `displayName`, `createdAt`, `updatedAt` | `revision`, `status` |
+| Auth subject lookup | `AUTH#<provider>#<opaqueSubject>` | `USER` | `userId`, `createdAt`; client responseへ出さない | immutable、重複Put禁止 |
+| Band | `BAND#<bandId>` | `META` | `bandId`, `slug`, `name`, `createdBy`, timestamps | `revision`, `status=ACTIVE|ARCHIVED` |
+| BandMembership | `BAND#<bandId>` | `MEMBERSHIP#<userId>` | `membershipId`, `bandId`, `userId`, `role`, timestamps | `revision`, `status=ACTIVE|REMOVED` |
+| Song | `SONG#<songId>` | `META` | `bandId`, metadata、`currentVersionId`, `currentVersionSequence`, timestamps | `revision`, Song status、`archivedAt?` |
+| SongVersion | `VERSION#<versionId>` | `META` | `bandId`, `songId`, `sequence`, `label`, `note`, `basedOnVersionId?`, actor / timestamps | 原則immutable。限定metadata更新時だけ`revision` |
+| Asset | `ASSET#<assetId>` | `META` | `bandId`, `songId`, `songVersionId?`, `kind`, internal `storageObjectKey`, checksum / size / MIME、actor / timestamps | `revision`, upload / deletion state |
+| Comment | `VERSION#<versionId>` | `COMMENT#<createdAt>#<commentId>` | `bandId`, `songId`, `versionId`, `commentId`, author、type、body、timestamps | `revision`, `deletedAt?` |
+| CommentAnchor | `VERSION#<versionId>` | `ANCHOR#<orderType>#<position>#<commentId>` | `bandId`, `songId`, `versionId`, `commentId`, `commentSk`, optional time / bar / beat / part code | immutable。Commentと同時作成 |
+| MidiProposal | `PROPOSAL#<proposalId>` | `META` | `bandId`, `songId`, `sourceVersionId`, `sourceMidiAssetId`, separate `proposalAssetId`, summary、actor / timestamps | `revision`, Proposal status |
+| ProposalDecision | `PROPOSAL#<proposalId>` | `DECISION#<decidedAt>#<decisionId>` | `bandId`, `songId`, `sourceVersionId`, `decision`, note / partial detail、actor | append-only。Proposal/Asset/Versionを上書きしない |
+| AuditEvent | `BAND#<bandId>` | `AUDIT#<occurredAt>#<auditEventId>` | actor、action、resource type / ID、result、request ID。本文やobject keyを複製しない | append-only、retention policy対象 |
+| Idempotency | `OP#<actorUserId>#<operation>` | `KEY#<clientOperationId>` | input hash、result resource ID、createdAt、`expiresAt` | conditional Put、TTL補助 |
+
+`CommentAnchor`の`orderType / position`は、time anchorなら`T#<timeMs 12桁>`、musical positionなら`B#<bar 8桁>#<beat 4桁>#<tick 8桁>`、位置なしCommentにはAnchor itemを作りません。timeとbar/beatを同時に受ける場合はserverが整合を検証し、Versionが違う位置情報を流用しません。
+
+Proposal lifecycleのphysical candidateは`DRAFT | SUBMITTED | REVIEWING | ACCEPTED | PARTIALLY_ACCEPTED | REJECTED | WITHDRAWN`です。FLOW-001の`HOLD`はfinal Decisionを追加せず`REVIEWING`を維持するUI actionとして扱い、独立した永続statusにはしません。Decision itemは`ACCEPT | PARTIAL | REJECT`を記録し、権限matrixはAUTHZ-001で確定します。
+
+### ScopeIndex: MVPで唯一のGSI
+
+`ScopeIndex`は`GSI1PK` / `GSI1SK`を持つitemだけが入るsparse GSIです。projectionは`KEYS_ONLY`とし、一覧のindex query後に必要なcanonical itemを`BatchGetItem`します。これによりitem種別ごとの表示fieldをindexへ複製せず、write / storage amplificationをkey分に限定します。一覧の追加round tripは2 user規模では受容します。
+
+| Indexed item | GSI1PK | GSI1SK | served access pattern |
+| --- | --- | --- | --- |
+| BandMembership | `USER#<userId>` | `BAND#<bandId>` | UserのBand一覧 |
+| Song | `BAND#<bandId>` | `SONG#<updatedAt>#<songId>` | BandのSong一覧 |
+| SongVersion | `SONG#<songId>` | `VERSION#<sequence 12桁>#<versionId>` | Version履歴とlatest候補 |
+| Asset | `SONG#<songId>` | `ASSET#VERSION#<versionId-or-STAGING>#<createdAt>#<assetId>` | Version / staging Asset一覧 |
+| MidiProposal | `SONG#<songId>` | `PROPOSAL#VERSION#<versionId>#<createdAt>#<proposalId>` | Song全体またはVersion単位のProposal一覧 |
+
+GSI queryはeventually consistent onlyなので、Membership authorization、Asset access authorization、current Versionのread-after-write判定には使いません。GSIは一覧候補の発見だけに使い、protected operationはbase tableを再読込します。LSI、別GSI、Streams、DAX、Global TablesはMVPでは追加しません。
+
+### Access-pattern matrix
+
+| # | Access pattern | Operation / key | consistency | count / pagination |
+| --- | --- | --- | --- | --- |
+| 1 | Get Band by ID | `GetItem(BAND#id, META)` | protected readはstrong | 1 item |
+| 2 | Check membership | `GetItem(BAND#id, MEMBERSHIP#userId)` | **strong必須**。`ACTIVE` / capabilityも確認 | 1 item、毎protected command |
+| 3 | List Bands for User | `Query ScopeIndex(USER#userId, begins_with(BAND#))` → canonical `BatchGet` | indexはeventual。表示後の操作時は#2を再確認 | friend testは10件未満想定、cursor対応 |
+| 4 | Get Song | `GetItem(SONG#id, META)` → #2で`bandId`確認 | strong候補 | 1 item |
+| 5 | List Songs for Band | `Query ScopeIndex(BAND#id, begins_with(SONG#))` → `BatchGet` | listはeventual可。先に#2 | 25件/page、`LastEvaluatedKey` |
+| 6 | Get latest SongVersion | strong `Get Song.currentVersionId` → strong `GetItem(VERSION#id, META)` | **strong**。GSI latestだけに依存しない | 2 items |
+| 7 | List SongVersions | `Query ScopeIndex(SONG#id, begins_with(VERSION#))`、descending | eventual可 | 25件/page |
+| 8 | Get Version | `GetItem(VERSION#id, META)` → `bandId/songId`照合 | strong候補 | 1 item |
+| 9 | List Comments for Version | base `Query(VERSION#id, begins_with(COMMENT#))` |通常eventual、投稿直後はAPI responseまたはstrong | 50件/page |
+| 10 | Comments around anchor | base `Query(VERSION#id, ANCHOR#T#... BETWEEN ...)`または`ANCHOR#B#...` → stored Comment keyを`BatchGet` | base Queryはstrong候補 | 100 anchors/page、windowを限定 |
+| 11 | List Proposals for Version / Song | `Query ScopeIndex(SONG#id, begins_with(PROPOSAL#...))` | eventual可。mutation前はbase再読込 | 25件/page |
+| 12 | Get Proposal + Decision history | `Query(PROPOSAL#id)`。`META` + `DECISION#` | review直後はstrong候補 | decisionは50件/page |
+| 13 | Get Asset metadata | `GetItem(ASSET#id, META)` | strong候補 | 1 item |
+| 14 | Resolve Asset ownership | #13 + strong #2、request Song / Versionとstored IDsを照合 | **strong必須** | signed instructionごと |
+| 15 | Write AuditEvent | protected mutationと同じ`TransactWriteItems`で`Put` | transaction | 1 event /重要操作 |
+| 16 | Prevent cross-Band read | resource base itemのstored `bandId`とstrong Membershipを照合 | **strong必須** | mismatchはDATA-002の外向き404候補 |
+
+GSI pagination tokenはserverがopaque cursorとして署名 / encodeする候補で、raw keyやinternal storage keyを公開API identifierにしません。`Scan`は運用調査以外のapplication pathで使いません。
+
+### Atomicity and write matrix
+
+| Operation | write strategy | atomic boundary / condition | consistency note |
+| --- | --- | --- | --- |
+| Create Song + initial Version | `TransactWriteItems` | Song Put、Version Put、idempotency Put、optional Audit。両entityの`attribute_not_exists` | SongとVersionを半端に残さない |
+| BandMembership add / role / remove | `TransactWriteItems` | Membership conditional Put/Update + Audit + idempotency。最後のOwner等のruleはAUTHZ-001で追加 | authorization readはstrong |
+| Create Comment | `TransactWriteItems` | Comment + optional Anchor + idempotency。Version / membershipは直前にstrong readし、必要ならtransaction conditionへ含める | Anchorだけ残さない |
+| Create Proposal | `TransactWriteItems` | Proposal + idempotency + Audit候補。source / proposal Assetは`AVAILABLE`かつsame Band / Song / Versionを事前確認 | source Assetは更新しない |
+| Record Proposal Decision | `TransactWriteItems` | expected revision / statusでProposal summary Update、append Decision Put、idempotency、Audit | **Versionを作らない**。相反判断を409にする |
+| Complete Asset upload | object storage verify後に`TransactWriteItems` | Assetをexpected state / revisionで`AVAILABLE`へUpdate + idempotency + Audit。storageとDynamoDBは同一transactionではない | retry可能なreconciliationが必要 |
+| Create next Version | `TransactWriteItems` | Version Put、expected Song revisionでcurrentVersion pointer Update、verified Asset association、idempotency、Audit | Proposal Decisionとは別command |
+| Single Song metadata update | conditional `UpdateItem` | `revision = expectedRevision`かつnot archived | 1 itemなのでtransaction不要 |
+
+DynamoDB transactionは最大100 unique item / 4 MBであるため、Versionに一度に関連付けるAsset数へimplementation上限を設けます。外部object storageの成否とDynamoDB transactionはatomicにならないため、Asset stateとreconciliationを必須にします。
+
+### Concurrency and idempotency
+
+- mutable entityのupdateは`revision = expectedRevision`をconditionにし、成功時に`revision = revision + 1`と`updatedAt`をserver値で更新します。
+- condition failureはsilent overwriteせずDATA-002の`409 CONFLICT`へmapし、clientへlatest再読込と差分確認を促します。
+- Proposal DecisionはProposal revisionとallowed current statusを同時にcondition化し、AのAcceptとBのRejectが両方current summaryにならないようにします。Decision履歴はappend-onlyです。
+- create / complete系は`clientOperationId`からIdempotency itemを作り、同じkey + input hashは既存resultを返し、同じkey + 異なるinputは409候補とします。
+- `TransactWriteItems.ClientRequestToken`の公式idempotency windowは10分なので、それだけに依存せず、applicationのIdempotency itemを24時間保持する初期候補とします。TTL削除は非同期のため、期限切れitemもapplicationで`expiresAt`を判定します。
+- retryはthrottle / retryable 5xxへbounded exponential backoff + jitterを使い、validation、permission、condition conflictは自動再送しません。
+
+### Asset metadata boundary
+
+1. upload requestでserverがMembership、capability、Band / Song / Version ownership、kind、size、MIME候補を検証する。
+2. DynamoDBへ`Asset(state=PENDING_UPLOAD)`とopaque internal object keyを作る。client supplied filenameからkeyを組み立てない。
+3. short-lived upload instructionだけを返し、長期URLを保存しない。
+4. upload completeでobjectの存在、size、checksum、type等をstorage側から検証する。
+5. conditional writeで`VERIFYING` / `AVAILABLE`へ進める。失敗時は`FAILED`として再試行またはorphan cleanup対象にする。
+6. download/accessごとにAsset、Version、Song、BandMembershipを再確認してshort-lived instructionを返す。
+
+DynamoDBに保存するのはmetadataだけです。audio / MIDI binaryはprivate S3、presigned URLは短命response、`storageObjectKey`はinternal fieldとし通常のclient DTOへ出しません。`SOURCE_MIDI` Assetはread-only source、`PROPOSAL_MIDI`は別Asset ID / objectです。Proposal Decisionはどちらのbinaryも変更しません。
+
+### Deletion, retention, and recovery
+
+| Resource | MVP behavior | physical cleanup boundary |
+| --- | --- | --- |
+| Song | `ARCHIVED` + `archivedAt/by`。一覧から除外し、明示restore可能 | friend test中はcascade hard deleteしない。purgeは別Human Gate |
+| SongVersion | 原則immutable / retained。current pointer変更はtransaction | MVPでは自動hard deleteしない |
+| Comment / Anchor | Commentはtombstone化し本文をactive itemから除去。Anchorはtimeline整合用tombstone参照を保持 | backup内残存とprivacy削除手順を別taskで定義 |
+| Asset | accessを即時denyする`DELETION_REQUESTED` → object cleanup確認後`DELETED` | S3 Versioning / lifecycleと同期するSTORAGE-001責務。metadata tombstoneは保持 |
+| Membership | `REMOVED`へ変更し、以後のstrong membership checkを拒否 | historical actor IDとAuditは保持 |
+| Proposal / Decision | Proposal withdrawalは可、Decision historyはappend-only | Original / Proposal Assetを上書き・cascade削除しない |
+| AuditEvent | 重要eventだけを保持し、本文・URL・secretは複製しない | 180日retentionを初期候補。正式期間はprivacy / incident reviewで承認 |
+
+TTLは削除時刻の厳密な保証ではなく、期限後も数日残る可能性があります。そのためpermission、idempotency、privacyの判定をTTL削除完了へ依存させません。Song / Version / Assetの自動TTLは使いません。
+
+table作成taskではDynamoDB PITRを35日で有効化する推奨です。PITRは誤更新・削除からtable metadataを指定時点へ戻す助けになりますが、S3 object、外部identity、IAM、application bugの再発防止、個別itemの即時undoを保証しません。restoreは既存tableを巻き戻さず**新しいtable**を作るため、切替前にrecord count、critical relationship、GSI、authorizationを隔離検証します。TTL、PITR、deletion protection、tags、alarms、IAM、Streams等はrestore後に手動 / IaCで再設定が必要です。
+
+Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 → validation → application endpoint切替候補 → rollback / cleanupの手順と時間を記録します。S3 Versioningは別のSTORAGE-001 gateで、DynamoDB PITRと同じものではありません。
+
+### Capacity and cost
+
+- nonprod / Private AlphaはOn-Demand capacityを選びます。小さく不規則なtrafficにcapacity planningが不要で、request単位課金となるためです。freeを保証せず、resource作成直前にTokyo Regionのcurrent official priceを再確認します。
+- 主なbilling driverはtable / GSIのread-write request、transaction request、stored bytes、PITR / backup、restore / export、data transferです。transaction read / writeは通常requestより多くrequest unitを使います。
+- `ScopeIndex`はindex keyを持つitemだけを対象にし`KEYS_ONLY` projectionとします。それでもindexed Song / Version / Asset / Proposal / MembershipのwriteごとにGSI write / storage amplificationがあるため、不要なprojectionと追加indexを避けます。
+- DynamoDB item上限は400 KBです。Comment本文、Version note、Proposal summaryへserver-side上限を設け、一覧summaryを小さく保ちます。audio / MIDI binary、波形sample、piano roll全note列、file内容はS3へ置きます。
+- large collection、unbounded Comment/Audit、Scan、N+1 BatchGet、hot keyはmetricsで確認します。2 user想定を理由にpaginationを省略しません。
+
+### Security / authorization boundary
+
+- PK / SKやopaque IDを知っていることはauthorizationではありません。API / Lambdaはidentityをserverで確定し、strong base-table readで`BandMembership.status=ACTIVE`とoperation capabilityを確認します。
+- client supplied `bandId`、`songId`、`versionId`、`assetId`の関係を信用せず、stored `bandId / songId / versionId`が同じchainに属することを検証します。
+- GSIのeventual resultだけでpermissionを許可しません。membership removal後のprotected read / signed accessはbase itemで拒否します。
+- cross-Band mismatchや他Band resourceは、内部logへsafe request IDとcategoryを残しつつ、外向きには存在を漏らさない404候補を維持します。
+- private S3 object key、signed URL、Cognito subject、internal auth lookup keyをpersistent public API IDにしません。
+
+### Physical design summary
+
+| Item | Decision |
+| --- | --- |
+| selected model | On-Demand single-table design |
+| table candidate | `streamband-<environment>-metadata` |
+| primary key | `PK` / `SK`; entity prefix + opaque immutable ID |
+| GSI | `ScopeIndex` (`GSI1PK` / `GSI1SK`), sparse, `KEYS_ONLY`; no LSI |
+| access | base `Get/Query` for identity / authorization / detail、GSI for user / Band / Song scope lists |
+| transactions | Song + initial Version、Membership mutation、Comment + Anchor、Proposal Decision、Version create、verified Asset completion |
+| concurrency | integer `revision` + `expectedRevision` conditional write、conflictは409、silent overwrite禁止 |
+| backup | PITR 35日をresource taskで有効化し、Private Alpha前にnew-table restore drill |
+| delete | archive / tombstone first。Asset object cleanupは別state machine、automatic cascadeなし |
+| migration trigger | access pattern churn、relationship / reporting要求、transaction / item / hot-key limit、保守性または実測cost問題でPostgreSQLを再評価 |
+
+### Current official references
+
+- [DynamoDB On-Demand capacity mode](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/on-demand-capacity-mode.html)
+- [DynamoDB constraints（400 KB item、100 item transaction）](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Constraints.html)
+- [Global Secondary Index consistency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html)
+- [DynamoDB transactions and idempotency](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis.html)
+- [DynamoDB concurrency patterns](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/BestPractices_ImplementingVersionControl.html)
+- [DynamoDB TTL behavior](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/TTL.html)
+- [PITR restore behavior](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/pointintimerecovery_restores.html)
+
+公式仕様、quota、priceはresource作成直前に再確認します。
+
 ## 開発運用
 
 - 永続化を始めてもlocalStorageやcookieを共同制作dataの正にしない
@@ -263,19 +461,19 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - `main`へ直接pushせず、1 task = 1 branch = 1 PRと`Quality checks`を維持する
 - migrationはforward/rollback、backup、data loss riskをreviewし、UI taskへ混ぜない
 
-## 未確定事項
+## CLOUD-DATA-001後の未確定事項
 
-- DB製品、ORM、migration tool、hosting先
+- DynamoDB table resource、IAM、repository implementation、migration toolの実装
 - Auth provider、session、招待、Membership roleと権限matrix
-- stable IDとslug形式、slug変更/redirect
+- opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
 - Memoを1件にするかcategory別・revision別にするか
-- Version sequence、label unique、branch/派生versionの扱い
+- Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲
-- object storage provider、region、暗号化、scan、容量、format、保持、削除、費用上限
-- audit logの保持期間、閲覧権限、privacy dataの扱い
+- S3 object key詳細、暗号化、scan、容量、format、保持、削除、費用上限
+- AuditEventの正式保持期間、閲覧権限、privacy dataの扱い
 - Presence/Call/Bridgeを採用するか、採用時のprotocolとdata保持
-- backup、restore、disaster recovery、account/Band削除手順
+- restore cutover、disaster recovery、account/Bandのlegal deletion手順
 
 これらは候補のままとし、証拠のない採用決定や実装予定日を記録しません。
