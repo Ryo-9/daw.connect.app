@@ -164,6 +164,32 @@ Creative workflowの実装時は、制作をblockしないこととVersion histo
 
 Integration testは将来承認されたAUTHZ capabilityとphysical modelを使い、private content、実user、未公開曲をfixture / logへ入れません。
 
+### COLLAB-001-DESIGN future membership / notification contract
+
+Membership lifecycleとNotificationを実装する場合は、sessionやclient表示ではなくstrong Membership / canonical sourceを正として次を検証します。現在はtest code、provider、AWS resourceを追加しません。
+
+- Admin / Editor / Commenter / Guestが自分のACTIVE Membershipをexplicit confirmation後にleaveできる
+- last ACTIVE Ownerのleaveをdenyし、ownership transfer後ならformer Ownerがleaveできる
+- OwnerはAdmin / Editor / Commenter / Guestをremoveできる
+- AdminはEditor / Commenter / Guestをremoveでき、Owner / peer Admin removeをdenyする
+- Editor / Commenter / Guestによるmember removeをdenyする
+- leave / remove後は次のprotected requestからdenyし、old shared URLやstale sessionでaccessできない
+- leave / remove後もComment、Proposal / Decision、Version contribution等のshared historyを保持する
+- removed memberのself-rejoinをdenyし、新しいinvitation + explicit acceptanceを要求する
+- Activity Status変更でRole、capability、Membership state、access、Task assigneeが変わらない
+- Activity Status変更でNotification preset / frequency / Quiet Hoursが変わらない
+- Notification preset / frequency変更でauthorization Role / capabilityが変わらない
+- Quiet Hoursでordinary deliveryをhold / digestでき、in-app historyは保持できる
+- security-critical notificationはordinary presetでOFFにならず、Quiet Hoursをbypassする候補を検証する
+- NotificationをREADにしてもTask、Proposal、Invitation等のsource stateが変わらない
+- ordinary Notificationの90日cleanupがsource entityを削除せず、Security notification / Auditへ誤適用されない
+- action-required表示がcurrent source stateと整合し、stale Notificationだけでworkflowを変更しない
+- deep linkごとにcanonical source authorizationを再検証する
+- removed Memberがold Notification linkからBandへ入れず、cross-Band sourceを404候補でdenyする
+- Notification ownershipだけではBand accessを許可せず、signed URL / S3 key / tokenをpayloadやlogへ保存しない
+
+Email / push provider、digest scheduler、physical TTL / index、delivery retryのintegration testは、それぞれの実装方式とisolated environmentが承認された後に追加します。
+
 ## Level 3 — 一般公開前
 
 - 本番相当環境で主要ユーザーフローを E2E 確認する
