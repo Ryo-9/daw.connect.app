@@ -238,6 +238,22 @@
 - 実装状態: docs-only。hosting account / project / GitHub App / domain / credential / deployment、AWS resource、runtime / package / config変更はない。
 - 関連: HOST-001、CLOUD-002、CLOUD-003候補、[HOSTING.md](HOSTING.md)、[ARCHITECTURE.md](ARCHITECTURE.md)、[AWS.md](AWS.md)
 
+## DEC-016: Dedicated nonprodのCDK bootstrap permission planを定める
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（CLOUD-003C-DECISION）
+- Human decision: PR reviewでapprove / rejectする。actual bootstrap commandは、このDecisionの承認とは別の明示Human Gateを必要とする
+- Bootstrapper recommendation: 既存のStreamBand専用human IAM userへ、AWS CDK公式が示す`cloudformation:*`、`ecr:*`、`ssm:*`、`s3:*`、`iam:*` / `Resource: "*"`のcustomer-managed policyを実行直前だけattachし、bootstrap直後にdetach・削除する。long-lived access keyは作らず、temporary `aws login` sessionを使う
+- Alternative not selected: 専用same-account bootstrap roleは継続運用ではisolationに優れるが、初回一回の作業にrole / trust / caller policy / profileが増える。現行`aws login` sessionがMFA必須AssumeRole trustを満たす保証を公式資料から確認できないため、推測で採用しない
+- CloudFormation execution recommendation: synthetic dataだけのisolated nonprod accountに限り、bootstrapが作るCloudFormation execution roleへAWS managed `AdministratorAccess`を明示指定する。human userの日常policyには付けず、cross-account trustを追加しない
+- Risk acceptance: execution roleのblast radiusはaccount-wide。nonprod account分離、real / unreleased data禁止、review済みCDK template、deploy principal制限で緩和する。Private Alphaへpolicyを持ち越さず、real data前にfresh reviewする
+- Bootstrap configuration: `ap-northeast-1`、profile `streamband-nonprod`、`CDKToolkit`、default qualifier、termination protection / public access block enabled、customer-managed bootstrap KMS keyなし、cross-account trustなし、express modeなし
+- OIDC sequence: human bootstrapとtemporary privilege撤去を先に完了し、GitHub OIDC / deployment roleは別task、その後にfirst nonprod application deploymentとする
+- 実装状態: docs-only recommendation。AWS接続、IAM / policy / role、OIDC、resource、bootstrap、deployは未実施で、CLOUD-003C actual bootstrapは未承認
+- 見直し条件: current CDK template / CLI変更、existing `CDKToolkit`検出、account / Region差異、KMS / trust差異、Private Alpha開始、real data投入、custom execution policyへ移行する時
+- 関連: CLOUD-003C-REVIEW、CLOUD-003C-DECISION、[AWS.md](AWS.md)
+
 ---
 
 ## 新規決定テンプレート
