@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-030 | CLOUD-DATA-001 | Codex | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/cloud-data-001-dynamodb-design` | 2026-09-11 | PR マージまたは作業中止 | Cloud MVP DynamoDB physical designとtask trackingのみ。AWS resource、runtime、infra codeは対象外 |
+| LOCK-031 | AUTHZ-001 | Codex | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/authz-001-capability-matrix` | 2026-09-11 | PR マージまたは作業中止 | Band Membership capability、ownership、error / audit contractとtask trackingのみ。Auth/AWS/runtime実装は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-030 | CLOUD-DATA-001 | Codex | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #30。mainへのマージを確認して解除。AWS resource作成なし |
 | LOCK-029 | CLOUD-003C-DECISION | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #29。mainへのマージを確認して解除。actual bootstrapは別Human Gateで未承認 |
 | LOCK-028 | CLOUD-003C-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #28。mainへのマージを確認して解除 |
 | LOCK-027 | CLOUD-003C-PREP | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #27。mainへのマージを確認して解除 |

@@ -147,8 +147,8 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 | enum | 候補値 | 注意 |
 | --- | --- | --- |
 | Song status | `idea`, `in_progress`, `in_review`, `completed`, `archived` | 現在の4状態とのmappingを定義。Review statusとは別 |
-| Membership role | `owner`, `manager`, `contributor`, `viewer` | musical partと分離。操作matrixはCORE-004で決める |
-| Membership status | `invited`, `active`, `suspended`, `left` | invite/退会仕様と同時に確定する |
+| Membership role | `owner`, `admin`, `editor`, `commenter`, `guest` | AUTHZ-001のcapability bundle。musical part、Cognito group、AWS roleと分離 |
+| Membership status | `active`, `removed` | controlled friend testの最小値。invite / suspendは後続flowで追加判断 |
 | Part code | `vocal`, `guitar`, `bass`, `drums`, `keyboard`, `other`, `all` | 初期UI候補。複数partと自由labelを許容するか未決定 |
 | Track type | `audio`, `midi`, `reference`, `guide`, `other` | DAW trackの完全再現には使わない |
 | Asset kind | `audio_preview`, `audio_stem`, `midi_source`, `midi_proposal`, `reference` | PreviewとStem、元MIDIとproposalを区別する |
@@ -425,6 +425,8 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 - GSIのeventual resultだけでpermissionを許可しません。membership removal後のprotected read / signed accessはbase itemで拒否します。
 - cross-Band mismatchや他Band resourceは、内部logへsafe request IDとcategoryを残しつつ、外向きには存在を漏らさない404候補を維持します。
 - private S3 object key、signed URL、Cognito subject、internal auth lookup keyをpersistent public API IDにしません。
+- AUTHZ-001のrole bundleは`Owner / Admin / Editor / Commenter / Guest`です。creator fieldはaudit / own-resource conditionであり、resource管理権限そのものではありません。
+- Bandごとに最低1人のACTIVE Ownerを残し、ownership transferとMembership changeはexpected revision付きtransactionでinvariantを守ります。詳細なcapability / audit / error contractは[API.md](API.md)を正とします。
 
 ### Physical design summary
 
@@ -464,7 +466,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 ## CLOUD-DATA-001後の未確定事項
 
 - DynamoDB table resource、IAM、repository implementation、migration toolの実装
-- Auth provider、session、招待、Membership roleと権限matrix
+- Auth provider、session、招待、capability policyの実装mapping
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
 - Memoを1件にするかcategory別・revision別にするか
