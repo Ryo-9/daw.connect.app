@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| STORAGE-001-DESIGN | Private Preview / MIDI storage contract | Codex | レビュー待ち | `docs/storage-001-private-asset-design` | `docs/API.md`、`docs/DATABASE.md`、`docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 作成予定 | private S3候補のbucket、encryption、upload / access、retention、recovery contractを設計。AWS resource作成なし |
+| STORAGE-001-DESIGN | Private Preview / MIDI storage contract | Codex | レビュー待ち | `docs/storage-001-private-asset-design` | `docs/API.md`、`docs/DATABASE.md`、`docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #32 | private S3候補のbucket、encryption、upload / access、retention、recovery contractを設計。AWS resource作成なし |
 
 ## 完了・中止履歴
 

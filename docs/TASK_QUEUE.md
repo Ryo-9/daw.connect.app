@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | STORAGE-001-DESIGN | Private Preview / MIDI storage contract | レビュー待ち（Draft PR作成予定）。private bucket、SSE-S3、opaque key、upload / access、retention、recoveryを設計。実装なし |
+| 1 | STORAGE-001-DESIGN | Private Preview / MIDI storage contract | レビュー待ち（PR #32）。private bucket、SSE-S3、opaque key、upload / access、retention、recoveryを設計。実装なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | CLOUD-003の必要なfoundation execution gate完了後。controlled user、email verification、session、password resetを最小実装する候補 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -58,7 +58,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
 | AUTHZ-001 | P0 | Band Membership authorization | 完了（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。実装なし |
 | API-001 | P0 | Band / Song core read-write | DATA-002 contractの最小slice。Auth/Authz/Dataのgate後のみ |
-| STORAGE-001-DESIGN | P0 | Private Preview / MIDI storage contract | レビュー待ち（Draft PR作成予定）。bucket、encryption、opaque key、format / size、state、short-lived upload/access、retention、recoveryを設計。resource作成なし |
+| STORAGE-001-DESIGN | P0 | Private Preview / MIDI storage contract | レビュー待ち（PR #32）。bucket、encryption、opaque key、format / size、state、short-lived upload/access、retention、recoveryを設計。resource作成なし |
 | STORAGE-001 | P0 | Private Preview / MIDI Asset implementation | CLOUD-003 foundation execution gateとSTORAGE-001-DESIGN承認後のみ。S3 / API / IAM実装は別task |
 | VERSION-001 | P0 | Persisted Version workflow | DAW export後の明示Version作成。Proposal Decisionによる自動作成なし |
 | COMMENT-001 | P0 | Persisted Version Comment | Version-scoped Comment + Anchorとpermission / conflict test |
