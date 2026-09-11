@@ -39,7 +39,8 @@ StreamBandはDAWを置き換えず、DAW project、plugin state、音色、mix�
 
 #### MUST
 
-- controlledな2 userのauthentication、email verification、sign in / out、password reset、session
+- invitation-gatedな2 userのself-service authentication、email verification、sign in / out、password reset、session
+- verified emailに結びつくBand invitation、explicit acceptance、expiry / revoke、role validation
 - private Band、Band Membership、server-side application authorization
 - Song、SongVersion、Comment、CommentAnchor
 - Asset metadataとprivate Preview / Source MIDI upload・access
@@ -54,14 +55,14 @@ StreamBandはDAWを置き換えず、DAW project、plugin state、音色、mix�
 #### SHOULD LATER
 
 - Stem upload（PreviewとMIDIの安全なloopが成立した後）
-- formal email invitation flow、notification
+- large-scale invitation automation、general collaboration notification
 - CloudFront private delivery
 - full audit UI、restore UI
 - full-text search
 - richer malware/content inspection
 - presence（短命stateのみ。永続履歴を既定にしない）
 
-Private Alphaではformal invitationを作らず、管理されたaccount / Membership provisioningで2人だけを登録する候補です。誰でも参加できるBandや公開join linkは許可しません。
+Friend Testからinvite-only self-service registrationを使い、一般公開時にsignup systemを作り直さない方針です。Open public signup、誰でも参加できるBand、公開join linkは許可しません。
 
 #### OUT OF SCOPE through 2026
 
@@ -116,23 +117,28 @@ Cognitoは「このrequestのuserは誰か」を確認します。Band Membershi
 
 Private Alphaの最小候補:
 
-- public self-sign-upは初期OFFとし、2 userをcontrolled provisioningする
+- user-facing sign-in identifierはemail addressとし、ownershipはverified issuer + Cognito `sub`からopaque internal Userへmappingする
+- open public signupはOFF、invitation-gated self-service signupはONとし、2人のfriend testから最終製品に近い登録UXを使う
 - email verificationを必須候補とする
 - sign in、sign out、password reset、session expiry / refreshを実装対象にする
-- strong password policy、generic authentication error、rate / abuse controlを設計する
-- social login、passkey、enterprise SSO、複数IdP、advanced MFA UXはDEFER
-- MFAは将来対応できる構成を保ち、Private Alphaで必須化するかはAUTH-001のhuman security gateとする
+- password policy、generic authentication error、progressive rate / abuse controlを設計する
+- social login、enterprise SSO、複数IdPはDEFERするが、PasskeyはPrivate Alphaまでのtargetとしてfresh Cognito WebAuthn reviewを行う
+- Friend TestでMFAは必須にせず、security-sensitive operationにはstep-up authenticationを計画する
 
 AWS管理者のMFAと、StreamBand利用者のCognito MFAは別問題です。AWS root userや管理権限の日常利用を避け、管理者accessはMFAと短時間credentialを必須候補にします。
 
 #### Band invitation
 
-2026年末はformal email invitationより、監査可能なcontrolled test flowを推奨します。
+Friend Testから、最終製品に近いinvitation-gated self-service registrationを使用します。
 
-1. 管理者が許可済みemail / Cognito subjectを確認する
-2. applicationの管理境界でBandMembershipを作る
-3. actor、対象Band、対象User、時刻、request IDをAuditEvent候補へ残す
-4. userは本人の認証後だけBandへ入れる
+1. Owner / Adminが許可されたroleでinvitationを発行する
+2. verified emailに結びつく予測不能token付きlinkを本人が開く
+3. StreamBand branded entryからCognito registration、email verification、password作成、loginを完了する
+4. Band名、inviter、roleを確認し、accept / later / declineを本人が選ぶ
+5. accept時にserverがtoken、expiry、revoke、email、inviter capabilityを再検証してからBandMembershipを作る
+6. actor、Band、invitation、target internal User、result、時刻、request IDをsafe AuditEvent候補へ残す
+
+Open public signupはOFFのままにします。Cognito Managed Loginの標準self-registrationを有効にするとinternet上の誰でもaccountを作れるため、invitation tokenをCognito registrationと安全にbindするexact mechanismはAUTH invitation implementation gateで決めます。管理者作成accountへUXを戻して解決しません。
 
 consoleやDBのad-hoc直接編集を通常運用にせず、実装taskで再実行可能なbootstrap / admin commandとrunbookを用意します。公開join、guessable token、Cognito accountだけで自動参加する方式は禁止します。
 
@@ -1362,6 +1368,538 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 - [AWS CDK: Security best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html)
 - [AWS CDK: Deploy applications](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html)
 - [AWS CDK: Bootstrap an environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+
+## AUTH-001-DESIGN: Cognito authentication and Web session contract
+
+### Status and boundary
+
+初回調査日: 2026-09-11。Human review revision: 2026-09-11。この章は、2人のinvitation-gated friend test向けにAmazon Cognito User Poolsとbrowser sessionの境界を実装前に定める設計です。Cognito user pool / domain / app client / user、invitation、callback URL、client secret、session / device store、API integration、AWS resourceは作成していません。AUTH-001 runtime実装はCLOUD-003Cのfoundation execution gateと、このrevised designのreviewが完了するまでblockします。
+
+認証と認可を次のように分けます。
+
+```text
+Cognito authentication
+Who is this person?
+        ↓
+private auth-subject mapping
+internal StreamBand User
+        ↓
+canonical resource + strong ACTIVE BandMembership
+AUTHZ-001 capability
+What may this member do in this Band?
+```
+
+Cognito group、email、画面上のrole、sessionが存在することだけでSong / Asset accessを許可しません。
+
+### Friend-test authentication scope
+
+MVPで扱うもの:
+
+- invitation-gated self-service signup、email verification、password creation
+- email + password sign in / sign out
+- forgot-password / reset
+- session expiration / renewal
+- invalid、verification pending、reset required、disabled userの安全な案内
+- Cognito `sub`からinternal Userへのprivate mapping
+- Membership removal後の次requestからの即時authorization deny
+- independent multi-device sessionと将来のtrusted-device管理
+- StreamBand User state、30-day account deletion recovery、collaboration historyのanonymized retention
+- Private AlphaまでのPasskey-preferred候補と重要操作のstep-up authentication
+
+DEFER:
+
+- open public signup、social login、enterprise SSO、anonymous access
+- billing identity、大規模なinvitation automation、複数identity provider
+- public account recovery support portal、advanced threat protection、WAF
+- Companion / native client。将来追加する場合はWeb app client / BFF cookieを再利用しない
+
+### Sign-in identifier decision
+
+**Human-approved decision: user-facing sign-in identifierはemail address。** 初回の基本UXは`email + password`です。Provider内部usernameのexact implementationをUXの前提にはせず、invite-only self-service signup、Managed Login、将来のPasskeyとの整合をAUTH implementation gateで確認します。
+
+| option | evaluation |
+| --- | --- |
+| emailをCognito username attributeとして使う | user-facing UXと一致して単純。ただしCognito設定後の変更制約とPasskey username promptをimplementation時に確認する |
+| provider内部username + email alias | internal provider identityをemail変更から分離できるが、invite-only Managed Login signupとの整合と運用が増える可能性がある |
+
+- user poolはcase-insensitiveを候補とし、emailのcase差で別identityを作らない
+- user-facing loginはemailだけとし、provider usernameをpublic StreamBand IDや画面上の所有権として使わない
+- emailはverifiedになるまで通常accessへ進めない
+- email変更時は新しいaddressのverificationを完了するまで、既存verified aliasを安全に保つ設定候補を実装taskで確認する
+- Cognito `sub`はprovider内で固定のauth subjectですが、StreamBand public User IDではありません。email、username、`sub`のいずれもBand roleではありません
+- `verified issuer + sub`をprivate mappingしてopaque internal User IDを得るため、email変更後もSong / Comment / Proposal / Membership ownershipは変わりません
+- signup / email changeでduplicate / alias collisionを検証し、client errorから他accountの存在を開示しません
+
+### Invitation-gated self-service signup
+
+**Human-approved product flow: open public signupはdisabled、invitation-gated self-service signupはenabled。** Friend Test専用のtemporary login UXを作らず、最終製品に近いsignup flowを2人・invite-onlyの範囲で先に使います。一般公開時はauthentication systemを作り直さず、入口をinvite-onlyからpublicへ開放できる設計にします。
+
+```text
+Band invitation
+→ invitation link
+→ StreamBand branded entry
+→ Cognito self-service registration
+→ email verification
+→ password creation
+→ login
+→ invitation details and role confirmation
+→ explicit accept
+→ BandMembership
+```
+
+Invitation minimum contract:
+
+1. invitationはverified email addressに結びつけ、予測不能tokenとserver-stored digest / stateを持つ候補とする
+2. initial expiryは**14日**。accept時にserverがtoken、expiry、revocation、email一致、inviterのcurrent ACTIVE Membershipとinvite capabilityを再検証する
+3. link clickやCognito User作成だけではMembershipを作らない。本人がBand名、inviter、roleを確認してexplicit acceptした時だけ作成する
+4. `あとで決める`はstateを変えない。本人のdeclineで`PENDING → DECLINED`とするが、expiry前・未revoke・inviter capability有効・verified email一致・その他validation成功なら、本人の明示操作で`DECLINED → ACCEPTED`へ変更できる
+5. Cognito User、private auth-subject mapping、invitation、BandMembershipは別record / transitionとして扱い、partial failureをreconcileする
+6. default invited roleは`Editor`。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待できる。Editor / Commenter / Guestは招待不可
+7. Owner roleを通常invitationで付与せず、AUTHZ-001のownership transfer専用flowを使う
+8. unknown / invalid / expired / revoked invitationはBandやaccountの存在を漏らさないsafe errorにする
+
+Invitation decision state:
+
+| current | explicit action / event | result | reversibility |
+| --- | --- | --- | --- |
+| `PENDING` | あとで決める | `PENDING` | state変更なし |
+| `PENDING` | 本人が辞退 | `DECLINED` | expiry前かつ未revoke / validなら本人が再accept可能 |
+| `DECLINED` | やっぱり参加する | `ACCEPTED` + Membership create | accept時に全条件をserver-sideで再検証 |
+| `PENDING / DECLINED` | inviter revoke / replacement invalidation | `REVOKED / INVALIDATED` | 同じinvitationでは不可逆。新規発行が必要 |
+| `PENDING / DECLINED` | expiry到達 | `EXPIRED` | 同じinvitationでは不可逆。新規発行が必要 |
+
+`DECLINED`画面では「この招待は辞退済みです」と`やっぱり参加する`を表示できます。再accept時もlink knowledgeや過去のvalidationを信用せず、token、expiry、revoke / replacement、verified email、inviterのcurrent ACTIVE Membership / invite capability、target Band / roleを再検証します。成功したexplicit acceptだけがBandMembershipを作ります。Inviter revoke、expiry、capability loss、invalid / replaced invitationではdenyし、新しいinvitationを必要とします。
+
+AWS current guidanceではCognito self-service sign-upを有効にするとinternet上の誰でもsign upできます。Managed Loginだけでinvitation tokenをsignupへ安全にbindできると仮定しません。Pre-sign-up validation、StreamBand server-mediated registration、separate app-client / entryなどのexact mechanismは**UNRESOLVED implementation gate**です。Human-approved signup UXをadministrator-created userへ戻して解決しません。`AdminCreateUser` temporary-password flowは、将来のemergency / operator fallbackとして必要性を別reviewしますがprimary flowではありません。
+
+### Web authentication architecture
+
+| option | security / operation | evaluation |
+| --- | --- | --- |
+| browserがCognito tokenを保持してAWS APIを直接call | BFF session storeが不要で単純だが、malicious JavaScriptによるtoken theftのimpactが大きく、refresh token保護がbrowser責務になる | Web MVPでは不採用 |
+| same-origin Backend for Frontend（BFF）がtokenを保持し、browserへHttpOnly cookieを返す | tokenをbrowser JavaScriptへ露出せずsession revokeを制御しやすい。CSRF、server session store、proxy allowlist、Vercel運用が追加責務 | **Web MVP recommendation** |
+
+Web flow:
+
+```text
+Browser
+→ same-origin Next.js / Vercel BFF login endpoint
+→ Cognito Managed Login
+→ BFF callback（code + state）
+→ BFFがcodeをtokenへ交換
+→ Cognito tokenをserver-side sessionへ関連付ける
+→ Browserにはopaque session ID cookieだけ
+→ Browser request → BFF → allowlisted AWS API
+→ BFFがaccess tokenをAuthorization headerへ付与
+→ APIがtokenを検証
+→ internal User + BandMembership authorization
+```
+
+BFFはOAuth confidential clientであり、Cognito token、refresh token、client secretをbrowserへ返しません。server-side session storeはopaque session ID、encrypted token material、expiry、internal User reference、revocation stateだけを保持する候補です。保存場所、encryption key、TTL、VercelからAWSへのcredential boundaryはAUTH-001 implementation前の専用physical-design gateで確定します。session storeを決めるまでtokenをclient-side cookieへ詰めるfallbackへ移行しません。
+
+BFF proxyは任意URLを受けず、approved AWS API host / path / methodへの固定mappingだけを持ちます。将来のCompanion Appは別のpublic app client + Authorization Code / PKCEをreviewし、Webのconfidential client secretやcookie sessionを共有しません。
+
+### Login UI and OAuth decision
+
+**Human-approved decision: StreamBand branded entry UIからCognito Managed Loginへ移動し、StreamBandへ戻る。** Managed LoginにはStreamBandのlogo、色、dark/light等の利用可能なbrandingを適用します。Password入力、signup、verification、forgot-password、Passkey候補をprovider surfaceへ寄せ、完全custom password formは初期必須にしません。明確なUX価値が得られた場合だけ将来再評価します。
+
+- OAuth flow: Authorization Code grant only
+- PKCE: transactionごとに新しいverifierを作り、`S256`を使う
+- `state`: login transactionへbindしてcallbackでconstant-time比較し、replay後は再利用不可
+- `nonce`: transactionごとに作り、verified ID token claimと照合する
+- Implicit grant: tokenがfront channelへ露出しPKCEを使えないため不採用
+- Client credentials: human Web sign-inでは有効化しない
+- callback / logout URL: environmentごとのexact allowlist。fragment / wildcardなし
+
+Managed Login独自cookieは1時間有効で、短いapplication tokenを設定しても同じbrowserが1時間以内にcredentialなしで再認証できる場合があります。StreamBand logoutはBFF sessionだけでなくCognito `/logout`へbrowserをredirectしてManaged Login cookieもclearする候補とします。
+
+### Cognito app-client candidate
+
+| setting | Web MVP candidate |
+| --- | --- |
+| client type | confidential traditional Web app client |
+| client secret | あり。ただしBFFのsensitive server configurationだけに保存し、browser / repository / PR / logへ出さない |
+| grant | Authorization Code only + PKCE S256 |
+| identity provider | Cognito local user only |
+| scopes | `openid`、`email`、review済みAPI scopeだけ。`profile`や`aws.cognito.signin.user.admin`は必要性が出るまで要求しない |
+| token revocation | enabled |
+| refresh rotation | enabled、retry grace **10秒**候補 |
+| user-existence protection | `PreventUserExistenceErrors=ENABLED` |
+| callback / logout | local / nonprod / Private Alphaでexact URLを分離 |
+| client credentials / implicit | disabled |
+
+Client ID、user pool ID、issuer / domainはpublic configurationになり得ますが、値はresource作成taskでenvironmentごとに注入し、このtaskでは作成・記録しません。client secretはconfidential valueです。nonprod client / secret / callbackをPrivate Alphaへ再利用しません。
+
+### Token and application session contract
+
+| artifact | purpose | initial candidate |
+| --- | --- | --- |
+| ID token | BFFがsign-in時のidentity claimを検証する。API permission tokenやBand roleとして使わない | 1 hour |
+| access token | BFFからAWS APIへ提示し、issuer、signature、client / audience、`token_use=access`、expiry、scopeを検証する | 1 hour |
+| refresh capability | BFFだけがtoken endpointでsession renewalに使う。API、browser、localStorageへ渡さない | 約7日を支えられるrefresh token、rotation enabled、graceはimplementation時に再確認 |
+| BFF session | opaque browser sessionからserver-side token recordを引く | **12-hour idle timeout、7-day absolute timeout** |
+| Managed Login cookie | Cognito domain側のinteractive reauthentication state | Cognito fixed 1 hour behaviorを前提として扱う |
+
+通常使用中はBFFがserver-side renewalを行い、activeなmusic review中に突然loginへ飛ばさないことを優先します。Absolute 7日を超えて延長せず、refresh failure、disabled / suspended User、mapping不整合ではsessionを破棄します。Access / ID / refresh tokenのcurrent Cognito supported range、Managed Login cookie behavior、refresh rotationはimplementation直前に公式docsで再確認します。
+
+Session expiry時は、current editing / viewing contextをsafe same-origin routeとしてserver sessionへ一時保持し、`StreamBand Session Expired` screenからreauthentication後に復帰します。Comment body等のprivate draftをURLやcookieへ入れず、復元不能な未保存入力がある場合は期限前warning候補を出します。Explicit logoutでは以前のSongへ自動復帰せず、StreamBand login / home entryへ戻します。
+
+tokenは種類ごとに検証し、ID tokenをAPI access tokenの代用にしません。Cognito `cognito:groups`やOAuth scopeはcoarse identity/API boundary候補であって、`Owner / Admin / Editor / Commenter / Guest`はDynamoDB BandMembershipから毎request判定します。
+
+### Cookie, CSRF, and OAuth transaction security
+
+Primary session cookie candidate:
+
+```text
+Name: __Host-streamband-session
+Value: opaque random session identifier only
+Secure: true
+HttpOnly: true
+SameSite: Lax
+Path: /
+Domain: omitted (host-only)
+Max-Age: no longer than the 7-day absolute session
+```
+
+`SameSite=Lax`は、Discord、LINE、email等の外部siteからSong / Comment共有linkをtop-level navigationで開いた時に、existing sessionを不必要に失わないためのcandidateです。Cross-site subrequestやunsafe methodを許可する根拠にはしません。
+
+session IDはsuccessful login、security-sensitive rotation、privilege-sensitive reauthenticationでrotateし、URL、HTML、localStorage、sessionStorage、logへ出しません。通常renewalでsession IDをrotateする場合は同時request raceを安全に扱います。environment間でcookie name / originを共有しません。
+
+OAuth開始用のshort-lived transaction cookieはopaque transaction IDだけを持ち、`Secure`、`HttpOnly`、`SameSite=Lax`、host-only、最長10分候補とします。これはCognitoからのtop-level callbackでstate / PKCE verifierをserver側recordから解決するためで、main application sessionとは別です。callback後に即deleteします。
+
+Cookie-authenticated mutationはすべて次を要求します。
+
+- safe methodのGET / HEADはstateを変更しない
+- exact `Origin` / target hostを検証し、不一致またはsensitive requestで欠落した場合はfail closed候補
+- sessionへbindしたsynchronizer CSRF tokenをHTML / JSONで渡し、custom headerで返させる。URLやlogへ入れない
+- `Sec-Fetch-Site`等をdefense-in-depthに使えるが、legacy fallbackとしてOrigin / CSRF validationを維持する
+- OAuth callbackは`state`、PKCE、nonce、expected issuerを別途検証する
+
+`SameSite`だけをCSRF対策と見なしません。BFFとbrowser appは同一originを原則とし、credential付きcross-origin BFF callを作りません。
+
+### XSS and rendering boundary
+
+- HttpOnlyはJavaScriptによるcookie valueの直接窃取を減らしますが、XSSがuser権限でBFF requestを送ることまでは防ぎません
+- Song title、Comment、Version note等のuntrusted textはframeworkのescaped renderingを維持し、sanitizationなしの`dangerouslySetInnerHTML`を使わない
+- access / refresh / ID token、authorization code、client secretをbrowser JavaScript、localStorage、sessionStorageへ保存しない
+- BFFのoutbound API destinationをallowlistし、client supplied URLへtokenをforwardしない
+- CSP、security headers、third-party script governanceはHOST security implementation taskでreviewする
+
+### Internal User mapping
+
+```text
+verified Cognito issuer + sub
+→ private Auth subject lookup
+→ opaque internal User ID
+→ canonical resource
+→ strong ACTIVE BandMembership
+→ AUTHZ-001 capability
+```
+
+- provider keyはexpected Cognito issuerと`sub`の組をserverがverified tokenから作る。client submitted `sub`、email、User IDをmapping authorityにしない
+- CLOUD-DATA-001の`AUTH#<provider>#<opaqueSubject> / USER` lookupをconditional writeでuniqueにし、1 subjectを複数Userへ割り当てない
+- emailはprofile / recovery attributeで、foreign keyやresource owner keyではない。email変更後もinternal User IDとownershipは変わらない
+- valid Cognito accountでもmappingがmissing / disabledならapplication sessionを開始せずgeneric support stateにする
+- profile responseへraw provider subjectやprivate lookup keyを出さない
+
+### Email verification and password policy
+
+**Email rule:** verified email addressを通常accessの必須条件とします。UNCONFIRMED / unverified stateではBand dataへ進めず、verification / controlled supportだけを案内します。Invitation acceptanceではsignup / authenticated identityのverified emailとinvitation targetをserver-sideで再照合し、単なるclient inputを信用しません。Resend / reset responseは`PreventUserExistenceErrors`とBFF normalizationを使い、account有無をできる限り同じ表示・timingへ寄せます。
+
+Password candidate:
+
+| setting | candidate |
+| --- | --- |
+| minimum | **8 characters** |
+| maximum | Cognito current maximum 256 charactersを受け入れ、silent truncationしない |
+| composition | uppercase 1文字以上、lowercase 1文字以上、number 1文字以上。symbolはoptional |
+| password manager | 利用可能・推奨。paste / autofillを妨げない |
+| temporary password | primary signupでは使わない。AdminCreateUser fallbackを採用する別taskだけで決める |
+| routine expiration | なし。漏えい疑い、admin reset、user reset時だけ変更 |
+| password history | first friend testではDEFER。feature plan / costと実用性をPrivate Alpha前に再評価 |
+
+Cognitoがpassword hashing / storageを担い、StreamBandはpasswordを保存、転送log、analyticsへ記録しません。8文字 + compositionはhuman-approved initial UXであり、password managerとより長いpassphraseを妨げません。Providerのcurrent setting rangeはimplementation時に公式docsで再確認します。
+
+### Passkey, MFA, and step-up stance
+
+**Human-approved decision: Friend TestではMFAをmandatoryにしないが、Passkeyを無期限DEFERしない。** Private AlphaまでにPasskey registrationとPasskey-preferred normal sign-inをtargetとし、Face ID / Touch ID / Windows Hello等のplatform UXを利用します。Passwordはrecovery pathとして維持します。
+
+Current CognitoはManaged LoginでWebAuthn Passkeyを扱い、Passkey登録には既存authentication sessionが必要です。Choice-based authentication、feature plan、RP ID、user verification、MFAとの組み合わせをPrivate Alpha real-data前にfresh reviewします。ProviderのPasskey credentialとStreamBand device session / trusted-device recordは別conceptです。Synced Passkeyを1 physical deviceと1:1に扱いません。
+
+Security-sensitive operationはstrong reauthentication / step-upを要求する候補です。
+
+- password / email変更
+- Passkey追加・削除、device security action
+- Band ownership transfer
+- account deletion
+- future billing-sensitive operation
+
+Successful strong reauthenticationは約**15分**再利用可能なcandidateとし、通常のmusic review、Comment、Version閲覧で毎回step-upを求めません。Exact Cognito WebAuthn / MFA / challenge behavior、recovery factor、costはimplementation gateです。
+
+### Account states and error UX
+
+Authentication provider state、StreamBand User state、BandMembership stateを別conceptとして保持します。Provider固有statusを画面business roleにしません。
+
+| Cognito / application state | behavior |
+| --- | --- |
+| `UNCONFIRMED` / verification pending | sessionを作らず、verificationまたはcontrolled supportへ案内 |
+| `FORCE_CHANGE_PASSWORD` | operator fallbackで生じた場合だけnew-password challenge完了までsessionなし。primary signup stateではない |
+| `CONFIRMED` + verified email + mapped internal User | session候補。Band accessは別Membership check |
+| `RESET_REQUIRED` | password reset flowだけへ案内し、通常sessionを作らない |
+| disabled | existing BFF sessionを破棄し、generic account-unavailable案内。Cognito token revokeだけに依存しない |
+| deleted / not found / unknown | generic credential / recovery response。account存在を外向きに区別しない |
+
+wrong credential、unknown accountは「emailまたはpasswordを確認してください」、verification / reset requiredは本人がchallengeを開始できたcontextだけで必要な次stepを示します。Cognito unavailableはretryable service errorとrequest IDだけを返し、password再入力を無限に促しません。Band unauthorizedはAUTHZ-001に従い403 / hidden 404とし、authentication failureと混同しません。
+
+StreamBand User state:
+
+| state | application behavior |
+| --- | --- |
+| `ACTIVE` | authentication後にMembership / capability次第で利用可能 |
+| `SUSPENDED` | new / existing application accessを停止し、sessionをrevoke。Band historyは保持 |
+| `DELETION_PENDING` | application accessを即停止し、sessionをrevoke。30-day recovery grace中 |
+| `DELETED` | login不可。PII / auth mappingを削除またはanonymizeし、必要なcollaboration historyはFormer member表示へ置換 |
+
+BandMembershipの`ACTIVE / REMOVED`等はこれと別です。Userが`ACTIVE`でも特定Bandで`REMOVED`ならそのBandへ入れず、Cognito accountが有効でもStreamBand Userが`SUSPENDED / DELETION_PENDING / DELETED`ならapplication accessを許可しません。
+
+### Forgot-password, sign-out, and revocation
+
+Forgot-password candidate:
+
+1. Managed Loginのforgot-password surfaceからuser-facing email addressを入力する
+2. Cognito / BFFはexisting / unknownをできる限り同じoutward responseへ正規化する
+3. verified delivery channelへshort-lived codeを送る
+4. codeとnew passwordを確認し、成功時は**全既存StreamBand sessionを無効化**する
+5. loginへ戻り、新しいsessionを開始する
+
+provider側quotaに加え、BFF / edgeでIP、opaque account bucket、request categoryのprogressive delay / throttling候補を設けます。単純な「5回失敗で30分固定lock」は採用しません。Login、reset request / confirm、verification resend、OAuth callback failureを別bucketにし、emailやraw Cognito errorをlog keyにしません。
+
+Sign-out candidate:
+
+1. CSRF-protected POSTでBFF logoutを開始する
+2. **current deviceの**server-side sessionをinvalidにし、current refresh tokenをrevokeする
+3. `__Host-streamband-session`をexpireする
+4. browserをCognito `/logout`へredirectし、StreamBand login / home entryへ戻す。以前のSongへ自動復帰しない
+5. current device logoutで他の正常なdevice sessionを失効させない
+
+Cognito JWTはself-containedなので、signature / expiryだけを独自検証するconsumerはrevocationを即時反映しない場合があります。WebではBFF sessionを入口にし、AWS API側のtoken validation method、revocation expectation、1-hour access-token residual windowをimplementation testで確認します。Password reset、User suspend / delete、all-device logoutではUser session indexから全sessionをinvalidateできる設計候補にします。
+
+### Multi-device, trusted device, and security actions
+
+同一accountでMac、Windows、iPhone、iPad / Android等の複数端末へ同時loginできます。各deviceは独立したsession ID、refresh lineage、created / last-used time、revocation stateを持つ候補で、current-device logoutは他端末へ影響しません。
+
+New device candidate flow:
+
+```text
+authentication
+→ additional identity verification when risk requires
+→ security notification
+→ trusted device registration
+```
+
+- 同じtrusted deviceの通常loginごとにはnew-device notificationを送らない
+- trusted statusは**180日未使用**でexpireし、active regular-use deviceはtrustを維持する
+- browser fingerprintingをprimary identityにせず、server-issued opaque device / session recordとstrong authentication eventを基礎にする
+- future native appはOS secure storageをcredential / session materialの候補とする
+- exact device credential、rotation、risk signal、Cognito remembered-device / WebAuthnとの関係はphysical-design taskで決める
+
+Future Settings → Security → Logged-in devicesは次を提供します。
+
+- current device logout
+- specified device logout
+- specified device protect: target sessionsとtrusted statusをrevokeし、次accessでstrong verificationを要求
+- all other devices / all devices logout
+
+Known lost deviceではspecified-device protectを優先でき、account-wide compromise疑いではall-device logout + password / Passkey / email等のcredential reviewを行います。Passkey credential managementとdevice session / trusted-device managementは別画面 / conceptにします。
+
+Security notificationはFriend Testではemail中心です。New / unusual device、password / email / Passkey change、device protect、account deletion等を即時候補とし、通常のtrusted-device loginでは毎回通知しません。Future mobileではrisk / importanceに応じてpush + emailを使い分けます。
+
+Risk response candidate:
+
+| risk | response |
+| --- | --- |
+| normal | normal login / renewal |
+| new or unusual device | additional identity verification + security notification |
+| higher risk | step-up authentication / email verification candidate |
+| obvious repeated attack | stronger progressive throttling。単発の怪しさだけで即account lockしない |
+
+### Account deletion and history retention
+
+```text
+deletion request + strong step-up
+→ immediate application access stop
+→ all sessions revoke
+→ DELETION_PENDING
+→ 30-day recovery grace
+→ final deletion / PII anonymization
+```
+
+- 30日以内のrecoveryはstrong identity verificationとHuman-reviewed support / self-service contractで行い、recovery後は全deviceで再authenticationする
+- final deletionでemail、profile、auth credential / mapping等のPIIを削除またはanonymizeする
+- Comment、Proposal、Decision、Version contribution等はBand production historyに必要な範囲を保持し、authorは`Former member`相当のopaque tombstone identityで表示できる
+- collaboration historyへemail、Cognito username / `sub`、deleted profileを残さない
+- last ACTIVE Ownerはownership transferなしにaccount deletionやBand leaveを完了できない
+- full legal retention / erasure、backup内expiry、AuditEvent retentionはPrivate Alpha privacy / deletion taskで確定する
+
+### Membership removal boundary
+
+`BandMembership=REMOVED`はCognito account disable / deleteではありません。Userは別Bandやaccount settingsへsign inできる可能性がありますが、removed Bandのprotected requestは次のstrong base-table Membership readで拒否します。
+
+- removal operation後にUserのactive BFF sessionsを通知 / invalidateできるなら行うが、authorization correctnessをsession invalidationへ依存させない
+- already issued S3 access instructionのresidual riskはSTORAGE-001-DESIGNの5分expiryまで残る
+- stale page、valid Cognito token、old role claim、known Song / Asset IDはaccess proofにならない
+- normal Band removalにCognito user deletionを使わない
+
+### API and hosting boundary
+
+Future protected request:
+
+```text
+browser session cookie
+→ same-origin BFF session + CSRF validation
+→ BFF retrieves server-side access token
+→ fixed AWS API routeへBearer tokenを付与
+→ API verifies issuer / signature / client-or-audience / token_use / expiry / scope
+→ auth subject lookup
+→ canonical resource
+→ strong ACTIVE BandMembership
+→ AUTHZ-001 capability
+```
+
+HOST-001のVercel Pro primary candidateを前提に、browserとBFFは同一origin候補です。nonprod / Private Alphaはuser pool、app client、session namespace、callback / logout originを分けます。
+
+- localhostはlocal developmentに限りexact `http://localhost:<port>/<callback-path>`候補を登録できる
+- cloud callback / logoutはHTTPS必須で、wildcard、arbitrary Vercel Preview URL、user-controlled return URLを許可しない
+- Preview deploymentはnonprod synthetic dataに限定し、Private Alpha app client callbackへ登録しない
+- open redirectを防ぐため、post-login return pathはsame-origin relative path allowlistに限定する
+
+### Configuration and secret classes
+
+| class | examples | handling candidate |
+| --- | --- | --- |
+| public environment configuration | Region、Cognito issuer / domain、user pool ID、app client ID、public API origin | valueはdeployment environmentへ注入。secretと偽らないが、environment混同を防ぎrepositoryへ実値をhard-codeしない |
+| sensitive server configuration | app client secret、session encryption / signing key、server-side token material、provider admin credential | Vercel / approved secret managerのserver-only setting。browser bundle、repository、PR、logへ出さない |
+| browser cookie | opaque session ID、opaque OAuth transaction ID | HttpOnly / Secure cookie。Cognito token / user or music dataを含めない |
+
+このtaskでは`.env`、secret nameの実装、値、callback URLを追加しません。BFFからsession store / AWS APIへ接続するcredential方式はOIDC deployment identityと混同せず、runtime service identityの別Human Gateで決めます。
+
+### Logging, abuse, cost, and recovery
+
+Safe log候補:
+
+- request ID、opaque internal User ID（必要な場合だけ）、auth event category、result、safe provider error category、latency
+
+記録禁止:
+
+- password、temporary password、authorization code、PKCE verifier、state / nonce value
+- access / ID / refresh token、cookie、client secret、reset / verification code、raw claims
+- private email、Song / file / Comment情報、private callback / signed URL
+
+Rate-limit候補はlogin failure、reset request / confirm、verification resend、callback failureを分け、Cognito quotaだけをabuse controlと見なしません。threshold、WAF、edge productはimplementation / operations taskで決めます。
+
+Cognitoの主なcost driverはfeature planごとのMAU、federated MAU、M2M request、email / SMS delivery、advanced threat protection等です。2 local userのfriend testは小規模と見込みますがfreeを保証しません。Managed Loginに必要なfeature plan、Tokyo Regionのcurrent price、email delivery、Budgetをresource作成直前に公式pricingで再確認します。
+
+Recovery候補:
+
+- one user locked out: もう一方のBand Owner権限ではなく、controlled auth support runbookでidentityを確認してreset / resendする
+- both users locked out: separate AWS operator accessとreview済みCognito admin runbookで復旧し、root accountを通常手段にしない
+- email delivery failure: address / bounce / sending quotaをsafe metadataだけで確認し、別channelでpasswordやcodeを送らない
+- Cognito configuration error: IaC rollbackとuser/session recoveryを分け、user pool replacementを即実行しない
+- BFF cookie/session bug: server-side sessionsをinvalidateし、Cognito token revoke / Managed Login logoutを組み合わせる。Band dataは変更しない
+
+### Mandatory future tests
+
+- valid login、wrong password、unknown accountのnon-enumerating outward response
+- invitation-gated signup、verified email、explicit acceptance、14-day expiry、revoke / decline / inviter capability loss
+- `PENDING → DECLINED`、validな`DECLINED → ACCEPTED`、expired / revoked / capability-lost / invalidated re-accept deny
+- `あとで決める`がstateを変えず、re-acceptで全server validationを再実行し、成功時だけMembershipを作る
+- link click / Cognito User creationだけではMembershipを作らず、default roleがEditor、Owner invitationを拒否する
+- open public signupを拒否し、invite-only gateを迂回できない
+- verification required、password creation、password reset後のall-session invalidation
+- access / ID / refresh token type、issuer、audience / client、expiry、nonceの誤りをdeny
+- 12-hour idle / 7-day absolute expiration、active renewal、safe route復帰、explicit logout時のhome復帰
+- independent multi-device session、current / specified / all-device revoke、specified-device protect
+- 180-day unused trusted-device expiryと、active trusted deviceへ毎回new-device通知しないこと
+- Passkey登録 / preferred sign-in、password recovery、15-minute step-up reuse、sensitive operationのstep-up requirement
+- disabled Cognito userをdenyし、BandMembership REMOVEDをvalid Cognito accountでも次requestからdeny
+- StreamBand User `SUSPENDED / DELETION_PENDING / DELETED`をdenyし、stateがBandMembershipと混同されない
+- forged internal User ID / email / `sub`を無視し、auth-subject mappingをserver tokenから解決
+- cross-Band resourceをAUTHZ-001どおりdenyし、Cognito groupをBand roleとして使用しない
+- browser localStorage / sessionStorage / HTML / URL / logにtokenやsecretが存在しない
+- session / transaction cookieのSecure、HttpOnly、SameSite、Path、Domain、expiryが契約どおり
+- external top-level Song / Comment linkでLax sessionを利用でき、cross-site POST / subrequestはCSRF / Origin ruleで拒否される
+- cookie mutationのCSRF token、Origin / Host、safe-method rule、OAuth state / nonce / PKCE mismatchをdeny
+- exact callback originだけを許可し、open redirect、wildcard Preview callback、wrong environmentをdeny
+- email変更後もinternal User ID / ownershipが安定し、unverified new aliasを通常accessに使わない
+- risk responseがprogressiveで、少数failureによる固定30分lockを行わず、obvious attackをthrottleする
+- account deletionが即access停止、30-day recovery、final PII anonymization、Former member history、last Owner invariantを守る
+- BFF outbound destination allowlistを外れるURL / methodへaccess tokenをforwardしない
+- private-alpha app client / callback / session namespaceがnonprodから分離される
+- error / audit logにpassword、code、token、cookie、client secret、private emailがない
+
+### Compact authentication contract
+
+| item | decision / candidate |
+| --- | --- |
+| identity provider | Amazon Cognito User Pools（adopted design、not created） |
+| user model | 2 invitation-gated self-service users。open public signup disabled |
+| sign-in identifier | user-facing email + password。provider username implementationはgate |
+| invitation | unpredictable token、14-day expiry、server revalidation、explicit accept、default Editor |
+| login UI | StreamBand branded entry → branded Cognito Managed Login → StreamBand |
+| Web architecture | same-origin confidential BFF、server-side token/session、opaque HttpOnly cookie |
+| OAuth | Authorization Code + PKCE S256、state + nonce、Implicit disabled |
+| app client | confidential Web client、secret server-only、token revocation / rotation enabled |
+| lifetime | access 1h、ID 1h、refresh capability約7日、BFF idle 12h / absolute 7日 |
+| cookie / CSRF | `__Host-` host-only Secure HttpOnly SameSite=Lax + synchronizer token + Origin validation |
+| internal mapping | verified issuer + `sub` → private lookup → internal User。emailはforeign keyにしない |
+| email | verified address required。email変更でinternal ownershipは変わらない |
+| password | 8+、uppercase / lowercase / number各1以上、symbol optional、manager推奨、routine expiryなし |
+| Passkey / MFA | Friend TestでMFA mandatoryではない。Private AlphaまでにPasskey-preferred候補をfresh review |
+| step-up | sensitive operationで要求し、successful strong reauthを約15分再利用候補 |
+| devices | independent multi-device sessions、trusted-device unused expiry 180日、specific-device protect |
+| logout | current deviceだけを通常logout。specified / all-device revokeは別action |
+| account deletion | immediate stop → DELETION_PENDING 30日 → PII anonymization、Band historyはFormer memberとして保持 |
+| authorization | Cognitoだけでは不可。canonical resource + strong ACTIVE Membership + capability |
+| environment | local / nonprod / Private Alphaでuser pool / client / callback / sessionを分離 |
+
+### Private Alpha re-review and unresolved implementation gates
+
+Private Alphaへreal unreleased musicを投入する前に、次を再承認します。
+
+- separate account / user pool / app client / domain / callback / session namespace
+- Managed Login feature planとcurrent Cognito / email delivery cost
+- invitation-gated self-service signupのexact Cognito / server mechanismとprovider username
+- Passkey / WebAuthn、RP ID、user verification、MFA interplay、lost-factor / password recovery
+- server-side session / trusted-device store、token encryption、TTL、revocation index、Vercel-to-AWS runtime identity
+- client secret storage / rotation、callback protection、CSP / security headers
+- API Gateway token validation / revocation semanticsとBandMembership strong-read test
+- privacy notice、account deletion / export、30-day recovery、history anonymization、email change、support / incident runbook
+
+### Official references（2026-09-11確認）
+
+- [Amazon Cognito: User pool managed login](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-managed-login.html)
+- [Amazon Cognito: Apply branding to managed login](https://docs.aws.amazon.com/cognito/latest/developerguide/managed-login-branding.html)
+- [Amazon Cognito: Authentication flows and WebAuthn passkeys](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-authentication-flow-methods.html)
+- [Amazon Cognito: Application-specific settings with app clients](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html)
+- [Amazon Cognito: Using PKCE in authorization code grants](https://docs.aws.amazon.com/cognito/latest/developerguide/using-pkce-in-authorization-code.html)
+- [Amazon Cognito: Working with user attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html)
+- [Amazon Cognito: Configuring policies for user creation](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-admin-create-user-policy.html)
+- [Amazon Cognito: Pre sign-up Lambda trigger](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-lambda-pre-sign-up.html)
+- [Amazon Cognito: Creating user accounts as administrator](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-create-user-accounts.html)
+- [Amazon Cognito: Password and account recovery](https://docs.aws.amazon.com/cognito/latest/developerguide/managing-users-passwords.html)
+- [Amazon Cognito: Managing user existence errors](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pool-managing-errors.html)
+- [Amazon Cognito: Token validity quotas](https://docs.aws.amazon.com/cognito/latest/developerguide/quotas.html)
+- [Amazon Cognito: Refresh tokens](https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-refresh-token.html)
+- [Amazon Cognito: Token revocation](https://docs.aws.amazon.com/cognito/latest/developerguide/token-revocation.html)
+- [Amazon Cognito: User account disable / delete](https://docs.aws.amazon.com/cognito/latest/developerguide/how-to-manage-user-accounts.html)
+- [Amazon Cognito pricing](https://aws.amazon.com/cognito/pricing/)
+- [RFC 10017: OAuth 2.0 for Browser-Based Applications](https://www.rfc-editor.org/rfc/rfc10017.html)
+- [RFC 9700: OAuth 2.0 Security Best Current Practice](https://www.rfc-editor.org/rfc/rfc9700.html)
+- [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)
+- [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
+
+Current feature、quota、pricing、Managed Login behaviorはresource / runtime実装直前に再確認します。
 
 ## STORAGE-001-DESIGN: Private Preview / MIDI storage contract
 

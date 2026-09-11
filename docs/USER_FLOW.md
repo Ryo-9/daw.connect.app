@@ -107,14 +107,37 @@ Preview → Comment → Proposal → Decisionのreviewを行う
 
 ## 2. アカウント作成
 
-目的: 安全に利用を開始する。
+目的: Friend Testから最終製品に近いself-service registrationを安全に試す。
 
-- メールアドレスなど必要最小限の情報を入力する
-- 利用規約とプライバシーポリシーを確認する
-- 本人確認が必要な方式では案内に従う
-- 登録後、初期設定またはダッシュボードへ移動する
+Open public signupは無効にし、Band invitationを持つ人だけがself-service registrationへ進める設計にします。一般公開時はauthentication systemを作り直さず、invite-only入口をpublicへ開放できる構成を目指します。Managed Loginだけでinvite gateを安全に成立させるexact mechanismは未確定であり、administrator-created temporary accountへ戻して解決しません。
 
-例外として、期限切れの招待、登録済みメール、確認失敗時の案内を用意します。
+### Invitation-gated friend-test authentication flow（AUTH-001-DESIGN）
+
+```text
+Band invitation link
+→ StreamBand branded entry
+→ branded Cognito Managed Login registration
+→ email verification + password creation
+→ email + password login
+→ Authorization Code + PKCE callback
+→ same-origin BFF creates opaque HttpOnly session
+→ internal User mapping
+→ invitation details / role confirmation
+→ explicit accept
+→ ACTIVE BandMembership creation
+→ dashboard / allowed Band
+```
+
+- sign in: user-facing IDはemail。unknown account / wrong passwordは存在を区別しないgeneric errorにする
+- verification: verified emailとinvitation targetが一致するまでMembershipへ進めない
+- session: access / ID 1時間、約7日のrefresh capability、idle 12時間 / absolute 7日のBFF session候補。通常使用中はserver-side renewalする
+- session expiry: StreamBand Session Expired画面でreauthenticateし、元のsafe routeへ戻る。Private draftをURLへ入れない
+- sign out: current deviceだけをlogoutし、StreamBand login / home entryへ戻る。他deviceは維持する
+- forgot password: email verification codeとnew passwordで完了し、既存StreamBand sessionをすべてinvalidateする
+- Passkey: Friend Testのmandatory MFAではないが、Private AlphaまでにPasskey-preferred normal sign-inをtargetとして再確認する
+- Membership removal: Cognito accountが有効でも、removed Bandは次requestのstrong Membership checkで拒否する
+
+Login / signup / invitation / reset / logout、Cognito、session / device、email deliveryはまだ未実装です。localhost、nonprod、Private Alphaはcallback / client / sessionを分離し、wildcard callbackやtokenのlocalStorage保存を行いません。
 
 ## 3. バンド作成
 
@@ -131,12 +154,13 @@ Preview → Comment → Proposal → Decisionのreviewを行う
 目的: 共同制作する相手をワークスペースへ招く。
 
 - バンド詳細からメンバー画面を開く
-- 招待先と想定する役割を入力する
+- verified email addressとroleを入力する。Default roleはEditor
 - 招待内容を確認して送信する
-- 招待された人は招待画面でバンドと招待者を確認する
-- ログインまたはアカウント作成後、参加を確定する
+- 14日以内に予測不能token付きlinkからregistration / loginする
+- 招待された人はBand名、inviter、roleを確認し、accept / あとで決める / declineを選ぶ
+- accept時にserverがtoken、expiry、revoke、email一致、inviter権限を再検証してからMembershipを作成する
 
-招待の再送、取消、期限、権限は認証・権限設計と同時に決めます。
+Link clickだけではMembershipを作りません。`あとで決める`は`PENDING`のままです。辞退すると`DECLINED`になりますが、expiry前・未revoke・inviter capability有効・verified email一致・その他server validation成功なら、本人は「この招待は辞退済みです」画面の`やっぱり参加する`から明示的に再acceptできます。再acceptでも全条件を再検証し、成功時だけMembershipを作ります。Inviter revoke、expiry、capability loss、invalid / replaced invitationではacceptできず、新規発行が必要です。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待でき、Editor以下はinvite不可です。Owner roleは通常invitationで付与せず、ownership transfer専用flowを使います。
 
 ## 5. 楽曲作成
 

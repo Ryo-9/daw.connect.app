@@ -107,6 +107,37 @@ API、Server Actions、DB、認証・認可、ファイル保存を採用した�
 
 権限テストは正常系より優先します。URL や ID を変えて他バンドのデータへアクセスできないことを、API / Server Action と E2E の両方で確認します。
 
+### AUTH-001-DESIGN future authentication contract
+
+AUTH-001実装時は、既存のUI smokeとは別に、次を必須test contractとします。Cognito production resource、実email、Private Alpha dataへtestから接続しません。
+
+- valid login、invalid password、unknown accountのnon-enumerating response
+- invitation-gated signup、verified email、14-day expiry、revoke / decline / inviter capability loss、explicit acceptance
+- `PENDING → DECLINED`を保存し、validな`DECLINED`を本人がexplicit re-acceptすると`ACCEPTED`になる
+- `DECLINED`がexpired、inviter revoked、inviter capability lost、invalid / replacedの場合はre-acceptをdenyする
+- `あとで決める`はinvitation stateを変更せず、re-acceptでも全server validationを再実行する
+- Membershipはinitial accept / re-acceptのvalidation成功時だけ作成する
+- open public signup、link-click-only Membership creation、invalid role、Owner invitationを拒否する
+- password reset後のall-session invalidationと、8文字 + uppercase / lowercase / number policy
+- 12-hour idle / 7-day absolute session、active renewal、expired screenからsafe route復帰、explicit logout時のhome復帰
+- independent multi-device session、current / specified / all-device logout、specified-device protect
+- trusted deviceの180-day unused expiry、new-device notification、progressive rate limiting
+- Passkey registration / preferred sign-in、password recovery、sensitive operationのstep-up、15-minute strong-reauth reuse
+- disabled Cognito userをdenyし、valid Cognito accountでも`BandMembership=REMOVED`なら次requestからBand accessをdeny
+- StreamBand Userの`SUSPENDED / DELETION_PENDING / DELETED`をdenyし、provider / Membership stateと混同しない
+- tokenのissuer、client / audience、`token_use`、expiry、state、nonce、PKCE mismatchを拒否する
+- forged email / User ID / `sub`を無視し、internal User mappingをverified tokenから解決する
+- access / ID / refresh token、client secret、authorization code、session cookieをlocalStorage、URL、HTML、logへ置かない
+- `__Host-` session cookieのSecure、HttpOnly、SameSite、Path、Domain、expiryを確認する
+- external top-level Song / Comment linkでLax sessionを維持し、cross-site mutationをCSRF / Origin ruleで拒否する
+- cookie mutationがCSRF token + Origin / Hostを要求し、OAuth state mismatchとwrong callback originを拒否する
+- BFFがallowlist外のhost / path / methodへaccess tokenをforwardしない
+- nonprod client / callback / sessionでPrivate Alphaへ入れない
+- email変更後もinternal User IDとresource ownershipが変わらない
+- account deletionが即access停止、30-day recovery、PII anonymization、Former member history、last Owner invariantを守る
+
+Local testではCognito protocol / errorをdeterministic adapterで模擬し、nonprod integration testは専用synthetic userとisolated environmentだけを使用します。認証失効、cookie、callback、email delivery、rate limitの実environment testはAUTH-001 implementation計画で範囲とcleanupを明示します。
+
 ## Level 3 — 一般公開前
 
 - 本番相当環境で主要ユーザーフローを E2E 確認する
