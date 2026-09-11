@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-028 | CLOUD-003C-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-003c-bootstrap-review` | 2026-09-11 | PR マージまたは作業中止 | 現行CDK bootstrapのresource、cost、permission、execution policy、OIDC原則を公式資料でreview。AWS接続・変更は対象外 |
+| LOCK-029 | CLOUD-003C-DECISION | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/cloud-003c-bootstrap-decision` | 2026-09-11 | PR マージまたは作業中止 | nonprod bootstrap permission / execution policy、exact command、runbook、STOP条件のdecision docs。AWS接続・変更は対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-028 | CLOUD-003C-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #28。mainへのマージを確認して解除 |
 | LOCK-027 | CLOUD-003C-PREP | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #27。mainへのマージを確認して解除 |
 | LOCK-026 | CLOUD-003B-CI | Codex | `.github/workflows/ci.yml`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #26。mainへのマージを確認して解除 |
 | LOCK-025 | CLOUD-003B | Codex | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #25。mainへのマージを確認して解除 |

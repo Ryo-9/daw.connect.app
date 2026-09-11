@@ -894,6 +894,179 @@ OIDC deployment roleはhuman bootstrap permissionとは別の設計対象です�
 - [AWS IAM: Create a role for an OIDC identity provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)
 - [AWS Security Blog: Use IAM roles to connect GitHub Actions to AWS](https://aws.amazon.com/blogs/security/use-iam-roles-to-connect-github-actions-to-actions-in-aws/)
 
+### CLOUD-003C-DECISION: Final nonprod bootstrap permission and execution plan
+
+判断日: 2026-09-11
+
+状態: **Review recommendation — actual bootstrapは未承認**
+
+この節はCLOUD-003C-REVIEWを、専用StreamBand nonprod accountで1回だけ行うbootstrapの推奨案へ絞り込んだものです。AWSへ接続せず、policy、role、resourceを作成・変更せず、commandも実行していません。人がこの案を承認した後も、実行は別taskとし、直前にcurrent CLI / template / priceを再確認します。
+
+#### Human bootstrap permission model
+
+| Option | Security isolation | Beginner operations | `aws login` compatibility | Privilege removal / retention risk |
+| --- | --- | --- | --- | --- |
+| A. 既存専用human IAM userへcustomer-managed bootstrap policyを一時attach | userへ直接強い権限が付く時間帯は明確なrisk。時間を限定し、他用途accountでは使わない | policy作成・attach・detach・削除で完了し、role profile / trust policyが不要 | 現在確認済みのtemporary `aws login` profileをそのまま利用できる | attach中の全sessionが権限を得るため作業直前attachと直後detachが必須。detach後にpolicy削除と元permission確認が容易 |
+| B. 同一accountの専用bootstrap roleを作り一時AssumeRole | bootstrap permissionをroleへ隔離でき、継続運用では優位 | role、trust、callerの`sts:AssumeRole`、profile、session、MFA条件の設定と撤去が増える | AWS公式の`aws login`資料は短期credentialを説明するが、そのsessionがMFA必須trustの`aws:MultiFactorAuthPresent`を満たす保証までは明記していない。公式AssumeRole例はMFA device情報を別途profile / requestへ渡す | roleを消し忘れるriskと、trust / caller policyの両方を検証する負担がある |
+
+**Recommendation: Option A.** 初回だけのdedicated nonprod bootstrapでは、既存の専用human IAM userへcustomer-managed policyを実行直前だけattachし、確認完了後に即detachしてpolicy自体も削除します。追加roleとMFA連携を推測で構築せず、manual stepを最小化し、long-lived access keyを作らないことを優先します。
+
+この選択は、一般的にuserへの直接付与がroleより安全という意味ではありません。attach中は強い権限がuserの有効なsessionへ及ぶため、短いmaintenance window、単一command、即時撤去、撤去確認を一つのrunbookとして扱います。継続deployとPrivate Alphaではこの方式を再利用せず、別OIDC deployment roleをreviewします。
+
+#### Temporary bootstrapper policy
+
+Suggested policy name: `StreamBandNonprodCdkBootstrapTemporary`
+
+**Review candidate — not applied**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CdkBootstrapDocumentedServiceFamilies",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:*",
+        "ecr:*",
+        "ssm:*",
+        "s3:*",
+        "iam:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+これはAWS CDK公式guideがbootstrap identityに必要として示すservice action familyをそのまま表した、**broad but service-limited**な一時候補です。`iam:*`と`Resource: "*"`を含むためleast privilegeとは呼びません。applicationの日常操作、deploy、Private Alphaへ流用しません。
+
+- human approval後、bootstrap実行直前だけ既存専用IAM userへattachする
+- attach中は他のAWS作業をせず、承認済みbootstrap commandだけを1回実行する
+- `CDKToolkit`と期待resourceの確認後、同じexecution window内で即detachする
+- detach後、userが元の限定permissionだけへ戻ったことを人が確認する
+- successful bootstrapと撤去確認後、customer-managed policyを削除する。失敗時も放置せず、調査に必要な記録を残してdetachを優先する
+- policy documentはrepositoryのreview記録から再作成できるため、AWS上へ未使用policyを保存し続けない
+
+policy作成・attach・detach・削除自体にも別のprivileged human actionが必要です。その実行主体と手順はactual bootstrap taskで明示し、root credentialを日常利用へ転用しません。
+
+#### CloudFormation execution policy
+
+| Option | Initial success | Security / maintenance |
+| --- | --- | --- |
+| 1. AWS managed `AdministratorAccess` | Cognito、Lambda、API Gateway、DynamoDB、private S3、CloudWatchと、それらに必要なrole / policyを後続CDK stackで扱いやすい | CloudFormation execution roleがaccount内の広い変更能力を持つ。template、deploy principal、account分離が破られるとblast radiusが大きい |
+| 2. Custom limited managed policy | 許可serviceを明示でき、execution roleのblast radiusを抑えられる | resource作成時のIAM / PassRole / service-linked role / tagging等を事前に正確に網羅する必要があり、現時点のempty stackでは過不足なく確定できない。各sliceでpolicy保守とdeploy failure対応が増える |
+
+**Recommendation: Option 1 — AWS managed `AdministratorAccess`をCloudFormation execution roleだけへ明示指定する。**
+
+理由は、ここがreal dataを禁止した専用nonprod accountであり、current stackはempty、次の複数service sliceを学習しながら小さく追加する段階だからです。初回からcustom policyを推測すると、必要actionの欠落を繰り返し補うか、結局広いwildcardを見えにくい形で作るriskがあります。
+
+適用境界は次のとおりです。
+
+- `AdministratorAccess`はbootstrapが作る**CloudFormation execution roleのみ**。human IAM userの日常policyへattachしない
+- human userに付ける一時bootstrap policyは前節の5 service familyだけとし、bootstrap直後に撤去・削除する
+- `--trust`と`--trust-for-lookup`でcross-account principalを追加しない
+- bootstrap後も、CDK roleをassumeできるprincipalを無条件に増やさない
+- nonprodにはsynthetic / disposable dataだけを置き、未公開楽曲とreal user dataを入れない
+- Private Alpha accountへこのexecution policyをcopyしない。real data投入前にfresh execution-policy reviewとhuman approvalを必須にする
+- 将来OIDC deployment roleを作る場合、repository / branch / environmentとassume可能roleを別taskで限定する
+
+blast radiusはaccount-wideです。誤ったCloudFormation templateや、CDK deployment roleをassumeできるprincipalの侵害により、nonprod account内のresourceが広く変更・削除され得ます。account分離、synthetic data限定、PR review、deployment principal制限を必須countermeasureとします。
+
+#### Final recommended bootstrap configuration
+
+| Setting | Recommendation |
+| --- | --- |
+| Target | dedicated StreamBand `nonprod` account only |
+| Region | `ap-northeast-1` |
+| Local profile | `streamband-nonprod` temporary `aws login` session |
+| Toolkit stack | `CDKToolkit` |
+| Qualifier | default `hnb659fds` |
+| Termination protection | enabled |
+| Bootstrap S3 public access block | enabled |
+| Customer-managed bootstrap KMS key | do not create; use current default AWS-managed encryption behavior unless a separate reason is approved |
+| Cross-account deploy trust | none; omit `--trust` |
+| Cross-account lookup trust | none; omit `--trust-for-lookup` |
+| CloudFormation execution policy | AWS managed `AdministratorAccess`, execution role only |
+| Express mode | disabled so the initial bootstrap keeps normal stabilization / rollback behavior |
+| Application resources | none; bootstrap stack only |
+| Data | no unreleased music, production data, Private Alpha data, or application asset |
+
+`--trust` / `--trust-for-lookup`は空値を渡さず、option自体を意図的に省略します。account performing the bootstrap以外のcross-account trustは追加しません。
+
+#### Exact proposed command
+
+**PROPOSED ONLY — HUMAN APPROVAL REQUIRED — DO NOT EXECUTE**
+
+```text
+cd infra
+npm exec -- cdk bootstrap aws://<NONPROD_ACCOUNT_ID>/ap-northeast-1 \
+  --profile streamband-nonprod \
+  --toolkit-stack-name CDKToolkit \
+  --qualifier hnb659fds \
+  --termination-protection true \
+  --public-access-block-configuration true \
+  --bootstrap-customer-key false \
+  --express false \
+  --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess
+```
+
+`<NONPROD_ACCOUNT_ID>`はexecution時に安全なlocal contextで置換し、repository、PR、chat、logへ実値を残しません。local `infra/`にlockされたCDK CLIを使い、`--trust` / `--trust-for-lookup`は付けません。実行直前にCLI help、generated bootstrap template、target、policy、cost driverを再確認し、差異があれば停止します。
+
+#### Future human execution runbook（このtaskでは実行しない）
+
+1. localだけで対象がStreamBand専用nonprod account、Regionが`ap-northeast-1`であることを確認し、account ID / ARNをrepository、PR、chatへ転記しない
+2. 月額USD 10 Budgetと通知先が有効であることを確認する。Budgetはhard capではない
+3. `aws login --profile streamband-nonprod`で再認証する
+4. human-approved privileged administration手順で、`StreamBandNonprodCdkBootstrapTemporary`だけを既存専用IAM userへattachする
+5. installed CDK version、proposed command、generated template、expected resource、KMS / trust / execution policyを直前確認する
+6. 承認されたbootstrap commandを1回だけ実行し、失敗時にoptionを推測で変えて再実行しない
+7. `CDKToolkit`の成功、S3 / ECR、5 bootstrap role、SSM parameter、termination protection、public access block、customer-managed KMS keyなし、cross-account trustなしを確認する
+8. 成否にかかわらずtemporary human bootstrap policyを直ちにdetachし、成功時はpolicyを削除する
+9. human IAM userが以前の限定permissionへ戻り、bootstrap / administration actionを実行できないことを確認する
+10. Billing、Cost Explorer、Budgetの初期変化を確認し、想定外resource / costがあれば停止・調査する
+11. 同じtaskでapplication stackをdeployせず、OIDC、Cognito、S3 application bucketその他のresourceを追加しない
+12. command、resource category、成否、撤去確認、cost確認だけを機密識別子なしで別branch / PRへ記録する
+
+#### STOP conditions
+
+次のいずれかがあればbootstrapを開始または再実行しません。
+
+- StreamBand専用nonprod以外のaccount、または`ap-northeast-1`以外を指している
+- 予期しない既存`CDKToolkit` stackがある、または既存stackのversion / parameterが不明
+- generated template / resource categoryがCLOUD-003C-REVIEWとmaterially異なる
+- customer-managed KMS keyを作成・参照する設定が入る
+- `--trust`、`--trust-for-lookup`、その他のcross-account trustが入る
+- bootstrapper policyまたはCloudFormation execution policyが承認内容より広い、別policyへ置き換わる、または対象principalが不明
+- USD 10 Budget、billing / cost monitoring、通知先を確認できない
+- temporary credentialとtarget identityを安全に確認できない
+- long-lived access keyの作成・入力・共有を要求される
+- nonprodにreal / unreleased song、Private Alpha data、production credentialが存在する
+- CLI / template / official documentationが更新され、review内容と一致しない
+- temporary policyを直後に撤去できる担当・時間・確認手順が揃っていない
+
+#### OIDC order
+
+推奨順序は次です。
+
+```text
+human performs one approved bootstrap
+→ verifies resources and removes temporary human privilege
+→ separate GitHub OIDC / deployment-role task and Human Gate
+→ first reviewed nonprod application deployment
+```
+
+初回bootstrapにGitHub OIDCは技術的な必須条件ではありません。bootstrap permission、OIDC trust、継続deploy permissionを同時に作ると、失敗原因とprivilege boundaryが混ざるため分離します。このPR後もOIDCは未実装です。
+
+#### Official references（2026-09-11再確認）
+
+- [AWS CLI: Login for local development using console credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html)
+- [AWS CLI: Using an IAM role](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html)
+- [AWS IAM: Secure API access with MFA](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_configure-api-require.html)
+- [AWS CDK: Bootstrapping environments](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+- [AWS CDK: `cdk bootstrap` command](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-bootstrap.html)
+- [AWS CDK security best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html)
+
 ### Official references（2026-09-10確認）
 
 - [AWS CDK supported Node.js versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html)
