@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-003C-DECISION | Final nonprod bootstrap permission and execution plan | Codex | レビュー待ち | `docs/cloud-003c-bootstrap-decision` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 未作成 | 一時bootstrap policy、nonprod execution policy、exact command、runbook、STOP条件を一案へ確定。actual bootstrapは未承認 |
+| CLOUD-003C-DECISION | Final nonprod bootstrap permission and execution plan | Codex | レビュー待ち | `docs/cloud-003c-bootstrap-decision` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #29 | 一時bootstrap policy、nonprod execution policy、exact command、runbook、STOP条件を一案へ確定。actual bootstrapは未承認 |
 
 ## 完了・中止履歴
 
