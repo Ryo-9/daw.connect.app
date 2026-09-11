@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CREATIVE-001-DESIGN | Creative workflow and lightweight production tracking | レビュー待ち。Memo / Idea / Task、Version横断未対応、Anchor / Timeline / Focus、非強制progressをdocs化。runtime / physical DB変更なし |
+| 1 | CREATIVE-001-DESIGN | Creative workflow and lightweight production tracking | レビュー待ち（PR #35）。Memo / Idea / Task、Version横断未対応、Anchor / Timeline / Focus、非強制progressをdocs化。runtime / physical DB変更なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。CLOUD-003の必要なfoundation execution gate完了後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -82,7 +82,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | レビュー待ち。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更しない |
+| CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | レビュー待ち（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更しない |
 | CREATIVE-DATA-001 | P1 | Creative item persistence extension | CREATIVE-001承認後の候補。Physical item / index / transaction / retention / Auditをreviewし、既存single-tableを変更する場合は専用Decisionとmigration planを要求 |
 | CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingする設計候補 |
 | CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | Data / Authz contract後の小規模surface候補。Timeline marker、cluster、Focusを非永続mockから検証し、playback / Version作成をblockしない |
