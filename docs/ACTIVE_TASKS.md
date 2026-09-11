@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-DATA-001 | Metadata persistence physical design | Codex | レビュー待ち | `docs/cloud-data-001-dynamodb-design` | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 作成予定 | Cloud MVPのDynamoDB key、GSI、access pattern、transaction、PITR / restoreを設計。AWS resource作成なし |
+| CLOUD-DATA-001 | Metadata persistence physical design | Codex | レビュー待ち | `docs/cloud-data-001-dynamodb-design` | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #30 | Cloud MVPのDynamoDB key、GSI、access pattern、transaction、PITR / restoreを設計。AWS resource作成なし |
 
 ## 完了・中止履歴
 
