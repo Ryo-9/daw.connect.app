@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-OIDC-001-DESIGN | GitHub Actions OIDC deployment trust design | レビュー待ち（Draft PR作成予定）。nonprod Environment、immutable subject、CDK bootstrap role delegation、PR safetyを設計。実装なし |
+| 1 | CLOUD-OIDC-001-DESIGN | GitHub Actions OIDC deployment trust design | レビュー待ち（PR #33）。nonprod Environment、immutable subject、CDK bootstrap role delegation、PR safetyを設計。実装なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | CLOUD-003の必要なfoundation execution gate完了後。controlled user、email verification、session、password resetを最小実装する候補 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -53,7 +53,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C-REVIEW | P0 | CDK bootstrap resource / cost / permission review | 完了（PR #28）。現行default bootstrap、billing driver、temporary permission、execution policy、OIDC原則と明示Human Gateを公式資料で整理。AWS接続・resource変更なし |
 | CLOUD-003C-DECISION | P0 | Final nonprod bootstrap permission and execution plan | 完了（PR #29）。bootstrapper temporary policy、execution role、proposed command、runbook、STOP条件を一案へ確定。AWS接続・変更なし |
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 未承認。CLOUD-003C-DECISIONのhuman review / merge後も、actual command実行には別の明示承認が必要 |
-| CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | レビュー待ち（Draft PR作成予定）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
+| CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | レビュー待ち（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001 | P0 | Private Alpha authentication prototype | CLOUD-003のfoundation execution gate完了までblock。完了後にCognito候補、controlled user、verification、session、resetを検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |

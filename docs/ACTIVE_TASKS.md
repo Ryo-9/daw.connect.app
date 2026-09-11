@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-DESIGN | GitHub Actions OIDC deployment trust design | Codex | レビュー待ち | `docs/cloud-oidc-001-deployment-trust` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 作成予定 | nonprod GitHub Environment、OIDC trust、CDK role delegation、PR safety、revocationを設計。実装なし |
+| CLOUD-OIDC-001-DESIGN | GitHub Actions OIDC deployment trust design | Codex | レビュー待ち | `docs/cloud-oidc-001-deployment-trust` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #33 | nonprod GitHub Environment、OIDC trust、CDK role delegation、PR safety、revocationを設計。実装なし |
 
 ## 完了・中止履歴
 
