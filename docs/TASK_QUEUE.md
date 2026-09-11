@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | AUTHZ-001 | Band Membership authorization | レビュー待ち（Draft PR作成予定）。Owner / Admin / Editor / Commenter / Guestのcapability、ownership、error、audit、future test contractをreview。実装なし |
+| 1 | AUTHZ-001 | Band Membership authorization | レビュー待ち（PR #31）。Owner / Admin / Editor / Commenter / Guestのcapability、ownership、error、audit、future test contractをreview。実装なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | CLOUD-003の必要なfoundation execution gate完了後。controlled user、email verification、session、password resetを最小実装する候補 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -56,7 +56,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001 | P0 | Private Alpha authentication prototype | CLOUD-003のfoundation execution gate完了までblock。完了後にCognito候補、controlled user、verification、session、resetを検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
-| AUTHZ-001 | P0 | Band Membership authorization | レビュー待ち（Draft PR作成予定）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractをreview。実装なし |
+| AUTHZ-001 | P0 | Band Membership authorization | レビュー待ち（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractをreview。実装なし |
 | API-001 | P0 | Band / Song core read-write | DATA-002 contractの最小slice。Auth/Authz/Dataのgate後のみ |
 | STORAGE-001 | P0 | Private Preview / MIDI Asset | Block Public Access、short-lived upload/access、complete verification、retention |
 | VERSION-001 | P0 | Persisted Version workflow | DAW export後の明示Version作成。Proposal Decisionによる自動作成なし |

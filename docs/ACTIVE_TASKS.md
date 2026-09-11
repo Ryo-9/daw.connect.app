@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUTHZ-001 | Band membership authorization and capability matrix | Codex | レビュー待ち | `docs/authz-001-capability-matrix` | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 作成予定 | 5 roleのcapability、ownership、cross-Band protection、audit、future test contractを設計。AWS resource作成なし |
+| AUTHZ-001 | Band membership authorization and capability matrix | Codex | レビュー待ち | `docs/authz-001-capability-matrix` | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #31 | 5 roleのcapability、ownership、cross-Band protection、audit、future test contractを設計。AWS resource作成なし |
 
 ## 完了・中止履歴
 
