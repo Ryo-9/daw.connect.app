@@ -140,12 +140,12 @@ CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infr
 
 - environment: `local`、AWS `nonprod`、`private-alpha`だけを初期境界とする
 - account: 本物の未公開曲を入れる前にnonprodとPrivate Alphaを別AWS accountへ分ける
-- credential: local humanはIAM Identity Center等のshort-lived session、GitHub ActionsはOIDC AssumeRoleを第一候補とし、long-lived access keyを使わない
+- credential: local human bootstrap identity、GitHub Actions OIDC deployment identity、CloudFormation execution roleを別主体として扱う。GitHub deploymentはrepositoryと`nonprod` Environmentを限定したshort-lived OIDC sessionを第一候補とし、long-lived access keyを使わない
 - deployment: nonprod / Private Alphaのrole、stack、approvalを分離し、Private Alphaのunattended destroyを禁止する
 - rollback: application、infrastructure、data recoveryを分け、IaC rollbackをuser data restoreと見なさない
 - source layout: repository rootの`infra/`をapp packageや`src/**`と分離する。root npm workspaceやroot dependencyには含めない
 
-AWSへの接続、account binding、IAM / OIDC、Budgets、bootstrap resource、deployed stack、workflowは未作成です。最初のAWS接続とbootstrapはCLOUD-003Cの別Human Gateです。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003B章を参照します。
+AWSへの接続、account binding、IAM / OIDC、Budgets、bootstrap resource、deployed stack、deployment workflowは未作成です。通常のPR `Quality checks`はAWS accessを持たず、将来のdeploymentはprotected `main`から別workflow / jobと`nonprod` Environment gateを通す設計候補です。最初のAWS接続とbootstrapはCLOUD-003C、OIDC provider / role / workflowは別Human Gateです。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003章を参照します。
 
 ## 自動テスト
 

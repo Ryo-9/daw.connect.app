@@ -684,7 +684,7 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 - `AUTH-001`: Cognito User Pool、app client、session integrationを設計・実装する。CLOUD-002では作らない
 - `CLOUD-DATA-001`: PR #30でDynamoDB physical designを完了。resource implementationはfoundation gate後
 - `AUTHZ-001`: PR #31でBand Membership capability matrixとserver authorization test contractを完了。runtime implementationは別task
-- `STORAGE-001-DESIGN`: private bucket、opaque key、MIME / size、state、lifecycle、Versioning、short-lived accessをreview中。S3 / IAM / API実装は`STORAGE-001`へ分離
+- `STORAGE-001-DESIGN`: PR #32でprivate bucket、opaque key、MIME / size、state、lifecycle、Versioning、short-lived accessの設計を完了。S3 / IAM / API実装は`STORAGE-001`へ分離
 - `CLOUD-003`: Aは人間側account readiness、Bはoffline repository foundation、Cは別Human Gate後の最初のAWS接続 / bootstrapとして分割する
 
 ### Human approval gates
@@ -1069,6 +1069,299 @@ human performs one approved bootstrap
 - [AWS CDK supported Node.js versions](https://docs.aws.amazon.com/cdk/v2/guide/node-versions.html)
 - [AWS CDK versioning and Toolkit compatibility](https://docs.aws.amazon.com/cdk/v2/guide/versioning.html)
 - [AWS CDK CLI lookup option](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd.html)
+
+## CLOUD-OIDC-001-DESIGN: GitHub Actions OIDC deployment trust
+
+### Status and boundary
+
+調査日: 2026-09-11。これはnonprod継続deployment用のtrust / permission設計であり、OIDC provider、IAM role / policy、GitHub Environment、secret / variable、workflow、AWS resourceを作成・変更していません。AWS接続、CDK bootstrap / deployも行っていません。実装には本章末尾のHuman Gateと専用taskが必要です。
+
+既存のPR `Quality checks`は`pull_request`で動くread-only CIのまま維持し、AWS credentialを取得させません。actual CLOUD-003C bootstrapも別Human Gateで未承認です。
+
+### Three identities are separate
+
+| identity | lifecycle | responsibility | must not become |
+| --- | --- | --- | --- |
+| Human bootstrap identity | 初回bootstrap直前だけ一時permissionを得て、直後に撤去 | `CDKToolkit`を1回作成・検証する | 日常deploy identity、long-lived access key holder |
+| GitHub Actions OIDC deployment identity | 承認済みworkflow runごとにshort-lived STS sessionを得る | CDK CLIが必要なbootstrap roleをassumeする入口 | application administrator、human console user、bootstrapper |
+| CloudFormation execution role | CDK bootstrapが作り、CloudFormation serviceがdeploy時に使用 | application stackで実行可能なAWS actionの上限を決める | GitHub web identity roleそのもの、human permission |
+
+GitHub roleへapplication serviceの管理権限を直接集約しません。GitHub roleはdeployment entry point、`DeploymentActionRole` / publishing / lookup roleはCDK tooling boundary、`CloudFormationExecutionRole`はresource mutation boundaryです。
+
+### OIDC provider candidate
+
+| setting | candidate |
+| --- | --- |
+| Provider URL / issuer | `https://token.actions.githubusercontent.com` |
+| AWS STS audience | `sts.amazonaws.com` |
+| Credential model | GitHub OIDC tokenを`AssumeRoleWithWebIdentity`へ交換して得るtemporary STS credential |
+| Stored AWS access key | none |
+
+AWSはrole trust policyの`aud`と`sub`を検証します。`aud = sts.amazonaws.com`を`StringEquals`で固定し、別audience向けtokenがこのroleへ使われることを防ぎます。OIDC token、STS credential、signed tokenをGitHub log、artifact、repositoryへ保存しません。
+
+### Trust subject and GitHub Environment decision
+
+比較結果:
+
+| option | strength | limitation |
+| --- | --- | --- |
+| A. `main` branchを直接subjectへ固定 | branch refを狭くできる | deployment approval、environment-scoped history / protectionをsubjectだけでは表現しにくい |
+| B. GitHub Environment `nonprod`をsubjectへ固定 | environment protectionとdeployment branch restrictionを同じjobへ適用できる | Environment設定とplan上利用可能なprotection ruleの事前確認が必要 |
+
+**Recommendation: Option B、GitHub Environment `nonprod`.** 将来のdeployment jobは`environment: nonprod`を参照し、Environment側のdeployment branchを`main`だけに限定します。通常PR jobとarbitrary branchはEnvironmentへ到達させません。
+
+GitHub公式仕様ではEnvironmentを参照する従来subjectは次です。
+
+```text
+repo:Ryo-9/daw.connect.app:environment:nonprod
+```
+
+ただし、このrepositoryはGitHubのcurrent defaultで**immutable subject claims**を使用します。owner / repository名にimmutable IDが加わり、expected subjectは次の形です。実IDはrepository、PR、chatへ記録しません。
+
+```text
+repo:Ryo-9@<GITHUB_OWNER_ID>/daw.connect.app@<GITHUB_REPOSITORY_ID>:environment:nonprod
+```
+
+実装前にrepositoryのOIDC customizationをread-onlyで再確認し、実際のtoken claimと一致する完全一致値を安全なAWS設定手順へ渡します。さらにAWS IAMがcurrent GitHub claimとして扱える`ref = refs/heads/main`と`environment = nonprod`も完全一致条件へ加え、Environment設定とIAM trustの両方でbranchを限定します。名前だけのlegacy subjectへfallbackしたり、`StringLike` / wildcardで差異を吸収したりしません。OIDC subject customizationを変更する場合は、AWS trustを先に対応させる別migration taskが必要です。
+
+### GitHub Environment candidate
+
+- name: `nonprod`
+- deployment branches / tags: selected branch `main`だけ。`refs/pull/*`、tag、feature branchは許可しない
+- trigger candidate: protected `main`へmerge後、`workflow_dispatch`で人が対象commitを確認して開始する
+- required reviewer: repository planでprivate repositoryに利用可能なら1人のmanual approvalを推奨する。利用不能なら自動で弱い代替へせず、manual dispatch + branch restrictionを最低gateとしてhuman reviewする
+- prevent self-review / administrator bypass: team人数とplan capabilityを実装taskで確認し、利用可能なら有効化候補
+- secrets: AWS access keyを保存しない。non-sensitive valueも必要最小限とし、account identifierをrepositoryへcommitしない
+
+Environmentはsubjectを狭めるだけでなく、branch / approval gateとして使います。Environmentを作るだけではAWS権限は発生せず、OIDC provider / role trustとfuture workflowのすべてが揃った時だけtemporary sessionを取得できます。
+
+### GitHub deployment role permission boundary
+
+GitHub OIDC roleへ`AdministratorAccess`を付けません。current CDK default deploymentでは、entry identityが次のbootstrap roleを必要な時だけassumeします。
+
+| bootstrap role | GitHub roleからのaccess | purpose |
+| --- | --- | --- |
+| `DeploymentActionRole` | required | CloudFormation deployment開始とexecution roleのpassをCDK経由で行う |
+| `FilePublishingRole` | file assetがあるdeployでrequired | bootstrap S3 bucketへtemplate / file assetをpublishする |
+| `ImagePublishingRole` | container image assetがある場合だけ | bootstrap ECR repositoryへimage assetをpublishする。初回empty / non-container stackには不要候補 |
+| `LookupRole` | context lookupを承認したdeployだけ | environment lookupを行う。offline synthには使わない |
+| `CloudFormationExecutionRole` | GitHub roleが直接assumeしない | `DeploymentActionRole`がCloudFormationへpassし、CloudFormationがresource changeを実行する |
+
+CDK bootstrap roleには`aws-cdk:bootstrap-role` tagがあります。AWS公式のsecurity guidanceはdeployment identityに`sts:AssumeRole`を与え、このtagを`deploy / file-publishing / image-publishing / lookup`へ限定する候補を示しています。StreamBandではさらにnonprod account、default qualifier、Tokyo Regionの具体的role ARN候補へresourceを絞る方針です。
+
+bootstrap version確認の`ssm:GetParameter`をOIDC roleへ直接追加する必要があるかは、actual bootstrap template、current CLIと最初のdry reviewで確認します。current default deploy roleがversion parameterを読む構成を前提に、確認前からdirect SSM permissionを広げません。CloudFormation、IAM、S3、ECRその他application serviceの直接管理actionもGitHub roleへ付けません。
+
+### Role session restrictions
+
+- role maximum session duration candidate: **3,600 seconds（1 hour）**。AWS role設定の最小maximumとする
+- workflowのrequested duration candidate: **1,800 seconds（30 minutes）**。`AssumeRoleWithWebIdentity`の許容範囲内で、current stack規模に対してdefault 1 hourより短く始める。超過する場合は先にjob分割 / deploy時間を調査し、無条件に延長しない
+- role session name candidate: `streamband-gh-<RUN_ID>-<RUN_ATTEMPT>`。GitHub runとCloudTrail eventを対応付け、個人名を使わない
+- human console login、access key、unrelated service permission、cross-account trustを許可しない
+- trust先はStreamBand nonprod accountだけ。Private Alpha用roleへ再利用しない
+
+role trust削除後も既発行sessionはexpirationまで使える可能性があります。短いdurationとemergency revocation手順でresidual riskを限定します。
+
+### Workflow permission and PR safety
+
+現在のPR CIは次を維持します。
+
+```yaml
+permissions:
+  contents: read
+```
+
+将来の専用deployment jobだけが最低限次を必要とします。
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+```
+
+`id-token: write`はGitHub OIDC tokenを要求する権限で、repository contentへのwrite権限ではありません。ただしAWS role assumptionの入口になるため、workflow全体や`Quality checks`へ付けず、deployment job scopeだけに置きます。
+
+Concrete PR safety model:
+
+1. `pull_request` eventではAWS deployment jobを起動せず、OIDC permissionも付けない
+2. PRは既存`Quality checks`を通し、protected `main`へmergeする
+3. deploymentはdefault branchに置かれたreview済みworkflowを`workflow_dispatch`で開始する
+4. jobは`nonprod` Environmentを参照し、Environmentが`main`以外を拒否する
+5. Environment approvalが利用可能ならtoken発行stepより前に要求する
+6. fork、PR merge ref、feature branch、tag、外部reusable workflowへdeployment credentialを渡さない
+
+`pull_request_target`でPR codeをcheckoutしてdeployする構成や、arbitrary ref inputをcheckoutしてcredentialを取得する構成は禁止候補です。workflow ref / commitを固定してからOIDCを要求し、untrusted PR codeがcredential付きjobを変更できないようにします。
+
+### Future deployment sequence
+
+```text
+Pull Request
+→ Quality checks（AWS accessなし）
+→ protected mainへmerge
+→ main上の専用deployment workflowをmanual dispatch
+→ GitHub Environment nonprod gate
+→ GitHub OIDC token（immutable repo + environment subject）
+→ GitHub OIDC deployment roleをAssumeRoleWithWebIdentity
+→ CDK DeploymentActionRole / FilePublishingRole（必要ならImagePublishingRole / LookupRole）
+→ CloudFormationへCloudFormationExecutionRoleをpass
+→ reviewed stack deployment
+→ smoke check / deployment result記録
+```
+
+OIDC provider / role作成そのものと、最初のapplication resource deploymentを同じtaskにしません。最初のOIDC implementation taskではtrustとpermissionを検証するだけとし、Cognito、DynamoDB、application S3 bucket、Lambda、API Gatewayを自動deployしません。
+
+推奨順序は既存DEC-016を維持します。
+
+```text
+human bootstrap
+→ temporary human privilegeを撤去・確認
+→ separate OIDC provider / deployment-role implementation task
+→ separate deployment-workflow task
+→ first minimal nonprod application deployment
+```
+
+### Private Alpha boundary
+
+- nonprod OIDC role、Environment、execution policy、stackをPrivate Alphaへ再利用しない
+- Private Alphaは別AWS account、別GitHub Environment、別OIDC trust role、別execution-policy reviewを必要とする
+- nonprod subject / permissionからPrivate Alpha roleをassumeできるtrust pathを作らない
+- real unreleased musicはPrivate AlphaのAuth / Authz / Storage / recovery / cost gate完了後だけ扱う
+
+### Revocation and incident response
+
+Emergency stop order:
+
+1. GitHub deployment workflowをdisableするか、credential jobを停止し、新規runを止める
+2. `nonprod` Environmentのapprovalを停止し、deployment accessをblockする
+3. OIDC role trustからGitHub principal / subjectをremoveまたはexplicit denyし、新規sessionを止める
+4. 必要ならrole session revocationを行い、最大1時間の既発行credential residual riskを監視する
+5. deployment roleをdisable / deleteする。bootstrap roleとCloudFormation execution roleは影響を別reviewする
+6. OIDC provider削除は、同じproviderを使う他roleがないことを確認した最後のaccount-level手段とする
+
+workflow停止やtrust削除は新規OIDC sessionを止めますが、CloudFormationで既に開始したchangeやbootstrap execution roleを自動rollbackしません。進行中stack、data、rollbackは別incident runbookで扱います。
+
+### Audit and logging boundary
+
+記録候補:
+
+- repository identity、workflow name / ref、run ID / attempt、review済みcommit SHA
+- role session name、target environment、deployment result、safe error category
+- CloudFormation stack action、change set / stack outcome、request / event identifier
+
+記録禁止:
+
+- OIDC token、STS access / secret / session credential、JWT body、authorization header
+- account-specific identifierを含むrole ARNの不要なcopy
+- secret、signed URL、private object key、未公開Song / filename / Comment内容
+
+GitHub Actions log、CloudTrail / CloudFormation event、application logの保持とaccessは別operations taskで決め、credential debug outputを有効化しません。
+
+### Review candidate — not applied: trust policy
+
+次は構造確認用の非実行candidateです。placeholderは実装時の安全なlocal / AWS contextで解決し、repositoryへ実値を保存しません。
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GitHubNonprodEnvironmentOnly",
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::<NONPROD_ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:Ryo-9@<GITHUB_OWNER_ID>/daw.connect.app@<GITHUB_REPOSITORY_ID>:environment:nonprod",
+          "token.actions.githubusercontent.com:ref": "refs/heads/main",
+          "token.actions.githubusercontent.com:environment": "nonprod"
+        }
+      }
+    }
+  ]
+}
+```
+
+`StringEquals`を使い、immutable subject、branch ref、Environmentを重ねて限定し、repository / owner wildcard、`repo:*/*:*`、branch wildcard、PR subjectを許可しません。actual immutable IDsとOIDC customizationはimplementation直前に再取得してhumanへ提示します。
+
+### Review candidate — not applied: deployment entry permission
+
+次も非実行candidateです。default qualifier `hnb659fds`とRegionはDEC-016に合わせていますが、actual bootstrap後のrole名 / tag / templateを再確認するまで適用しません。
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AssumeReviewedCdkBootstrapRoles",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": [
+        "arn:aws:iam::<NONPROD_ACCOUNT_ID>:role/cdk-hnb659fds-deploy-role-<NONPROD_ACCOUNT_ID>-ap-northeast-1",
+        "arn:aws:iam::<NONPROD_ACCOUNT_ID>:role/cdk-hnb659fds-file-publishing-role-<NONPROD_ACCOUNT_ID>-ap-northeast-1",
+        "arn:aws:iam::<NONPROD_ACCOUNT_ID>:role/cdk-hnb659fds-lookup-role-<NONPROD_ACCOUNT_ID>-ap-northeast-1"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/aws-cdk:bootstrap-role": [
+            "deploy",
+            "file-publishing",
+            "lookup"
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+初回candidateはcontainer image assetを含まないため`ImagePublishingRole`を省きます。将来container assetがreview済みstackへ必要になった場合だけ、対応するexact role ARNと`image-publishing` tagを専用PRで追加します。direct `ssm:GetParameter`その他のactionがcurrent CLIで必要と判明した場合も、actual bootstrap template / CloudTrail-free dry review / official docsで根拠を示し、exact parameter resourceへ限定してから別途承認します。推測で`Resource: "*"`やapplication administrator permissionへ広げません。
+
+### Mandatory future verification
+
+- `pull_request` workflowとfork codeがOIDC deployment roleを取得できない
+- wrong repository、owner、immutable repository ID、Environment、audienceがすべてdenyされる
+- protected `main` + `nonprod` Environmentのexpected tokenだけがacceptされる
+- Environmentのdeployment branch ruleがfeature branch / tag / PR merge refをdenyする
+- GitHub roleはbootstrap role以外をassumeできず、application serviceを直接管理できない
+- file / deploy / lookup roleだけを必要に応じてassumeでき、image roleは未承認時にdenyされる
+- CloudFormation execution roleはGitHub roleから直接assumeできない
+- nonprod EnvironmentからPrivate Alpha roleをassumeできない
+- GitHub secret / variable / repositoryにlong-lived AWS access keyがない
+- trust削除後は新規sessionが失敗し、既発行sessionの最長1時間riskがrunbookどおり扱われる
+- token / STS credentialがlog、artifact、outputへ出ない
+
+### Pre-implementation Human Gate
+
+OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず人へ提示し、明示承認を得ます。
+
+1. Provider URL: `https://token.actions.githubusercontent.com`
+2. Audience: `sts.amazonaws.com`
+3. Repository: `Ryo-9/daw.connect.app`
+4. GitHub Environment `nonprod`と`main`限定条件
+5. current immutable subjectの完全一致値
+6. IAM role name
+7. exact trust policy
+8. exact deployment-entry permission policyとbootstrap role一覧
+9. role maximum 3,600秒、workflow request 1,800秒、session name
+10. workflow event / trigger、checkout ref、job permission
+11. Environment protection / reviewer / bypass設定
+12. rollback、trust removal、session revocation、provider removalの手順
+
+このreview後もOIDC provider / role / Environment / workflowは**not implemented / not approved for execution**です。CLOUD-003C actual bootstrapも別Human Gateです。
+
+### Official references（2026-09-11確認）
+
+- [GitHub: Configuring OpenID Connect in Amazon Web Services](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+- [GitHub: OpenID Connect reference](https://docs.github.com/en/actions/reference/security/oidc)
+- [GitHub: Deployments and environments](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
+- [AWS IAM: Create a role for a GitHub OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)
+- [AWS IAM: OIDC federation condition keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_iam-condition-keys.html#condition-keys-wif)
+- [AWS STS: AssumeRoleWithWebIdentity](https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html)
+- [AWS CDK: Security best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html)
+- [AWS CDK: Deploy applications](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html)
+- [AWS CDK: Bootstrap an environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
 
 ## STORAGE-001-DESIGN: Private Preview / MIDI storage contract
 

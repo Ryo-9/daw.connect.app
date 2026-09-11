@@ -301,6 +301,22 @@
 - 見直し条件: 100 MB以上、slow network、multi-part / resumable upload、Stem、scan、CloudFront、instant revocation、Private Alpha encryption / retention、実測costの要件が生じた場合
 - 関連: STORAGE-001-DESIGN、DATA-002、CLOUD-DATA-001、AUTHZ-001、[AWS.md](AWS.md)、[API.md](API.md)、[DATABASE.md](DATABASE.md)
 
+## DEC-020: nonprod deployment trustをGitHub Environment限定OIDCへ分離する
+
+- 日付: 2026-09-11
+- ステータス: 提案中
+- 提案者: Codex（CLOUD-OIDC-001-DESIGN）
+- Identity boundary: one-time human bootstrap identity、GitHub OIDC deployment identity、CloudFormation execution roleを別主体として扱う。GitHub roleへapplication administrator permissionを直接付けない
+- Trust candidate: GitHub Environment `nonprod`を選び、deployment branchをprotected `main`だけに限定する。`aud = sts.amazonaws.com`、current immutable repository + environment subject、`ref = refs/heads/main`、`environment = nonprod`を`StringEquals`で完全一致させ、repository / owner / branch wildcardを使わない
+- Workflow boundary: PR `Quality checks`は`contents: read`のままAWS accessなし。future deploymentはmainへmerge後の別workflow / jobをmanual dispatchし、そのjobだけ`contents: read` + `id-token: write`とEnvironment gateを持つ
+- Permission boundary: OIDC roleはreview済みCDK bootstrap deploy / file publishing / lookup roleだけをassumeするcandidateとし、container assetが必要になるまでimage publishing roleを省く。CloudFormation execution roleを直接assumeせず、AdministratorAccessをGitHub roleへ付けない
+- Session: role maximumは3,600秒、workflow requested durationは1,800秒候補。run ID / attemptを含む非個人session nameで監査し、human console loginとaccess keyを持たせない
+- Sequence: human bootstrapとtemporary privilege撤去、OIDC provider / role、deployment workflow、first application deployを別taskに分ける。nonprod roleをPrivate Alphaへ再利用しない
+- Implementation state: docs-only proposal。OIDC provider、IAM role / policy、GitHub Environment、workflow permission、secret / variable、AWS resourceは未作成。CLOUD-003C actual bootstrapも未承認
+- Human Gate: provider、audience、immutable subject、role名、exact trust / permission、session、workflow trigger、Environment protection、revocationを実装前に提示して明示承認を得る
+- 見直し条件: GitHub OIDC subject customization / immutable format変更、CDK bootstrap template / qualifier / role変更、container asset導入、deploymentが1時間を超える、Private Alpha開始、GitHub plan制約が判明した場合
+- 関連: CLOUD-OIDC-001-DESIGN、CLOUD-003C-REVIEW、CLOUD-003C-DECISION、DEC-014、DEC-016、[AWS.md](AWS.md)、[TESTING.md](TESTING.md)
+
 ---
 
 ## 新規決定テンプレート
