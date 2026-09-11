@@ -138,6 +138,32 @@ AUTH-001実装時は、既存のUI smokeとは別に、次を必須test contract
 
 Local testではCognito protocol / errorをdeterministic adapterで模擬し、nonprod integration testは専用synthetic userとisolated environmentだけを使用します。認証失効、cookie、callback、email delivery、rate limitの実environment testはAUTH-001 implementation計画で範囲とcleanupを明示します。
 
+### CREATIVE-001-DESIGN future creative workflow contract
+
+Creative workflowの実装時は、制作をblockしないこととVersion history / authorizationを、表示細部より優先して検証します。Physical persistenceが未決定のため、現在はtest追加やfixture変更を行いません。
+
+- old VersionのComment / Creative item Anchorがnew Versionへ自動移動しない
+- TaskはVersionをまたいでも自動duplicateせず、originと明示的なcurrent targetを別に保持できる
+- unfinished TaskがSong / Version creationをblockしない
+- Memo / Idea / Taskをどこからでも作成でき、`Memo ↔ Idea ↔ Task`で相互変換できる
+- Task state `OPEN / IN_PROGRESS / DONE / CANCELED`と、`DONE`からのreopenを検証する
+- assigneeはoptionalなACTIVE same-Band member 1人だけで、未指定を許可する
+- due dateはoptionalで、期限超過してもstateを自動変更しない
+- Comment → Taskが元Comment / origin Anchorを保持し、元Commentを削除しない
+- same Commentからのretry / double actionでaccidental duplicate Taskを作らない
+- Song-level TaskをAnchorなしで作成できる
+- time / bar-beatのpointとrange、optional Track、Version整合性を検証する
+- Song / Version / Waveform / MIDI contextからAnchorを初期化でき、各dimension解除で同じitemのscopeが自然に広がる
+- Anchor密集時にmarkerをclusterし、全annotationでTimelineを覆わない
+- playback位置到達やitem arrivalがmodal、focus steal、playback auto-stop、forced acknowledgementを起こさない
+- Focus Modeはcreative dataを削除・mutateせず、user操作で表示だけを隠す
+- Cross-Band UserがCreative itemをread / mutateできず、forged Song / Version / Anchor relationshipを拒否する
+- removed Memberがold Task / Comment URLを知っていても、strong ACTIVE Membership checkで次requestから拒否される
+- Proposal DecisionがIdea、Task、SOURCE_MIDI、SongVersionを自動変更しない
+- 完了率や期限超過をVersion作成条件・productivity scoreとして扱わない
+
+Integration testは将来承認されたAUTHZ capabilityとphysical modelを使い、private content、実user、未公開曲をfixture / logへ入れません。
+
 ## Level 3 — 一般公開前
 
 - 本番相当環境で主要ユーザーフローを E2E 確認する

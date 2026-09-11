@@ -2,7 +2,7 @@
 
 ## 基本方針
 
-ユーザーが「バンドを選ぶ → 楽曲を選ぶ → メモ・コメント・TODO・ファイルを扱う」という階層を迷わず理解できる導線にします。スマートフォンでは、現在のバンド名と楽曲名が分かる表示を保ち、主要操作までの手数を抑えます。
+ユーザーが「バンドを選ぶ → 楽曲を選ぶ → Previewと創作意図を確認する」という階層を迷わず理解できる導線にします。スマートフォンでは、現在のバンド名と楽曲名が分かる表示を保ち、主要操作までの手数を抑えます。StreamBandは創作を管理せず支えるため、Task処理や決まった順序を制作開始・Version共有の条件にしません。
 
 認証、招待、ファイル保存は将来の想定を含むフローです。今回は実装せず、方式を決定した後に詳細化します。
 
@@ -69,6 +69,63 @@ DAW export
 - Decision button、anchor、statusはPhase 1のvisual mockで、保存・通信・backend stateは持たない
 
 このflowはDAWを置き換えません。最終判断の反映と正式な音源・MIDIの生成はDAW側で行い、StreamBandでは共有された新しいVersionを次のreview単位として扱う想定です。
+
+## Creative support flow（CREATIVE-001-DESIGN）
+
+Memo / Idea / Taskは別pageへ分断せず、同じCreative Boardで軽く区別します。`Memo → Idea → Task`は一例であってworkflowではなく、任意の種類から直接作成し、`Memo ↔ Idea ↔ Task`を行き来できます。
+
+```text
+制作中に気づく
+→ contextを引き継いでMemo / Idea / Taskのどれかを作る
+→ 必要ならpoint / range、Version、Trackを調整する
+→ Creative BoardまたはTimelineで共有する
+→ Taskなら未対応 / 対応中 / 完了を任意に更新する
+→ 不要になればIdeaへ戻す、不要にする、または権限に応じて削除する
+→ 未対応のままでも次Versionを共有できる
+```
+
+### Version historyと未対応事項
+
+- SongVersionは上書きせず、Preview、MIDI、Comment / Anchor、Version固有情報をそのVersionの履歴として保持する
+- old VersionのAnchorはnew Versionへ自動remapしない。同じ`2:14`がV1ではGuitar Solo、V2ではChorusになり得るため
+- Current Song viewから過去Version由来の未対応項目を横断表示し、各itemに`origin: V4 / 2:14`等を示す
+- new Version作成時は未対応件数を`確認する / あとで確認`で軽く示せるが、作成をblockしない
+- itemをnew Versionでも追う場合は、`origin`を残したまま`current target: V2 / 3:02`等を本人が明示する。VersionごとにTaskを自動duplicateしない
+
+### CommentからTaskへ
+
+Version / position付きCommentの`Taskにする`から同じ本文を初期値としてSong Taskを作れます。元Commentを削除せず、CommentとTaskを相互参照します。同じCommentから作成済みなら`Task作成済み / Taskを見る`を表示し、accidental duplicateを防ぎます。Commentを経由せずSong / Creative Boardから直接Taskを作ることもできます。
+
+```text
+V4 / Guitar / 2:14 Comment
+「ここのGuitarをもう少し後ろにしたい」
+→ Taskにする
+→ Song Task + origin Comment + origin V4 / 2:14
+```
+
+### Context-aware anchor
+
+Comment / Memo / Idea / Taskのanchorは任意で、Version、timeline time、bar / beat、Trackと、point / rangeを組み合わせられます。作成場所から分かるcontextは初期値にしますが、すべて1 actionで解除・変更できます。
+
+```text
+Song page               → Song scope
+Version 6               → Version 6
+Waveform 2:14           → Version + point 2:14
+MIDI Track / Bars 48–52 → Version + Track + bar range
+
+V7 / Bass / 2:14–2:21
+→ time rangeを外す: V7 / Bass
+→ Trackを外す: V7
+→ Versionを外す: Song全体
+```
+
+別formへ移動してscopeを選び直させません。「入力できる情報は多くても、入力しなければ進めない情報は少なくする」を原則にします。Position付きitemはTimelineへ軽量markerとして表示し、密集時は`● 6`のようにclusterします。Playheadが重なる場合はside panelを軽くhighlightするだけで、modal、playback stop、focus stealing、forced acknowledgementを起こしません。
+
+### Focus Modeと進捗
+
+ユーザーが`すべて / 要対応だけ / 選択した種類 / Focus`を切り替えられる候補とします。Focus Modeはcreative annotationを一時的にほぼ隠してWaveform / MIDI / playhead / playback controlsへ集中する表示で、dataを削除せず、systemが自動切替しません。
+
+進捗はTask完了率やproductivity scoreではなく、`Current Version / 最近変わったこと / 考えていること / 制作中`で曲の変化と現在の意図を示します。Notificationやitem arrivalでplayback / editingを中断せず、old unfinished TaskもVersion作成を妨げません。
 
 ### Phase 2 server boundary補足（DATA-002候補）
 
@@ -217,20 +274,21 @@ Link clickだけではMembershipを作りません。`あとで決める`は`PEN
 
 Phase 1 では画面と導線のみを扱います。実ファイルの保存は、セキュリティ、費用、削除、アクセス制御を設計してから実装します。
 
-## 10. TODO 管理
+## 10. Creative Boardと軽量Task
 
-目的: 担当作業と進捗を明確にする。
+目的: 制作意図と必要な作業を、義務感を強めず同じ場所で共有する。
 
-- 楽曲詳細から TODO を開く
-- タイトル、パート、担当者、期限、優先度を入力する
-- TODO を作成し、一覧で状態を確認する
-- 作業開始時に「進行中」、完了時に「完了」へ更新する
-- ダッシュボードで自分の未完了 TODO を確認する
+- Creative BoardでMemo / Idea / Taskをfilterし、どの種類からでも直接作成する
+- TaskはSongへ所属し、任意で1人のassignee、`important`、calendar due date、Anchorを付ける
+- `未対応 / 対応中 / 完了`を更新し、DONEからreopen、TaskからIdea / Memoへの変更、「不要にする」を選べる
+- self-created Taskのdelete候補と、shared TaskをOwner / Admin以外は原則「不要にする」権限境界を実装前に確認する
+- 期限超過や未完了itemを表示しても、自動state変更、Version block、approval強制をしない
 
 ## 継続利用の基本ループ
 
-- ダッシュボードで更新と自分の TODO を確認する
+- ダッシュボードでCurrent Version、最近の変化、考えていること、任意の担当Taskを確認する
 - バンドから対象の楽曲を開く
 - 最新バージョンと未解決コメントを確認する
-- メモ、コメント、TODO、ファイルを更新する
-- 判断事項を楽曲内に残し、次の担当を明確にする
+- Memo / Idea / Task、コメント、ファイルを必要な範囲だけ更新する
+- 過去Version由来の未対応事項を確認するか、あとで確認して制作を続ける
+- 判断や試したいことを楽曲内に残し、必要な場合だけ担当を付ける

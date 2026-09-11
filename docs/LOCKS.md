@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/auth-001-cognito-session-design` | 2026-09-11 | PR #34 マージまたは作業中止 | Human-approved AUTH-001-DESIGN revisionを含むdocs contractのみ。認証・AWS resource・secret・runtime実装は対象外 |
+| LOCK-035 | CREATIVE-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/creative-001-creative-workflow-design` | 2026-09-11 | Draft PRのマージまたは作業中止 | Creative workflow docsのみ。runtime、DynamoDB physical key、AWS / Cognito / infraは対象外 |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #34。mainへのマージを確認して解除。Cognito / runtime実装なし |
 | LOCK-033 | CLOUD-OIDC-001-DESIGN | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #33。mainへのマージを確認して解除。OIDC / IAM / workflow実装なし |
 | LOCK-032 | STORAGE-001-DESIGN | Codex | `docs/API.md`、`docs/DATABASE.md`、`docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #32。mainへのマージを確認して解除。S3/AWS resource作成なし |
 | LOCK-031 | AUTHZ-001 | Codex | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #31。mainへのマージを確認して解除。AWS resource作成なし |

@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | Codex | レビュー待ち | `docs/auth-001-cognito-session-design` | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #34 | Human-approved revision反映済み。invite-only signup、branded Managed Login、BFF、7-day session、Passkey / device / deletion境界を設計。実装なし |
+| CREATIVE-001-DESIGN | Creative workflow and lightweight production tracking | Codex | レビュー待ち | `docs/creative-001-creative-workflow-design` | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-11 | #35 | 創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus Modeをdocs化。runtime / physical DB変更なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| AUTH-001-DESIGN | 完了 | Codex | `docs/auth-001-cognito-session-design` / #34 | 2026-09-11 | invite-only signup、branded Cognito Managed Login、BFF session、Passkey / device / account lifecycleを設計しmainへマージ済み。Cognito / runtime実装なし |
 | CLOUD-OIDC-001-DESIGN | 完了 | Codex | `docs/cloud-oidc-001-deployment-trust` / #33 | 2026-09-11 | GitHub Environment限定OIDC trust、CDK role delegation、PR safety、revocation contractを設計しmainへマージ済み。OIDC / IAM / workflow実装なし |
 | STORAGE-001-DESIGN | 完了 | Codex | `docs/storage-001-private-asset-design` / #32 | 2026-09-11 | private Preview / MIDIのbucket、encryption、opaque key、upload / access、retention、recovery contractを設計しmainへマージ済み。AWS resource作成なし |
 | AUTHZ-001 | 完了 | Codex | `docs/authz-001-capability-matrix` / #31 | 2026-09-11 | Band Membership role、capability、ownership、cross-Band protection、audit / test contractを設計しmainへマージ済み。AWS resource作成なし |

@@ -34,6 +34,7 @@
 | DEC-019 | 2026-09-11 | Private Assetをenvironment単位のS3 bucketと短命instructionで扱う | 提案中 | S3 / Asset security | - |
 | DEC-020 | 2026-09-11 | nonprod deployment trustをGitHub Environment限定OIDCへ分離する | 提案中 | AWS deployment identity / GitHub | - |
 | DEC-021 | 2026-09-11 | Invitation-gated CognitoとBFF Web session方針を定める | 承認済み | Authentication / Signup / Session / Device security | - |
+| DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
 
 ---
 
@@ -346,6 +347,26 @@
 - Unresolved implementation gates: invite-only self-serviceのexact Cognito integration、provider username、session / device store、encryption、client secret、callback実値、runtime identity、Passkey / WebAuthn設定、Private Alpha CSP / price / mobile timing。これらをapproved UXの撤回で解決しない
 - Human Gate: AUTH-001 runtimeはCLOUD-003C foundation execution gate後の別taskとし、Cognito resource / secret / callback / application codeを事前reviewする
 - 関連: AUTH-001-DESIGN、AUTHZ-001、CLOUD-DATA-001、HOST-001、CLOUD-OIDC-001-DESIGN、[AWS.md](AWS.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-022: 創作を管理せず支えるCreative workflowを定める
+
+- 日付: 2026-09-11
+- ステータス: 承認済み
+- 提案者: 人間側（CREATIVE-001-DESIGNで製品方針を明示）
+- 承認者: 人間側
+- Core principle: StreamBandはproject management appではなく、作者とBand memberの変化する創作意図を記録・共有し、制作負荷を減らす補助appとする。未完了item、期限、完了率でSong / Version作成をblockせず、systemが正しい制作手順やcompletionを強制しない
+- Creative item: user-facing modelは`Memo / Idea / Task`の3種類だけ。どこからでも作成し、`Memo ↔ Idea ↔ Task`を相互変更できる。一般Proposal stateは追加せず、MIDI Proposalは実際に比較できる別MIDI Asset / proposal dataとして維持する
+- Task: `OPEN / IN_PROGRESS / DONE / CANCELED`候補、DONEからreopen、CANCELEDは「不要にする」、optional single assignee、`NORMAL / IMPORTANT`、optional calendar due dateとする。別member approvalや期限超過によるautomatic state changeを要求しない
+- Version history: SongVersionを上書きせず、Preview、MIDI、Comment / Anchor、Version固有情報を保持する。Old Anchorはnew Versionへ自動remapせず、origin historyとuser指定のcurrent targetを分離し、TaskをVersionごとにduplicateしない
+- Outstanding items: Current Songから過去Version由来の未対応itemを横断確認でき、新Version作成時に件数を軽く示せる。ただし`確認する / あとで確認`の選択に留め、Version creationをblockしない
+- Comment → Task: 元Commentを消さず相互linkし、same Commentからのaccidental duplicateを防ぐ。Direct Song-level TaskとAnchorなしも許可する
+- Anchor: Version、time、bar / beat、Track、point / rangeをoptionalにし、作成contextを初期値にする。Dimensionを外すと同じitemが自然にSong scopeへ広がる。Versionをまたぐ自動移動はしない
+- Timeline / Focus: Anchor itemは軽量markerとclusterで表示し、playhead連動はside panelの軽いhighlightまで。Modal、playback stop、focus stealingを禁止する。Focus Modeはuser操作でannotation表示だけを隠し、dataを変更しない
+- Progress: Task完了率やproductivity scoreをprimary UXにせず、Current Version、最近変わったこと、考えていること、制作中の内容で曲の歩みを見せる
+- Security: Creative itemもprivate Band dataで、canonical resourceとstrong ACTIVE BandMembership、AUTHZ capabilityをserverが検証する。Cross-Band deny、removed Member deny、private contentをlogへ複製しない既存contractを弱めない
+- Physical design: CLOUD-DATA-001のsingle-table key / GSIは変更しない。Memo / Idea / Task、origin / current target、Comment link、delete / audit / capabilityのphysical persistenceは後続implementation gate
+- 実装状態: docs-only。UI、API、DB、DynamoDB、AWS、Cognito、infra、runtime、package、workflowは変更していない
+- 関連: CREATIVE-001-DESIGN、FLOW-001、CLOUD-DATA-001、AUTHZ-001、STORAGE-001-DESIGN、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

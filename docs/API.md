@@ -953,3 +953,71 @@ Cognito authentication successはSong / Version / Assetへのauthorizationでは
 - Cognito User Pool、user、client、domain、callback、secret、session store、AWS resourceはAUTH-001-DESIGNでは作成しない
 
 詳細なaccount state、password / MFA、cookie / CSRF、reset / revocation、logging、future test contractは[AWS.md](AWS.md)のAUTH-001-DESIGN節を正とします。
+
+## CREATIVE-001-DESIGN: Creative workflow behavior contract
+
+この章はMemo / Idea / Task、CommentからTaskへの変換、Version横断の未対応表示、Anchor、Focus Modeに必要な将来server behaviorを定義します。Endpoint、transport、DynamoDB physical item、runtime validation libraryは未決定で、API / DB / application codeは実装しません。
+
+### Creative item contract
+
+| Behavior | Required contract |
+| --- | --- |
+| create | `Memo / Idea / Task`のどこからでも作成可能。Songを必須scopeとし、Version / Track / point / rangeは任意 |
+| change kind | `Memo ↔ Idea ↔ Task`を許可。Taskから戻す操作も失敗や取消として扱わない |
+| list | Creative BoardでSong内を横断し、種類、要対応、origin Version等をfilterできる候補。Task完了率は返してもprimary scoreに使わない |
+| task state | `OPEN → IN_PROGRESS → DONE`、`DONE → OPEN / IN_PROGRESS`、任意stateから`CANCELED`候補。UIは`未対応 / 対応中 / 完了 / 不要にする` |
+| assignment | assigneeなし、またはsame-BandのACTIVE Membership 1件。複数assigneeはMVP対象外 |
+| priority | `NORMAL / IMPORTANT`のみ。NORMALは通常強調しない |
+| due date | optional calendar date。期限超過でstateやVersionを自動変更しない |
+| delete | own itemのdelete候補、shared / other-created itemの「不要にする」、Owner / Adminのbroader deletionをAUTHZ extensionで決める。hard delete / tombstoneは未決定 |
+| completion | approvalなしでDONEへ変更でき、reopen可能。`completedBy / completedAt / completedVersionId?`は将来metadata候補 |
+
+すべてのprotected read / mutationは、AUTHZ-001と同じ`verified identity → internal User → canonical resource → derived Band → strong ACTIVE BandMembership → capability / state / relationship check`を通します。Creative item用capability codeとrole matrixは実装前にAUTHZ-001の追加reviewで確定し、client role、URL Band ID、creator fieldだけでは許可しません。Cross-Band / removed Membershipは外向き404候補を維持します。
+
+### Version history and outstanding projection
+
+- Version-scoped Comment / Creative itemのorigin AnchorはimmutableなSongVersion参照として扱い、新Versionへserverが自動remapしない
+- Current Songの未対応一覧は、過去Versionに由来する`OPEN / IN_PROGRESS` Task等を横断するread projection候補であり、元itemをduplicateしない
+- new Version createは未対応件数をresponse / preflightで知らせることはできるが、unfinished itemをvalidation errorやconflictにせず、writeをblockしない
+- new targetを付ける場合は`originAnchor`を残し、明示的な`currentTargetAnchor?`を別参照として更新する。元のVersion historyを書き換えない
+- Proposal DecisionはSOURCE_MIDI、関連Idea、Task、SongVersionを自動変更しない。Accept後もDAW反映と明示Version createは別operation
+
+### Comment to Task
+
+CommentからTaskを作るcommand候補は、canonical Commentを読み、same Song / Version / Band chainとstrong ACTIVE Membershipを検証し、Task本文の初期値と`sourceCommentId` / origin Anchorをserver側で関連付けます。
+
+- 元Commentは保持し、Task作成でedit / tombstoneしない
+- `sourceCommentId`ごとのactive linked Taskについてidempotency / conditional uniqueness候補を設け、二重clickやretryでaccidental duplicateを作らない
+- 既存Taskがあればsafe Task summaryを返し、UIは`Task作成済み / Taskを見る`を表示できる
+- Commentを経由しないdirect Task createも許可し、Song-levelではAnchorを要求しない
+- Comment author、Task creator、assigneeは別概念。Client supplied author / Band / ownershipを信用しない
+
+### Anchor validation
+
+Anchorはoptionalなcontextであり、`Version / timeline time / bar-beat / Track`とpoint / rangeを組み合わせます。Positionを一つでも持つ場合は対象SongVersionを必須とし、current targetを更新してもoriginを保持します。
+
+| Dimension | Validation candidate |
+| --- | --- |
+| Version | canonical SongVersionがitemのSong / Bandと一致する |
+| time point / range | millisecondは0以上。Rangeはstart < endで、Version Asset durationを利用できる場合は範囲内 |
+| bar / beat point / range | 1始まり。拍子 / PPQのexact ruleはphysical implementation gate |
+| Track | canonical SongTrack採用前はstable Track / Part code候補。別Songの値を拒否する |
+| scope widening | time、Track、Versionを外すpartial updateを許可し、別create formや新itemを要求しない |
+
+Context-aware creationで初期値をserverへ送っても、それはauthorizationやownershipの証拠ではありません。Serverはcanonical chainを再検証し、anchor mismatchはsame-Band内なら422、cross-Band秘匿が必要なら404候補とします。
+
+### Display-only behavior
+
+Timeline marker cluster、playhead連動highlight、Creative Board filter、Focus Mode、progress summaryはread / presentation behaviorです。Playback到達を契機にstateを変更せず、modal、automatic playback stop、forced acknowledgementをserver eventとして要求しません。Focus Modeは保存済みcreative dataを削除・非表示権限変更せず、user-controlled display preferenceとして扱います。Preferenceをserverに保存するかlocal UI stateにするかはsurface implementation gateです。
+
+### Implementation gates
+
+- `Memo / Idea / Task`をsingle physical item + kindで持つか、既存`SongMemo / Task`を分けるか
+- Idea、current target、source Comment link、completion metadataのphysical representationとindex
+- Creative item capability / moderation / delete matrix、hard delete / tombstone / retention / AuditEvent
+- Comment-to-Task idempotency scopeと、同じCommentからintentionalに複数Taskを作る将来要件
+- bar / beat / time range、Track code、duration、Version変更時のvalidation
+- outstanding projectionのquery / pagination / consistency。CLOUD-DATA-001のkey / GSIをこのtaskで変更しない
+- Focus Mode / filter preferenceの保存先と、Timeline clusterの表示計算
+
+これらの未決事項を理由に、創作をblockするworkflow、Task完了率の評価、Anchor自動remap、SOURCE_MIDI上書き、ProposalからのVersion自動作成を導入しません。

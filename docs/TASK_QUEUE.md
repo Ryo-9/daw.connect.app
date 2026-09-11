@@ -12,15 +12,15 @@
 
 ## 現在の状態と次候補
 
-2026-09-11 時点で、初期ドキュメント（PR #2）からGitHub Actions OIDC deployment trust design（PR #33）までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はAUTH-001-DESIGN / PR #34で、human-approvedなinvite-only signup、BFF session、Passkey / device security、account deletion contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
+2026-09-11 時点で、AUTH-001-DESIGN / PR #34までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCREATIVE-001-DESIGNで、創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus ModeのUX contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | レビュー待ち（PR #34）。invite-only signup、branded Managed Login、BFF / 7-day session、Passkey / device、deletionをhuman-approved UXへrevision。実装なし |
+| 1 | CREATIVE-001-DESIGN | Creative workflow and lightweight production tracking | レビュー待ち（PR #35）。Memo / Idea / Task、Version横断未対応、Anchor / Timeline / Focus、非強制progressをdocs化。runtime / physical DB変更なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
-| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003の必要なfoundation execution gate完了後。Cognito / session runtimeは別task |
+| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。CLOUD-003の必要なfoundation execution gate完了後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
 | 5 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
 | 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
@@ -55,7 +55,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 未承認。CLOUD-003C-DECISIONのhuman review / merge後も、actual command実行には別の明示承認が必要 |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
-| AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | レビュー待ち（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
+| AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | 完了（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
 | AUTH-001 | P0 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003のfoundation execution gate完了までblock。Cognito、BFF session、callback、secretは専用実装taskで検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
 | AUTHZ-001 | P0 | Band Membership authorization | 完了（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。実装なし |
@@ -75,6 +75,17 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | FLOW-001 | P1 | Core Collaboration Review Flow | 完了（PR #20）。Song DetailでPreview → Comment → MIDI Proposal → Decision → Versionの順序と非破壊境界を明示 |
+
+## Creative Support Lane
+
+創作意図と制作の歩みを、project-management型の強制へ変えずに扱うレーンです。Creative itemのruntime / persistenceは、docs承認後もAUTHZ / data / surfaceの小さなtaskへ分割します。
+
+| ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
+| --- | --- | --- | --- |
+| CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | レビュー待ち（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更しない |
+| CREATIVE-DATA-001 | P1 | Creative item persistence extension | CREATIVE-001承認後の候補。Physical item / index / transaction / retention / Auditをreviewし、既存single-tableを変更する場合は専用Decisionとmigration planを要求 |
+| CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingする設計候補 |
+| CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | Data / Authz contract後の小規模surface候補。Timeline marker、cluster、Focusを非永続mockから検証し、playback / Version作成をblockしない |
 
 ## Core Lane
 
@@ -159,6 +170,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| AUTH-001-DESIGN | #34 | 2026-09-11 | invitation-gated signup、Cognito Managed Login、BFF session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
 | CLOUD-OIDC-001-DESIGN | #33 | 2026-09-11 | GitHub Environment限定OIDC trust、CDK role delegation、PR safety、revocation contractを設計。OIDC / IAM / workflow実装なし |
 | STORAGE-001-DESIGN | #32 | 2026-09-11 | private Preview / MIDIのbucket、encryption、opaque key、upload / access、retention、recovery contractを設計。AWS resource作成なし |
 | AUTHZ-001 | #31 | 2026-09-11 | 5 roleのBand capability、canonical ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。AWS resource作成なし |
