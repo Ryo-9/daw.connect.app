@@ -887,7 +887,7 @@ condition failureでtransaction自体が成立しないrejected last-Owner attem
 
 ### Selected Web MVP contract
 
-AUTH-001-DESIGN（2026-09-11）は、Amazon Cognito User Poolsをauthentication provider候補とし、Vercel上のsame-origin BFFがOAuth tokenをserver-sideで保持する構成を推奨します。これはcontractであり、Cognito、BFF、session store、API integrationは未実装です。
+AUTH-001-DESIGN（2026-09-11 human revision）は、Amazon Cognito User Poolsをauthentication providerとして採用し、Vercel上のsame-origin BFFがOAuth tokenをserver-sideで保持する構成を選択します。これはcontractであり、Cognito、BFF、session store、API integrationは未実装です。
 
 ```text
 Browser
@@ -902,14 +902,16 @@ Browser
 → AUTHZ-001 capability
 ```
 
-- Sign-inはhidden opaque Cognito username + verified email alias。Cognito `sub`はprivate mapping keyで、public User IDやBand roleではない
-- Userはadmin-controlled creationだけで開始し、public self-signupを無効化する
-- Login UIはCognito Managed Login、Authorization Code + PKCE S256を使用し、Implicit grantを無効化する
+- User-facing sign-inはemail + password。Provider usernameのexact implementationはinvite-only signupとの整合を実装前に確認する
+- Open public signupは無効、invitation-gated self-service signupを有効にする。Cognito UserとBandMembershipは別transition
+- Login UIはStreamBand branded entry → branded Cognito Managed Login、Authorization Code + PKCE S256を使用し、Implicit grantを無効化する
 - Web app clientはconfidential client候補。client secret、access / ID / refresh tokenをbrowserへ返さない
-- access / ID tokenは1時間、refresh tokenは24時間、BFF sessionはidle 30分 / absolute 8時間を初期候補とする
-- Browser cookieはopaque IDだけを持つ`__Host-`、Secure、HttpOnly、SameSite=Strict、Path=/、Domainなしとする
+- access / ID tokenは1時間、refresh capabilityは約7日、BFF sessionはidle 12時間 / absolute 7日を初期候補とする
+- Browser cookieはopaque IDだけを持つ`__Host-`、Secure、HttpOnly、SameSite=Lax、Path=/、Domainなしとする
 - Cookie mutationはsynchronizer CSRF token + exact Origin / Host validationを必要とし、SameSiteだけに依存しない
 - localStorage、sessionStorage、URL、HTML、logへtoken、authorization code、session ID、client secretを保存しない
+
+Invitation acceptanceは、予測不能token、14-day expiry、verified email、revoke / decline state、inviterのcurrent capabilityをserver-sideで再検証します。Link clickだけでMembershipを作らず、本人がBand名、inviter、roleを確認してacceptした時だけ作成します。Default roleはEditor、OwnerはAdmin以下、AdminはEditor以下を招待でき、Owner roleはownership transfer flowだけで扱います。Managed Loginとinvite gateのexact integrationは未解決で、admin-created primary UXへ戻しません。
 
 ### Authentication endpoints and session behavior candidates
 
@@ -921,8 +923,10 @@ Exact URLやNext.js実装方式はAUTH-001 implementation taskで決めますが
 | callback | exact callback origin、state、PKCE、nonce、issuer、token typeを検証してからBFF sessionを作る |
 | current session | browserへsafe internal User summaryだけを返し、Cognito token / `sub` / provider lookup keyを返さない |
 | refresh | BFFだけがrotation付きrefresh tokenを使用し、failure / disabled / mapping mismatchでsessionを破棄する |
-| logout | CSRF-protected POSTでBFF sessionを破棄し、refresh revoke、cookie expiry、Cognito logoutを行う候補 |
-| forgot password | outward responseを正規化し、verification codeとnew passwordをprovider flowで確認する |
+| logout | current device sessionだけを破棄し、refresh revoke、cookie expiry、Cognito logout後にlogin / homeへ戻る |
+| device security | specified device session / trust revoke、all-other / all-device revoke、15-minute step-up candidateを別operationにする |
+| forgot password | outward responseを正規化し、verification codeとnew passwordを確認後に全existing sessionを無効化する |
+| account delete | strong step-up後に即access停止、全session revoke、30-day `DELETION_PENDING`、final PII anonymization |
 | protected proxy | fixed API host / route / methodだけへaccess tokenをforwardし、client supplied URLを拒否する |
 
 ### Error and authorization separation
@@ -943,7 +947,9 @@ Cognito authentication successはSong / Version / Assetへのauthorizationでは
 - local、nonprod、Private Alphaでuser pool / app client / callback / logout origin / session namespaceを分離する
 - localhost callbackはlocalだけ。cloud callbackはHTTPSのexact allowlistで、wildcard Preview URLを登録しない
 - Private Alphaへnonprod client、secret、callback、sessionを再利用しない
-- server-side session store、encryption / TTL / revocation index、client secret storage / rotation、Vercel-to-AWS runtime identityは実装前に別途確定する
+- server-side session / trusted-device store、encryption / TTL / revocation index、client secret storage / rotation、Vercel-to-AWS runtime identityは実装前に別途確定する
+- Same accountのdevice sessionは独立し、trusted statusは180日未使用でexpireする候補。Passkey credentialとdevice recordを同一視しない
+- StreamBand User `ACTIVE / SUSPENDED / DELETION_PENDING / DELETED`をCognito stateとBandMembership stateから分離する
 - Cognito User Pool、user、client、domain、callback、secret、session store、AWS resourceはAUTH-001-DESIGNでは作成しない
 
 詳細なaccount state、password / MFA、cookie / CSRF、reset / revocation、logging、future test contractは[AWS.md](AWS.md)のAUTH-001-DESIGN節を正とします。

@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | Codex | レビュー待ち | `docs/auth-001-cognito-session-design` | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #34 | controlled Cognito user、Managed Login、BFF session、cookie / CSRF、reset / logout境界を設計。実装なし |
+| AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | Codex | レビュー待ち | `docs/auth-001-cognito-session-design` | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | #34 | Human-approved revision反映済み。invite-only signup、branded Managed Login、BFF、7-day session、Passkey / device / deletion境界を設計。実装なし |
 
 ## 完了・中止履歴
 

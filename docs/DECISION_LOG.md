@@ -33,7 +33,7 @@
 | DEC-018 | 2026-09-11 | Band authorizationをrole bundleとserver capabilityで判定する | 提案中 | Authorization / BandMembership | - |
 | DEC-019 | 2026-09-11 | Private Assetをenvironment単位のS3 bucketと短命instructionで扱う | 提案中 | S3 / Asset security | - |
 | DEC-020 | 2026-09-11 | nonprod deployment trustをGitHub Environment限定OIDCへ分離する | 提案中 | AWS deployment identity / GitHub | - |
-| DEC-021 | 2026-09-11 | Controlled Cognito userとBFF Web sessionを採用候補とする | 提案中 | Authentication / Web session | - |
+| DEC-021 | 2026-09-11 | Invitation-gated CognitoとBFF Web session方針を定める | 承認済み | Authentication / Signup / Session / Device security | - |
 
 ---
 
@@ -323,22 +323,28 @@
 - 見直し条件: GitHub OIDC subject customization / immutable format変更、CDK bootstrap template / qualifier / role変更、container asset導入、deploymentが1時間を超える、Private Alpha開始、GitHub plan制約が判明した場合
 - 関連: CLOUD-OIDC-001-DESIGN、CLOUD-003C-REVIEW、CLOUD-003C-DECISION、DEC-014、DEC-016、[AWS.md](AWS.md)、[TESTING.md](TESTING.md)
 
-## DEC-021: Controlled Cognito userとBFF Web sessionを採用候補とする
+## DEC-021: Invitation-gated CognitoとBFF Web session方針を定める
 
 - 日付: 2026-09-11
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（AUTH-001-DESIGN）
-- Identity: Amazon Cognito User Poolsをplanned providerとし、hidden opaque username + verified email aliasを選ぶ。Cognito `sub`はprivate auth mappingにだけ使用し、emailやprovider IDをpublic User ID / ownership keyにしない
-- User creation: 最初の2 userはadministrator-controlled creationとし、public self-registrationを無効化する。temporary passwordは1日候補で初回変更を必須とし、verified recipientだけ通常accessへ進める
-- Login: Cognito Managed Login + Authorization Code + PKCE S256を選び、Implicit grantを無効化する。custom password formとpublic invitation automationはDEFERする
-- Web session: Vercel上のsame-origin confidential BFFがCognito tokenをserver-sideで保持し、browserへopaque `__Host-` Secure / HttpOnly / SameSite=Strict session cookieだけを返す。tokenをlocalStorageへ保存しない
-- Lifetime candidate: access / ID token 1時間、refresh token 24時間 + rotation、BFF session idle 30分 / absolute 8時間。Managed Loginの1時間cookie behaviorを考慮する
-- CSRF / XSS: cookie mutationはsynchronizer token + Origin / Host、OAuthはstate / nonce / PKCEを検証する。HttpOnlyだけでXSSを防げるとは扱わず、untrusted collaboration textを安全にrenderする
-- Authorization: authentication successだけではBand resourceを許可せず、verified subject → internal User → canonical resource → strong ACTIVE BandMembership → AUTHZ-001 capabilityを毎request評価する。Membership removalにCognito deletionを使わない
-- MFA: synthetic-data nonprod friend testではDEFERし、Private Alpha real-data前にTOTP / recovery / costをfresh human reviewする。nonprod方針をPrivate Alphaへ自動継承しない
-- Environment: local / nonprod / Private Alphaでuser pool、app client、callback / logout origin、session namespaceを分離し、wildcard callbackとnonprod client再利用を禁止候補とする
-- 実装状態: docs-only proposal。Cognito、user、domain、app client、secret、callback、BFF、session store、AWS resource、runtime / package / configは未実装
-- Human Gate: server-side session store / encryption / revocation、client secret管理、callback実値、runtime identity、token validation、MFA、cost、recoveryを実装前にreviewする。AUTH-001 runtimeはCLOUD-003C foundation execution gate後の別task
+- 承認者: 人間側（PR #34 revisionで製品方針を明示）
+- Provider / authorization: Amazon Cognito User Poolsをauthenticationに採用する。Verified issuer + Cognito `sub`をprivate mappingし、opaque internal User → canonical resource → strong ACTIVE BandMembership → AUTHZ-001 capabilityでauthorizationする。Email、username、`sub`をBand keyにしない
+- User-facing identity: login IDはemail address、初回UXはemail + password。Provider内部usernameのexact implementationはinvite-only signup / Managed Login / Passkeyとの整合を実装gateで確認し、email変更でownershipを変えない
+- Signup: Open public signupはdisabled、invitation-gated self-service signupはenabled。AdminCreateUser / temporary passwordをprimary flowにせず、final-product flowをsmall invite-only scopeでFriend Testから使う
+- Invitation: verified email、予測不能token、14-day expiry、accept時server revalidation、explicit acceptanceを必須とする。Default roleはEditor、Owner / Adminだけが許可範囲をinviteでき、Owner roleはownership transfer専用flowとする
+- Login / OAuth: StreamBand branded entry → branded Cognito Managed Login → StreamBand。Authorization Code + PKCE S256、state / nonce、confidential BFFを使い、Implicitを無効化する
+- Web session: tokenはserver-side、browserはopaque `__Host-` Secure / HttpOnly / SameSite=Lax cookie。Access / ID 1時間、refresh capability約7日、idle 12時間 / absolute 7日のBFF session候補とし、active use中はrenewする
+- Session UX: expiry時は専用画面からreauthenticateしてsafe routeへ復帰し、explicit logoutはhomeへ戻る。同一accountのmulti-device sessionを許可し、current / specified / all-device revokeを分ける
+- Password: minimum 8文字、uppercase / lowercase / number各1以上、symbol optional、password manager推奨、routine forced rotationなし。Reset後は全StreamBand sessionを失効する
+- Passkey / step-up: Friend TestでMFAをmandatoryにしないが、Private AlphaまでにPasskey-preferred sign-inをtargetとする。Credential / ownership / account等の重要操作はstrong step-upを要求し、成功後約15分reuse候補とする
+- Device: trusted statusは180日未使用でexpireし、browser fingerprintをprimary identityにしない。Passkeyとdevice session / trustを別conceptとし、specific-device protectとsecurity notificationを計画する
+- Account: StreamBand User stateを`ACTIVE / SUSPENDED / DELETION_PENDING / DELETED`とし、Cognito / BandMembership stateから分離する。Deletionは即access停止 + session revoke → 30-day recovery → PII anonymization、collaboration historyはFormer member相当で必要範囲を保持する。Last Owner invariantを維持する
+- Risk: New / unusual deviceは追加verification、高riskはstep-up、明白な反復攻撃はprogressive throttleとし、少数failureで固定lockしない
+- Environment: local / nonprod / Private Alphaでuser pool、app client、callback / logout origin、session / device namespaceを分離し、wildcard callbackとnonprod client再利用を禁止する
+- 実装状態: docs-only decision。Cognito、invitation、user、domain、app client、secret、callback、BFF、session / device store、AWS resource、runtime / package / configは未実装
+- Unresolved implementation gates: invite-only self-serviceのexact Cognito integration、provider username、session / device store、encryption、client secret、callback実値、runtime identity、Passkey / WebAuthn設定、Private Alpha CSP / price / mobile timing。これらをapproved UXの撤回で解決しない
+- Human Gate: AUTH-001 runtimeはCLOUD-003C foundation execution gate後の別taskとし、Cognito resource / secret / callback / application codeを事前reviewする
 - 関連: AUTH-001-DESIGN、AUTHZ-001、CLOUD-DATA-001、HOST-001、CLOUD-OIDC-001-DESIGN、[AWS.md](AWS.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---

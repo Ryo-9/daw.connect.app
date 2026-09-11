@@ -16,7 +16,7 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/auth-001-cognito-session-design` | 2026-09-11 | PR マージまたは作業中止 | Cognito / Web session contractとtask trackingのみ。認証・AWS resource・secret・runtime実装は対象外 |
+| LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | `docs/auth-001-cognito-session-design` | 2026-09-11 | PR #34 マージまたは作業中止 | Human-approved AUTH-001-DESIGN revisionを含むdocs contractのみ。認証・AWS resource・secret・runtime実装は対象外 |
 
 ## 解除済みロック
 

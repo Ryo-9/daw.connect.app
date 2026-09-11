@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-11 時点で、初期ドキュメント（PR #2）からGitHub Actions OIDC deployment trust design（PR #33）までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はAUTH-001-DESIGNで、controlled Cognito userとVercel上のBFF web session contractを実装前にreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
+2026-09-11 時点で、初期ドキュメント（PR #2）からGitHub Actions OIDC deployment trust design（PR #33）までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はAUTH-001-DESIGN / PR #34で、human-approvedなinvite-only signup、BFF session、Passkey / device security、account deletion contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | レビュー待ち。controlled account、Managed Login、BFF session、cookie / CSRF、reset / logout、internal User mappingを設計。実装なし |
+| 1 | AUTH-001-DESIGN | Cloud MVP Cognito authentication and web session contract | レビュー待ち（PR #34）。invite-only signup、branded Managed Login、BFF / 7-day session、Passkey / device、deletionをhuman-approved UXへrevision。実装なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003の必要なfoundation execution gate完了後。Cognito / session runtimeは別task |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -55,7 +55,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 未承認。CLOUD-003C-DECISIONのhuman review / merge後も、actual command実行には別の明示承認が必要 |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
-| AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | レビュー待ち。email alias、controlled user、Managed Login、confidential BFF、cookie / CSRF、token / session、reset / revocationを設計。Cognito resource / runtime実装なし |
+| AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | レビュー待ち（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
 | AUTH-001 | P0 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003のfoundation execution gate完了までblock。Cognito、BFF session、callback、secretは専用実装taskで検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
 | AUTHZ-001 | P0 | Band Membership authorization | 完了（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。実装なし |
