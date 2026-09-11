@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-11 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）、core API / persistence boundary（PR #21）、Phase 2 Cloud MVP architecture plan（PR #22）、Cloud foundation decision（PR #23）、Private Alpha hosting decision（PR #24）、CDK repository foundation（PR #25）、infra CI integration（PR #26）、AWS nonprod readiness checkpoint（PR #27）、CDK bootstrap review（PR #28）、nonprod bootstrap decision（PR #29）、DynamoDB physical design（PR #30）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はAUTHZ-001で、Band Membership role、capability、ownership、cross-Band protection、audit / test contractをreviewしています。CLOUD-003C actual bootstrapは別Human Gateのままです。
+2026-09-11 時点で、初期ドキュメント（PR #2）、モックデータによる主要 UI（PR #3）、非永続インタラクション（PR #4）、実装状態とのドキュメント同期（PR #5）、テスト方針（PR #6）、基本 PR CI（PR #7）、Level 1自動テスト（PR #8）、ブランチ保護（PR #9）、PRテンプレート（PR #10）、モバイル監査（PR #11）、タップ領域調整（PR #12）、Project ContextとAI委任方針（PR #13）、320px楽曲詳細navigation改善（PR #14）、dark visual foundation（PR #15）、mechanical visual refinement（PR #16）、制作review surface（PR #17）、楽曲作成・編集の非保存フォーム（PR #18）、mock data schema review（PR #19）、core collaboration review flow（PR #20）、core API / persistence boundary（PR #21）、Phase 2 Cloud MVP architecture plan（PR #22）、Cloud foundation decision（PR #23）、Private Alpha hosting decision（PR #24）、CDK repository foundation（PR #25）、infra CI integration（PR #26）、AWS nonprod readiness checkpoint（PR #27）、CDK bootstrap review（PR #28）、nonprod bootstrap decision（PR #29）、DynamoDB physical design（PR #30）、Band authorization design（PR #31）は main へマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はSTORAGE-001-DESIGNで、private Preview / MIDIのbucket、upload、access、retention、recovery contractをresource作成前にreviewしています。CLOUD-003C actual bootstrapは別Human Gateのままです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | AUTHZ-001 | Band Membership authorization | レビュー待ち（PR #31）。Owner / Admin / Editor / Commenter / Guestのcapability、ownership、error、audit、future test contractをreview。実装なし |
+| 1 | STORAGE-001-DESIGN | Private Preview / MIDI storage contract | レビュー待ち（PR #32）。private bucket、SSE-S3、opaque key、upload / access、retention、recoveryを設計。実装なし |
 | 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | CLOUD-003の必要なfoundation execution gate完了後。controlled user、email verification、session、password resetを最小実装する候補 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -56,9 +56,10 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001 | P0 | Private Alpha authentication prototype | CLOUD-003のfoundation execution gate完了までblock。完了後にCognito候補、controlled user、verification、session、resetを検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
-| AUTHZ-001 | P0 | Band Membership authorization | レビュー待ち（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractをreview。実装なし |
+| AUTHZ-001 | P0 | Band Membership authorization | 完了（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。実装なし |
 | API-001 | P0 | Band / Song core read-write | DATA-002 contractの最小slice。Auth/Authz/Dataのgate後のみ |
-| STORAGE-001 | P0 | Private Preview / MIDI Asset | Block Public Access、short-lived upload/access、complete verification、retention |
+| STORAGE-001-DESIGN | P0 | Private Preview / MIDI storage contract | レビュー待ち（PR #32）。bucket、encryption、opaque key、format / size、state、short-lived upload/access、retention、recoveryを設計。resource作成なし |
+| STORAGE-001 | P0 | Private Preview / MIDI Asset implementation | CLOUD-003 foundation execution gateとSTORAGE-001-DESIGN承認後のみ。S3 / API / IAM実装は別task |
 | VERSION-001 | P0 | Persisted Version workflow | DAW export後の明示Version作成。Proposal Decisionによる自動作成なし |
 | COMMENT-001 | P0 | Persisted Version Comment | Version-scoped Comment + Anchorとpermission / conflict test |
 | PROPOSAL-001 | P1 | Persisted MIDI Proposal + Decision | SOURCE_MIDIを上書きしない別Asset / entityとDecision履歴 |
@@ -156,6 +157,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| AUTHZ-001 | #31 | 2026-09-11 | 5 roleのBand capability、canonical ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。AWS resource作成なし |
 | CLOUD-DATA-001 | #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、access pattern、transaction、concurrency、PITR / restoreを設計。AWS resource作成なし |
 | CLOUD-003C-DECISION | #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定。actual bootstrapは別Human Gateで未承認 |
 | CLOUD-003C-REVIEW | #28 | 2026-09-11 | 現行CDK bootstrapのresource、cost、permission、execution policy、OIDC原則をAWS公式資料で整理。AWS接続・resource変更なし |

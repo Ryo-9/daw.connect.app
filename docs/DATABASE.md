@@ -105,7 +105,7 @@
 | Decision | 制作上の確定事項 | `id`, `songId`, `songVersionId?`, `title`, `summary`, `status`, `sourceCommentId?`, `decidedBy`, `decidedAt`, `supersededById?` |
 | SongPart | 楽曲内の音楽上の担当分類 | `id`, `songId`, `partCode`, `label`, `sortOrder` |
 | SongTrack | DAW外で参照する論理track | `id`, `songId`, `songPartId?`, `label`, `trackType`, `sortOrder`, `archivedAt?` |
-| Asset | Audio Preview、Stem、MIDI、Referenceのfile metadata | `id`, `bandId`, `songId`, `songVersionId?`, `songTrackId?`, `kind`, `storageObjectKey`, `originalName`, `mimeType`, `sizeBytes`, `checksum`, `state`, `createdBy`, `createdAt`, `deletedAt?` |
+| Asset | Audio Preview、Stem、MIDI、Referenceのfile metadata | `id`, `bandId`, `songId`, `songVersionId?`, `songTrackId?`, `kind`, internal `storageObjectKey`, `originalName`, `declaredMimeType`, `verifiedMimeType?`, `sizeBytes`, `checksumAlgorithm`, `checksum`, `state`, `uploadExpiresAt`, `createdBy`, `createdAt`, `updatedAt`, `deletedAt?` |
 | MidiProposal | 元MIDIと別管理するproposal | `id`, `songId`, `songVersionId`, `sourceMidiAssetId`, `proposalAssetId?`, `targetRange?`, `summary`, `status`, `createdBy`, `createdAt`, `reviewedBy?`, `reviewedAt?` |
 | Comment | 会話・feedback本文 | `id`, `songId`, `songVersionId?`, `authorId`, `parentCommentId?`, `commentType`, `body`, `createdAt`, `updatedAt`, `deletedAt?` |
 | CommentAnchor | Commentの位置参照 | `id`, `commentId`, `anchorType`, `songVersionId`, `songTrackId?`, `timeMs?`, `bar?`, `beat?`, `tick?` |
@@ -151,8 +151,8 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 | Membership status | `active`, `removed` | controlled friend testの最小値。invite / suspendは後続flowで追加判断 |
 | Part code | `vocal`, `guitar`, `bass`, `drums`, `keyboard`, `other`, `all` | 初期UI候補。複数partと自由labelを許容するか未決定 |
 | Track type | `audio`, `midi`, `reference`, `guide`, `other` | DAW trackの完全再現には使わない |
-| Asset kind | `audio_preview`, `audio_stem`, `midi_source`, `midi_proposal`, `reference` | PreviewとStem、元MIDIとproposalを区別する |
-| Asset state | `pending`, `available`, `quarantined`, `failed`, `deleted` | upload検査方式の決定後に確定する |
+| Asset kind | `AUDIO_PREVIEW`, `SOURCE_MIDI`, `PROPOSAL_MIDI` | STORAGE-001-DESIGNの初期allowlist。Stem / Referenceは後続候補 |
+| Asset state | `PENDING_UPLOAD`, `VERIFYING`, `AVAILABLE`, `FAILED`, `DELETION_REQUESTED`, `DELETED` | STORAGE-001-DESIGNのstate machine。direct upload中をserver stateとして推測しない |
 | Proposal status | `draft`, `submitted`, `accepted`, `rejected`, `withdrawn` | acceptedでも元MIDIは上書きしない |
 | Comment type | `discussion`, `review_feedback`, `decision_reference` | 位置はComment Anchorで別管理する |
 | Anchor type | `version`, `time`, `musical_position`, `track` | `timeMs`とbar/beat/tickの整合ruleが必要 |
@@ -392,6 +392,8 @@ DynamoDB transactionは最大100 unique item / 4 MBであるため、Versionに�
 
 DynamoDBに保存するのはmetadataだけです。audio / MIDI binaryはprivate S3、presigned URLは短命response、`storageObjectKey`はinternal fieldとし通常のclient DTOへ出しません。`SOURCE_MIDI` Assetはread-only source、`PROPOSAL_MIDI`は別Asset ID / objectです。Proposal Decisionはどちらのbinaryも変更しません。
 
+STORAGE-001-DESIGNでは、初期kindを`AUDIO_PREVIEW / SOURCE_MIDI / PROPOSAL_MIDI`へ限定し、1 Assetにつき一意なopaque object keyを割り当てます。Asset metadataはupload intentとverified resultを分け、client申告値とstorage確認値を混同しません。署名URL、bucket名、object version ID、内部keyはpersistent public API identityにせず、通常のclient DTOへ含めません。詳細なformat、limit、expiry、CORS、Versioning / lifecycle契約は[AWS.md](AWS.md)を正とします。
+
 ### Deletion, retention, and recovery
 
 | Resource | MVP behavior | physical cleanup boundary |
@@ -473,7 +475,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲
-- S3 object key詳細、暗号化、scan、容量、format、保持、削除、費用上限
+- STORAGE-001-DESIGN contractをS3 / IAM / APIへ実装する方法、Private Alphaのencryption / retention再承認、scan / multipart導入条件
 - AuditEventの正式保持期間、閲覧権限、privacy dataの扱い
 - Presence/Call/Bridgeを採用するか、採用時のprotocolとdata保持
 - restore cutover、disaster recovery、account/Bandのlegal deletion手順
