@@ -35,6 +35,7 @@
 | DEC-020 | 2026-09-11 | nonprod deployment trustをGitHub Environment限定OIDCへ分離する | 提案中 | AWS deployment identity / GitHub | - |
 | DEC-021 | 2026-09-11 | Invitation-gated CognitoとBFF Web session方針を定める | 承認済み | Authentication / Signup / Session / Device security | - |
 | DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
+| DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
 
 ---
 
@@ -367,6 +368,28 @@
 - Physical design: CLOUD-DATA-001のsingle-table key / GSIは変更しない。Memo / Idea / Task、origin / current target、Comment link、delete / audit / capabilityのphysical persistenceは後続implementation gate
 - 実装状態: docs-only。UI、API、DB、DynamoDB、AWS、Cognito、infra、runtime、package、workflowは変更していない
 - 関連: CREATIVE-001-DESIGN、FLOW-001、CLOUD-DATA-001、AUTHZ-001、STORAGE-001-DESIGN、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-023: Band参加状態とNotification experienceを分離して定める
+
+- 日付: 2026-09-11
+- ステータス: 承認済み
+- 提案者: 人間側（COLLAB-001-DESIGNで製品方針を明示）
+- 承認者: 人間側
+- Leave: Admin / Editor / Commenter / Guestはconfirmation後にself-leaveでき、routine leaveは毎回step-upを要求しない。Membershipを`REMOVED`にし、次requestからstrong Membership checkでdenyする。Accountとshared production historyは保持し、self-rejoinには新Invitationが必要
+- Owner invariant: last ACTIVE Ownerはleaveできず、dedicated Ownership transferを先に行う。Transferは通常leaveと分け、AUTH-001のsensitive step-up対象を維持する
+- Remove: OwnerはAdmin以下、AdminはEditor / Commenter / Guestをremoveできる。AdminはOwner / peer Adminをremoveできず、Editor以下はremove不可。Confirmationでaccess loss、history retention、reinvite要件を示す
+- Removal reason: optional fixed category候補をAudit / operator用途に限定し、freeform reasonを対象者への攻撃的messageとしてそのまま通知しない。Exact category / retentionは実装gate
+- Activity Status: `通常参加 / 活動休止中 / 参加頻度低め / サポート参加`は本人のinformational profile metadataで、Role、permission、Membership、Task assignee、Notification settingを変更しない。勤怠score / ranking / penaltyに使わない
+- Notification principle: 「創作を管理しない。創作を支える」に従い、重要事項と制作contextへの復帰を助ける。Playback stop、forced modal、Task消化の督促、Role / Activity Status由来の強制通知を行わない
+- Preset / frequency: `集中 / 標準 / すべて`を本人が選ぶpreference bundleとし、ordinary eventは`リアルタイム / 1時間まとめ / 1日まとめ / OFF`候補。Authorization Roleとは分離する
+- Security notification: AUTH-001-DESIGNのsecurity eventをordinary notificationから分け、presetによる完全OFFを許さず、基本即時・Quiet Hours bypass候補とする
+- Quiet Hours: ordinary external deliveryをhold / digestし、in-app historyは記録可能。Activity Statusから自動設定しない
+- Notification Center: `要対応 / 未読 / すべて`。READはsource action完了ではなく、要対応はcurrent source stateからderiveする制作context shortcut
+- Deep link: Comment / Task / Proposal / Version / Invitation / Member stateのexact logical targetへ戻すが、canonical sourceとstrong ACTIVE Membershipを毎回再検証する。Notification ownershipをaccess proofにしない
+- Retention: ordinary Notificationは90日候補。Cleanupでsource entityを削除せず、Security notification / AuditEventは別retention contract
+- Physical design: Activity Status、Preference、QuietHours、Notification、TTL / index / digest / providerは後続gate。CLOUD-DATA-001のPK / SK / GSIを変更しない
+- 実装状態: docs-only。Runtime、AWS、Cognito、DynamoDB resource、delivery provider、workflow、package、infraは変更していない
+- 関連: COLLAB-001-DESIGN、AUTHZ-001、AUTH-001-DESIGN、CREATIVE-001-DESIGN、CLOUD-DATA-001、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

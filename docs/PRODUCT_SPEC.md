@@ -74,6 +74,35 @@ StreamBandはproject management appではありません。作者やBand member�
 
 Taskのhard delete / tombstone、completion metadata、assignee離脱処理、Memo / Idea / Taskの物理保存形式は実装前のdata / authorization gateで決めます。
 
+## Band participationとNotification
+
+Band MembershipのRole / stateとActivity Statusを分離します。Roleは`Owner / Admin / Editor / Commenter / Guest`のauthorization capability、Activity StatusはBand内で現在の参加状況を伝えるinformational profile metadataです。
+
+Activity Statusのuser-facing候補は`通常参加 / 活動休止中 / 参加頻度低め / サポート参加`です。本人が変更してもRole、permission、Band access、ACTIVE Membership、Task assignment、Notification presetをsystemが自動変更しません。活動率、稼働率、ranking、inactivity penaltyには使いません。
+
+### Leave / remove
+
+- Admin / Editor / Commenter / Guestは確認後に自分でBandを退出でき、routine leaveに毎回step-up authenticationを要求しない
+- Ownerは必要なACTIVE Ownerを残さず退出できない。最後のOwnerにはdedicated ownership transferを案内し、transferだけをsensitive step-up対象として維持する
+- OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestをremoveできる。AdminはOwner / peer Adminをremoveできず、Editor以下はremoveできない
+- Leave / remove成功後はMembershipを`REMOVED`とし、次のprotected requestからold URLを含めてdenyする。Cognito / StreamBand accountと共同制作履歴は削除しない
+- 本人は自力で再参加できず、新しいinvitationが必要。Historical attributionはAUTH-001のFormer member / PII contractに従う
+
+### Notification principle
+
+Notificationは制作を急かす仕組みではなく、見逃したくない重要事項を届け、元の制作contextへ戻るための補助です。Playbackを止めず、modalを強制表示せず、Task消化を繰り返し促しません。RoleやActivity Statusから通知量を強制しません。
+
+- presetは`集中 / 標準 / すべて`。Preferenceのinitial bundleであり、authorizationではなく本人が変更できる
+- ordinary eventは必要に応じて`リアルタイム / 1時間まとめ / 1日まとめ / OFF`を選べる候補とする
+- security notificationはordinary collaboration通知と分離し、presetでOFFにせず、即時・Quiet Hours bypass候補とする
+- Quiet Hoursではordinary push / emailをhold / digest候補にするが、in-app historyは記録できる
+- Notification Centerは`要対応 / 未読 / すべて`。要対応はsource stateから導く制作context shortcutで、productivity scoreではない
+- Notificationはsource dataではない。Read / expiry / deleteでComment、Task、Idea、Memo、Version、Proposal、Invitation、Membership eventを変更しない
+- ordinary notification retentionは初期90日。Security notification / Audit retentionは別contractとする
+- deep link先では毎回canonical sourceとstrong ACTIVE BandMembershipを再検証し、notification所有をBand access proofにしない
+
+Delivery channel / provider、event matrix、digest、physical persistence、mobile push、security retentionは実装前の専用gateで決めます。
+
 ## 主要機能
 
 1. バンドワークスペース

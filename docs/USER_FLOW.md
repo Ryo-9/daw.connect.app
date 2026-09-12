@@ -219,6 +219,69 @@ Login / signup / invitation / reset / logout、Cognito、session / device、emai
 
 Link clickだけではMembershipを作りません。`あとで決める`は`PENDING`のままです。辞退すると`DECLINED`になりますが、expiry前・未revoke・inviter capability有効・verified email一致・その他server validation成功なら、本人は「この招待は辞退済みです」画面の`やっぱり参加する`から明示的に再acceptできます。再acceptでも全条件を再検証し、成功時だけMembershipを作ります。Inviter revoke、expiry、capability loss、invalid / replaced invitationではacceptできず、新規発行が必要です。OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestを招待でき、Editor以下はinvite不可です。Owner roleは通常invitationで付与せず、ownership transfer専用flowを使います。
 
+### Bandから退出する（COLLAB-001-DESIGN）
+
+```text
+Band Settings
+→ Leave Band
+→ Band access停止とhistory保持を確認
+→ explicit confirm
+→ Membership REMOVED
+→ 次のprotected requestからdeny
+```
+
+- Admin / Editor / Commenter / Guestは本人の意思でleaveでき、通常leaveでは毎回step-up authenticationを要求しない
+- 最後のACTIVE Ownerはleaveできず、別operationのOwnership transferへ案内する。TransferはAUTH-001のsensitive step-upを維持する
+- Leave後もCognito account、StreamBand account、Comment / Proposal / Decision / Version contribution等のshared historyは残る
+- old shared URLやnotification linkを知っていても、次requestのstrong ACTIVE Membership checkで拒否する
+- Self-rejoinはできず、新しいinvitationとexplicit acceptanceが必要
+
+### 他memberをremoveする
+
+OwnerはAdmin / Editor / Commenter / Guest、AdminはEditor / Commenter / Guestだけをremoveできます。AdminはOwner / peer Adminをremoveできず、Editor / Commenter / Guestはmemberをremoveできません。
+
+Confirmationにはmember、current Role、Band accessを失うこと、過去の共同制作履歴が残ること、再参加には新しい招待が必要なことを表示します。Optionalなreason categoryはAudit / operator用途だけの候補で、freeform reasonを対象者への攻撃的message channelとしてそのまま通知しません。成功後はMembershipを`REMOVED`にし、accountやhistoryを削除せず、次requestからdenyします。
+
+### Activity Status
+
+Band member profileで本人が`通常参加 / 活動休止中 / 参加頻度低め / サポート参加`を選べる候補です。勤怠・活動率ではなく、現在の参加状況を軽く共有するmetadataです。変更してもRole、permission、ACTIVE Membership、Notification preset、assigneeを自動変更しません。
+
+## Notification experience（COLLAB-001-DESIGN）
+
+Notificationは制作を急かさず、見逃したくないことを届けて元の制作contextへ戻すために使います。Role / Activity Statusから大量通知を強制せず、playback stop、automatic modal、forced acknowledgementを起こしません。
+
+### Preferenceとfrequency
+
+- `集中`: 本人へ直接関係する重要事項を中心にし、noiseを減らす
+- `標準`: mention、review request、important Task、Proposal Decision、Version等を適度に知らせるrecommended preset
+- `すべて`: 参加可能な一般eventまで広く知らせる
+- ordinary collaboration eventはevent categoryに応じて`リアルタイム / 1時間まとめ / 1日まとめ / OFF`を選べる候補
+- Presetはinitial bundleであり、個別設定で調整できる。Role / Activity Status / authorizationを変更しない
+- Security notificationは別categoryで、presetによる完全OFFを許さず基本即時とする
+
+将来はin-app / mobile push / emailのchannel別設定を許容しますが、Friend Testで全matrixを実装せず、providerとdelivery infrastructureは別taskで選びます。
+
+### Quiet Hours
+
+Userは`23:00–08:00`等のQuiet Hoursを設定できます。期間中のordinary push / emailはholdまたはdigest候補にし、in-app historyは記録できます。Security-critical eventはbypass候補です。終了後のまとめ配信とtemporary pauseは後続実装で検討し、Activity StatusからQuiet Hoursを自動設定しません。
+
+### Notification Centerとdeep link
+
+Primary viewは`要対応 / 未読 / すべて`です。要対応はInvitation pending、mention、review request、important Task assignment、Proposal review等、戻ると有用なsource stateからderivedするshortcutです。ReadにしてもTask DONE、Proposal reviewed、Invitation acceptedにはなりません。
+
+```text
+Comment notification → exact Comment / Version / Anchor
+Task notification    → exact Task / Creative Board context
+Proposal notification→ exact MIDI Proposal
+Version notification → exact SongVersion
+Invitation           → invitation confirmation
+Member change        → Band Members / relevant state
+```
+
+Deep link先ではsource resourceのauthorizationを再検証します。Removed Memberやcross-Band userはnotificationを持っていてもアクセスできません。将来Mobileは同じlogical targetをUniversal Link / App Linkへmappingし、native appがなければWebへfallbackする候補です。
+
+Ordinary notificationは90日保持後にcleanup可能ですが、source Comment / Creative item / Version / Proposal / Invitation / Membership eventは削除しません。Security notificationとAuditの保持は別contractです。
+
 ## 5. 楽曲作成
 
 目的: 制作単位となる楽曲を登録する。

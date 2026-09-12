@@ -60,12 +60,16 @@
 
 ### 6. 通知一覧
 
-- メンション、コメント、招待、TODO 更新を確認する将来画面
+- `要対応 / 未読 / すべて`で、mention、review、Invitation、Creative item、Proposal、Version、member change等を確認する将来Notification Center
+- 各通知はexact source contextへdeep-linkし、READとsource action完了を混同しない
+- Ordinary historyは90日候補。Notification cleanupでsource entityを削除せず、deep link先でauthorizationを再確認する
 - 初期優先度: 低
 
 ### 7. 設定画面
 
-- プロフィール、表示、通知、アカウント管理を行う想定
+- Profile / Band profileで本人のActivity Statusを軽く表示・変更する候補
+- Notificationsで`集中 / 標準 / すべて`、event frequency、channel、Quiet Hoursを設定する候補
+- Activity Status、Role、Notification presetは別設定で、相互にpermission / deliveryを自動変更しない
 - 危険な操作は確認画面と再認証を検討する
 - 初期優先度: 低〜中
 
@@ -90,8 +94,10 @@
 
 ### 11. バンドメンバー・招待画面
 
-- メンバー一覧と招待状況を確認する
-- 招待、削除、役割変更は権限設計後に実装する
+- メンバー一覧、Role、informational Activity Status、招待状況を確認する
+- Admin以下のself-leaveと、AUTHZ-001で許可されたOwner / Adminのmember removeをconfirmation付きで扱う将来surface
+- Last OwnerはleaveできずOwnership transferへ案内し、leave / remove後もhistoryを保持して再参加には新しいInvitationを要求する
+- Remove confirmationはaccess loss、history retention、reinvite要件を表示し、freeform reasonを攻撃的messageとして配送しない
 - 初期優先度: 中（Phase 1 は見た目のみ）
 
 ## 楽曲画面

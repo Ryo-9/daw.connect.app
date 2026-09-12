@@ -113,6 +113,10 @@
 | ReviewResponse | reviewerごとの回答 | `id`, `reviewRequestId`, `reviewerId`, `status`, `commentId?`, `createdAt`, `updatedAt` |
 | Task | 制作TODO | `id`, `songId`, `songVersionId?`, `songPartId?`, `assigneeMembershipId?`, `title`, `description?`, `status`, `priority?`, `dueAt?`, `createdBy`, `createdAt`, `updatedAt`, `completedAt?` |
 | CreativeItem（論理contract） | UI上のMemo / Idea / Taskを同じCreative Boardで扱う概念。物理entity構成は未決定 | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision候補 |
+| ActivityStatus（論理metadata） | Role / Membership stateと独立したBand内参加状況 | `membershipId`, `statusCode`, `updatedBy`, `updatedAt`候補。Physical placementは未決定 |
+| NotificationPreference（論理contract） | User自身のpreset / event / channel / frequency選択 | `userId`, `preset`, category / channel overrides候補、timestamps。Authorizationとは無関係 |
+| QuietHours（論理contract） | ordinary deliveryをhold / digestする時間帯 | `userId`, `startLocalTime`, `endLocalTime`, `timeZone`, `enabled`, timestamps候補 |
+| Notification（論理contract） | sourceへのprivate reference / summaryとpresentation state | `id`, `userId`, `category`, `sourceType`, `sourceId`, `readState`, `occurredAt`, `expiresAt`候補。Source entityではない |
 | PresenceSession | online表示の一時session候補 | `id`, `bandId`, `songId?`, `userId`, `connectedAt`, `lastSeenAt`, `expiresAt` |
 | CallSession | 将来通話を採用した場合の最小session metadata | `id`, `bandId`, `songId?`, `providerRef?`, `startedBy`, `startedAt`, `endedAt?` |
 | DawBridgeSource | 将来Bridgeを採用した場合の参照metadata | `id`, `songId`, `songVersionId?`, `dawName`, `projectFingerprint?`, `bridgeVersion`, `capturedAt`, `capabilities` |
@@ -161,6 +165,10 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 | Creative item kind | `MEMO`, `IDEA`, `TASK` | user-facing modelは3種類。順序を強制せず相互変換可能 |
 | Task status | `OPEN`, `IN_PROGRESS`, `DONE`, `CANCELED` | UIは未対応 / 対応中 / 完了 / 不要にする。DONEからreopen可能 |
 | Task priority | `NORMAL`, `IMPORTANT` | 2段階だけ。NORMALはprimary UIで強調しない |
+| Activity status | `REGULAR`, `PAUSED`, `LOW_FREQUENCY`, `SUPPORT`候補 | 表示は通常参加 / 活動休止中 / 参加頻度低め / サポート参加。Role / accessへ影響させない |
+| Notification preset | `FOCUS`, `STANDARD`, `ALL`候補 | Preference bundle。Role / Activity Statusと独立 |
+| Notification frequency | `REALTIME`, `HOURLY_DIGEST`, `DAILY_DIGEST`, `OFF`候補 | Security categoryは通常preset / OFF対象外 |
+| Notification read state | `UNREAD`, `READ` | Source action / business stateを変更しない |
 | Decision status | `proposed`, `decided`, `superseded` | CommentやMemo本文だけで確定扱いにしない |
 
 ## Version naming草案
@@ -225,6 +233,53 @@ Creative item / Commentで共有するAnchor候補は、Version、timeline `time
 ### Retention and authorization boundary
 
 Creative itemはprivate Band dataです。Protected operationはcanonical itemからBandをderiveし、strong ACTIVE BandMembershipと将来承認するcreative capabilityを必須にします。Creatorは恒久authorityではありません。Own Task delete、shared / other-created itemの「不要にする」、Owner / Admin moderation、hard delete / tombstone、AuditEventはAUTHZ / data implementation gateで決めます。本文、Song title、Anchor detailをsecurity denial logへ複製しません。
+
+## COLLAB-001 conceptual model（physical designは未変更）
+
+この章はMembership lifecycle、Activity Status、Notification UXのdomain候補です。CLOUD-DATA-001のtable、PK / SK、`ScopeIndex`、TTL、transaction matrixを変更しません。各recordの物理配置とindexは後続physical-design taskで決めます。
+
+### Membership lifecycle and history
+
+- Leave / removeはcanonical `BandMembership`を`ACTIVE → REMOVED`へ条件付き更新する概念で、Cognito User / StreamBand Userの削除ではない
+- Admin / Editor / Commenter / Guestはself-leave可能。Ownerは別のACTIVE Ownerを残す場合だけleaveでき、sole Ownerはownership transferが先
+- OwnerはAdmin以下、AdminはEditor / Commenter / Guestだけをremoveできる既存AUTHZ contractを維持する
+- Leave / remove後もComment、Proposal / Decision、Version contribution、共有Creative item等のproduction historyとattributionを必要範囲で保持する
+- 個人だけの未共有draftは削除可能候補とし、共有済み制作履歴と同じ保持を自動適用しない。Exact delete / tombstoneは後続physical-design gateで決める
+- Self-rejoinを許可せず、新Invitation + explicit acceptanceで新しいACTIVE lifecycleへ進む。過去Membership recordを復活させるか新recordにするかはphysical gate
+- Account final deletion時のPII anonymization / Former member表示はAUTH-001-DESIGNに従う
+
+Removal reasonはoptionalなfixed category候補で、本文や攻撃的freeform messageをNotification / Auditへ複製しません。Exact categories、retention、operator visibilityは未決定です。
+
+### Activity Status boundary
+
+Activity StatusはBand member profileのinformational metadataで、authorization stateではありません。`REGULAR / PAUSED / LOW_FREQUENCY / SUPPORT`候補の変更はRole、Membership status、Task assignee、NotificationPreferenceをmutateしません。Access判定は常にstrong ACTIVE BandMembershipとAUTHZ capabilityだけを使用します。
+
+### Notification relationship and retention
+
+```text
+Internal User
+├── NotificationPreference?（preset / overrides）
+├── QuietHours?（ordinary delivery preference）
+└── Notification*（private source reference / presentation state）
+      `── canonical source（Comment / CreativeItem / Version / Proposal / Invitation / Membership event）
+```
+
+- Notificationはsource entityではなく、削除 / expiry / READでsourceを変更しない
+- `actionRequired`は保存済みsummaryだけを正にせず、current source stateからderiveする候補
+- ordinary Notificationは90日retention。Security notificationとAuditEventは別の保持・復旧contract
+- Notification deep linkはsource ID / Anchor等のlogical reference候補で、signed URL、S3 key、credentialを保存しない
+- List / readはNotification所有Userをserverで確認し、deep link先はcanonical sourceとstrong ACTIVE Membershipを再検証する
+- Activity Status、Role、Membership stateからNotification preset / QuietHours / assigneeを自動変更しない
+
+### Physical implementation gates
+
+- Activity StatusをBandMembership itemへ持つか別member profile itemにするか
+- NotificationPreference / QuietHours / NotificationのPK / SK / GSI / TTL、90日cleanup、pagination、read-state write pattern
+- source reference / privacy-safe snapshot / action-required projection / deduplication / digest deliveryの境界
+- leave / remove transaction、history / rejoin record、reason category / AuditEvent、notification generation
+- security notification retentionとordinary Notificationの分離、provider / queue / mobile token storage
+
+これらはCLOUD-DATA-001の追加access patternとして別reviewを必要とし、このtaskではphysical keyやAWS resourceを作りません。
 
 ## file / object storage境界
 
@@ -327,7 +382,7 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - Membership変更、Proposal Decision、Song archive、Asset削除等に限定した`AuditEvent`
 - authentication subjectからUserを引くlookup recordと、二重送信を防ぐidempotency record
 
-`CreativeItem`（Memo / Idea / Task）、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
+`CreativeItem`（Memo / Idea / Task）、`ActivityStatus`、`NotificationPreference`、`QuietHours`、`Notification`、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification delivery、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
 
 ### Single-tableを選ぶ理由
 
@@ -521,6 +576,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
 - Memo / Idea / Taskをsingle physical CreativeItemにするか既存SongMemo / Taskへ分けるか、kind変換履歴、outstanding projection、origin / current target Anchor、Comment linkのkey / index / transaction
+- Activity Status、NotificationPreference、QuietHours、Notificationのphysical item / index / TTL、90日cleanup、source projection、digest / delivery、security retention
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲

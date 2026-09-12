@@ -1021,3 +1021,77 @@ Timeline marker cluster、playhead連動highlight、Creative Board filter、Focu
 - Focus Mode / filter preferenceの保存先と、Timeline clusterの表示計算
 
 これらの未決事項を理由に、創作をblockするworkflow、Task完了率の評価、Anchor自動remap、SOURCE_MIDI上書き、ProposalからのVersion自動作成を導入しません。
+
+## COLLAB-001-DESIGN: Membership lifecycle and notification contract
+
+この章はBandからのleave / remove、informational Activity Status、Notification preference / Center / deep linkの将来server behaviorを定義します。Endpoint、delivery provider、queue、physical persistenceは未決定で、runtime / AWS / Cognito / DynamoDB physical designを変更しません。
+
+### Membership lifecycle
+
+すべてのmembership mutationは、AUTHZ-001の`authenticate → internal User → canonical Band / target Membership → strong ACTIVE actor Membership → capability → invariant → conditional mutation → safe AuditEvent`を維持します。
+
+| Operation | Allowed actor | Required behavior | Result |
+| --- | --- | --- | --- |
+| leave Band | Admin / Editor / Commenter / Guest本人 | explicit confirmation、actor Membership revision、通常はstep-up不要 | actor Membershipを`REMOVED` |
+| Owner leave | Owner本人 | 別のACTIVE Ownerが残る場合だけ。last Ownerならdenyしownership transferを案内 | transferとは別operation |
+| remove Admin | Owner | targetのcurrent Role / revision、confirmation | target Membershipを`REMOVED` |
+| remove Editor / Commenter / Guest | Owner / Admin | AdminはOwner / peer Adminを対象にできない | target Membershipを`REMOVED` |
+| remove by Editor / Commenter / Guest | deny | UI visibilityに関係なくserver deny | 403候補 |
+
+Owner transferはAUTHZ-001 / AUTH-001-DESIGNのdedicated sensitive operationで、step-upとatomic last-Owner invariantを維持します。通常leaveと一つのcommandにしません。
+
+Leave / remove成功後は、次のprotected requestからstrong Membership readでdenyします。Session invalidationやclient cacheだけに依存せず、Cognito User / StreamBand Userを削除しません。Shared Comment / Proposal / Decision / Version contributionとproduction historyを保持し、self-rejoinを許可せず、新しいinvitation + explicit acceptanceを要求します。
+
+Remove confirmationはtarget member、current Role、access loss、history retention、rejoin要件を表示できるsafe projectionを返す候補です。Optional removal reasonは固定category候補をAuditへ記録し、freeform messageを対象userへそのまま配送しません。Exact categoryとAudit retentionは実装gateです。
+
+### Activity Status
+
+Activity StatusはMembership role / stateとは別のinformational profile metadataです。User-facing候補は`通常参加 / 活動休止中 / 参加頻度低め / サポート参加`です。
+
+- 本人がsame-Band profile上で変更する候補。Exact moderation capabilityは実装前にreviewする
+- 更新してもRole、capability、Membership `ACTIVE / REMOVED`、access、Task assignee、Notification preferenceを変更しない
+- authorization requestはActivity Statusを参照しない
+- 活動率score、ranking、penalty、自動remove / reassignの入力に使わない
+
+### Notification preference contract
+
+Presetはauthorization roleと独立したuser preferenceです。
+
+| Preset | Initial semantics | Security notification |
+| --- | --- | --- |
+| 集中 | direct mention / request等、本人に直接関係する重要event中心 | OFF不可 |
+| 標準 | mention、review request、important Task、Proposal Decision、Version等のrecommended bundle | OFF不可 |
+| すべて | accessibleなordinary collaboration eventを広く含む | OFF不可 |
+
+Ordinary eventはcategoryごとに`REALTIME / HOURLY_DIGEST / DAILY_DIGEST / OFF`候補を持てます。Exact event / channel matrixはimplementation gateです。In-app / mobile push / emailを将来分けられますが、このdesignはproviderを選びません。Security eventはAUTH-001-DESIGNの別categoryで基本即時、ordinary presetによる完全OFF不可、Quiet Hours bypass候補です。対象例はnew / unusual device、password / email change、Passkey add / remove、device protect、account deletionを含むsecurity-sensitive actionです。
+
+Quiet Hoursは本人のtimezoneを含む開始 / 終了候補を持ち、ordinary external deliveryをhold / digestできます。In-app Notification record自体は作成可能です。Timezone変更、overnight range、DST、digest aggregation、temporary pauseは実装前にvalidationを決めます。
+
+### Notification read model
+
+Notification Centerは`要対応 / 未読 / すべて`を提供する候補です。
+
+- Notification presentation stateは`UNREAD / READ`。Readはsource stateを変更しない
+- `actionRequired`はNotification固有workflowではなく、canonical Invitation / Task / Proposal等のcurrent source stateからderiveする候補
+- stale summaryやNotification payloadをauthorization / mutationの正にしない
+- ordinary Notificationは90日retention後にcleanup可能。Source entity、Security notification、AuditEventは別retention contract
+- Notification削除 / expiryでComment、Memo、Idea、Task、Version、Proposal、Invitation、Membership historyをcascade deleteしない
+
+List / read mutationはauthenticated internal UserとNotification ownershipを確認します。Source summaryを表示する場合はprivacy-safe snapshotだけに限定し、sensitive contentを不用意に複製しません。
+
+### Deep-link authorization
+
+Notificationはopaque logical target（resource type + public-safe resource ID / Anchor reference候補）からsafe application routeを構築します。Signed URL、S3 object key、token、credential、private storage URLをtargetへ保存しません。
+
+Deep linkを開くたびにcanonical sourceを取得し、derived Bandとstrong ACTIVE Membership、AUTHZ capability、source stateを再検証します。Notification所有、old URL knowledge、READ状態はaccess proofではありません。Cross-Band / removed Membership / hidden sourceは外向き404候補を維持します。Sourceが削除 / unavailableならgenericなunavailable表示へ戻し、stale Notificationからworkflowを復活させません。
+
+### Implementation gates
+
+- Leave / remove endpoint shape、idempotency、revision、reason category、Audit retention、history projection
+- Activity Statusのinternal code、保存場所、更新capability、表示privacy
+- Notification / Preference / QuietHoursのphysical item、PK / SK / GSI / TTL、pagination、consistency。CLOUD-DATA-001はこのtaskで変更しない
+- Event category / preset / channel matrix、digest aggregation、Quiet Hours timezone / DST / retry / deduplication
+- Email / push provider、queue / scheduler、mobile push token、delivery receipt、security retention
+- Deep-link logical target / route mapping、source unavailable UX、Universal Link / App Link
+
+これらを実装するまでNotificationはfuture contractです。Role / Activity Statusからの自動preset変更、Task productivity coercion、playback interruption、source cascade delete、Notificationを根拠にしたauthorizationは導入しません。
