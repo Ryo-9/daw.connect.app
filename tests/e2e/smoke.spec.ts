@@ -40,14 +40,19 @@ test("トップから主要画面を移動できる", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("存在しないバンドと楽曲は404になる", async ({ page }) => {
-  const bandResponse = await page.goto("/bands/not-a-band");
-  expect(bandResponse?.status()).toBe(404);
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
-
-  const songResponse = await page.goto("/songs/not-a-song");
-  expect(songResponse?.status()).toBe(404);
-  await expect(page.getByText("This page could not be found.")).toBeVisible();
+test("存在しないページはStreamBandのcustom 404になる", async ({ page }) => {
+  for (const path of [
+    "/bands/not-a-band",
+    "/songs/not-a-song",
+    "/this-route-does-not-exist",
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(404);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "ページが見つかりません" }),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "ホームへ戻る" })).toBeVisible();
+  }
 });
 
 test("320pxで楽曲詳細セクションナビが横スクロールなしで収まる", async ({

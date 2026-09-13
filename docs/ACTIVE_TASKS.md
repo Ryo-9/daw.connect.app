@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-PREP | GitHub OIDC deployment trust IaC preparation | Codex | レビュー待ち | `chore/cloud-oidc-001-prep` | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、作業状態文書 | 2026-09-13 | #38 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synth。AWS / GitHub変更なし |
+| SURFACE-015C | StreamBand custom 404 | Codex | レビュー待ち | `ui/surface-015c-custom-404` | `src/app/not-found.tsx`、関連tests、作業状態文書 | 2026-09-14 | 未作成 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-OIDC-001-PREP | 完了 | Codex | `chore/cloud-oidc-001-prep` / #38 | 2026-09-14 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synthしmainへマージ済み。AWS / GitHub適用なし |
 | CLOUD-003C-EXECUTION-RECORD | 完了 | Codex | `docs/cloud-003c-bootstrap-execution-record` / #37 | 2026-09-13 | Human-operated nonprod bootstrapの成功、temporary privilege撤去、application resource未作成を機密識別子なしで記録しmainへマージ済み |
 | CLOUD-003C | 完了 | Human | Human-approved execution / 記録PR #37 | 2026-09-13 | StreamBand nonprodの`CDKToolkit` bootstrapが成功。Temporary human permissionは撤去済みで、application resource / OIDC / deployは未実施 |
 | COLLAB-001-DESIGN | 完了 | Codex | `docs/collab-001-membership-notification-design` / #36 | 2026-09-13 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerを設計しmainへマージ済み。runtime / physical DB変更なし |
