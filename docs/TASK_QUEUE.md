@@ -12,18 +12,17 @@
 
 ## 現在の状態と次候補
 
-2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCloud laneと独立したSURFACE-015Cでcustom 404を整えています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38とSURFACE-015C / PR #39までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCloud laneと独立したSURFACE-016で長い楽曲名の表示境界を検証しています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | SURFACE-015C | custom 404の追加 | レビュー待ち。App Router標準のnot-found、既存visual token、日本語案内、ホーム復帰導線を追加。Cloud critical pathとは独立 |
+| 1 | SURFACE-016 | 長い楽曲名の境界確認 | レビュー待ち。長文fixtureで主要card、見出し、breadcrumbの折返しとpage overflowを5 viewportで検証。Cloud critical pathとは独立 |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREP / PR #38のsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
 | 5 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
-| 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
 
 ## Data Design Lane
 
@@ -145,8 +144,8 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-015 | P1 | 主要画面のモバイル確認 | 完了（PR #11）。4 viewportで主要画面を監査し、Low issue 3件を独立した修正候補へ分割 |
 | SURFACE-015A | P2 | モバイルのタップ領域調整 | 完了（PR #12）。主要操作を44px目安へ調整し、320 / 375 / 390 / 768pxで横overflowがないことを確認 |
 | SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 完了（PR #14）。320pxで全section itemを表示し、navigation領域内の横scrollを解消 |
-| SURFACE-015C | P2 | custom 404の追加 | レビュー待ち。監査ISSUE-003として日本語案内とホームへの復帰導線をApp Router標準not-foundで追加 |
-| SURFACE-016 | P2 | 長い楽曲名の境界確認 | 長文fixtureを使い、主要card、見出し、breadcrumbの折返しと横overflowを確認する |
+| SURFACE-015C | P2 | custom 404の追加 | 完了（PR #39）。日本語案内とホームへの復帰導線をApp Router標準not-foundで追加 |
+| SURFACE-016 | P2 | 長い楽曲名の境界確認 | レビュー待ち。長文fixtureを使い、主要card、見出し、breadcrumbを320 / 375 / 390 / 768 / 1280pxで検証し、最小のoverflow修正を追加 |
 | SURFACE-017 | P1 | 楽曲作成・編集フォームの非保存プロトタイプ | 完了（PR #18）。保存処理なしで入力、review preview、未保存状態の見せ方を検証済み |
 
 ## Visual Lane
@@ -184,6 +183,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| SURFACE-015C | #39 | 2026-09-14 | App Router標準のcustom not-foundで日本語案内とホームへの復帰導線を追加。AWS / Auth / Data / infra変更なし |
 | COLLAB-001-DESIGN | #36 | 2026-09-13 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerを設計。runtime / DynamoDB physical design変更なし |
 | CREATIVE-001-DESIGN | #35 | 2026-09-11 | 創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus Modeを設計。runtime / DynamoDB physical design変更なし |
 | AUTH-001-DESIGN | #34 | 2026-09-11 | invitation-gated signup、Cognito Managed Login、BFF session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |

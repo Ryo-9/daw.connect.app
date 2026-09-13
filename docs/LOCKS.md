@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-039 | SURFACE-015C | Codex | `src/app/not-found.tsx`、`tests/component/not-found.test.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `ui/surface-015c-custom-404` | 2026-09-14 | Draft PRのマージまたは作業中止 | App Router custom 404と関連test / trackingだけ。Cloud、Auth、Data、infra、workflow変更なし |
+| LOCK-040 | SURFACE-016 | Codex | `src/components/song-card.tsx`、`src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `ui/surface-016-long-song-title-boundary` | 2026-09-14 | Draft PRのマージまたは作業中止 | 長い楽曲名の主要surface境界修正、E2E、trackingだけ。Cloud、Auth、Data、infra、workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-039 | SURFACE-015C | Codex | `src/app/not-found.tsx`、`tests/component/not-found.test.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #39。mainへのマージを確認して解除。Cloud、Auth、Data、infra、workflow変更なし |
 | LOCK-038 | CLOUD-OIDC-001-PREP | Codex | `infra/bin/streamband-infra.ts`、`infra/lib/nonprod-deployment-trust-stack.ts`、`infra/test/*.ts`、`infra/README.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #38。mainへのマージを確認して解除。AWS / GitHub適用なし |
 | LOCK-037 | CLOUD-003C-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #37。mainへのマージを確認して解除。Human-operated bootstrap事実のdocs同期のみ |
 | LOCK-036 | COLLAB-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #36。mainへのマージを確認して解除。runtime / physical DB変更なし |

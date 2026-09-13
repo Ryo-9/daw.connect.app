@@ -73,21 +73,21 @@ export default async function SongDetailPage({
           楽曲
         </Link>
         <span>/</span>
-        <span className="text-muted">{song.title}</span>
+        <span className="min-w-0 break-words text-muted">{song.title}</span>
       </nav>
 
       <section className="mt-5 overflow-hidden rounded-[24px] border border-line-strong bg-panel shadow-[0_22px_58px_rgba(0,0,0,0.3)]">
         <div className="relative border-b border-white/10 bg-gradient-to-br from-[#241f4a] via-[#171d37] to-[#0e172a] p-6 text-white sm:p-8">
           <div className="absolute -right-20 -top-24 h-64 w-64 rounded-full border-[42px] border-accent-blue/10" />
           <div className="relative flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <SongStatusBadge status={song.status} />
                 <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 font-mono text-[11px] font-bold text-muted">
                   {song.version}
                 </span>
               </div>
-              <h1 className="mt-4 text-4xl font-bold tracking-[-0.055em] sm:text-5xl">
+              <h1 className="mt-4 break-words text-4xl font-bold tracking-[-0.055em] sm:text-5xl">
                 {song.title}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
