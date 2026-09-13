@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-015C | StreamBand custom 404 | Codex | レビュー待ち | `ui/surface-015c-custom-404` | `src/app/not-found.tsx`、関連tests、作業状態文書 | 2026-09-14 | 未作成 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加 |
+| SURFACE-015C | StreamBand custom 404 | Codex | レビュー待ち | `ui/surface-015c-custom-404` | `src/app/not-found.tsx`、関連tests、作業状態文書 | 2026-09-14 | #39 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加 |
 
 ## 完了・中止履歴
 
