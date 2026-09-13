@@ -16,19 +16,21 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| COLLAB-001-DESIGN | Band membership lifecycle / Activity Status / Notification UX | Codex | レビュー待ち | `docs/collab-001-membership-notification-design` | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-11 | #36 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerをdocs化。runtime / physical DB変更なし |
+| CLOUD-003C-EXECUTION-RECORD | Nonprod CDK bootstrap execution record | Codex | レビュー待ち | `docs/cloud-003c-bootstrap-execution-record` | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-13 | 未作成 | Human-operated nonprod bootstrapの成功、temporary privilege撤去、application resource未作成を機密識別子なしで記録 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-003C | 完了 | Human | Human-approved execution / 記録PR未作成 | 2026-09-13 | StreamBand nonprodの`CDKToolkit` bootstrapが成功。Temporary human permissionは撤去済みで、application resource / OIDC / deployは未実施 |
+| COLLAB-001-DESIGN | 完了 | Codex | `docs/collab-001-membership-notification-design` / #36 | 2026-09-13 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerを設計しmainへマージ済み。runtime / physical DB変更なし |
 | CREATIVE-001-DESIGN | 完了 | Codex | `docs/creative-001-creative-workflow-design` / #35 | 2026-09-11 | 創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus Modeを設計しmainへマージ済み。runtime / physical DB変更なし |
 | AUTH-001-DESIGN | 完了 | Codex | `docs/auth-001-cognito-session-design` / #34 | 2026-09-11 | invite-only signup、branded Cognito Managed Login、BFF session、Passkey / device / account lifecycleを設計しmainへマージ済み。Cognito / runtime実装なし |
 | CLOUD-OIDC-001-DESIGN | 完了 | Codex | `docs/cloud-oidc-001-deployment-trust` / #33 | 2026-09-11 | GitHub Environment限定OIDC trust、CDK role delegation、PR safety、revocation contractを設計しmainへマージ済み。OIDC / IAM / workflow実装なし |
 | STORAGE-001-DESIGN | 完了 | Codex | `docs/storage-001-private-asset-design` / #32 | 2026-09-11 | private Preview / MIDIのbucket、encryption、opaque key、upload / access、retention、recovery contractを設計しmainへマージ済み。AWS resource作成なし |
 | AUTHZ-001 | 完了 | Codex | `docs/authz-001-capability-matrix` / #31 | 2026-09-11 | Band Membership role、capability、ownership、cross-Band protection、audit / test contractを設計しmainへマージ済み。AWS resource作成なし |
 | CLOUD-DATA-001 | 完了 | Codex | `docs/cloud-data-001-dynamodb-design` / #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、transaction、concurrency、PITR / restoreを設計しmainへマージ済み。AWS resource作成なし |
-| CLOUD-003C-DECISION | 完了 | Codex | `docs/cloud-003c-bootstrap-decision` / #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定しmainへマージ済み。actual bootstrapは別Human Gateで未承認 |
+| CLOUD-003C-DECISION | 完了 | Codex | `docs/cloud-003c-bootstrap-decision` / #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定。別Human Gateを経て2026-09-13にactual bootstrap完了 |
 | CLOUD-003C-REVIEW | 完了 | Codex | `docs/cloud-003c-bootstrap-review` / #28 | 2026-09-11 | 現行CDK bootstrap resource、cost、permission、execution policy、OIDC原則をAWS公式資料でreviewしmainへマージ済み。AWS接続・変更なし |
 | CLOUD-003C-PREP | 完了 | Codex | `docs/cloud-003c-prep-checkpoint` / #27 | 2026-09-11 | 人間確認済みのnonprod readinessとactual bootstrap前のHuman Gateを機密識別子なしでmainへ同期。AWS接続・resource変更なし |
 | CLOUD-003B-CI | 完了 | Codex | `chore/cloud-003b-infra-ci` / #26 | 2026-09-10 | Node.js 24の既存`Quality checks`へinfra build / test / offline synthを統合してmainへマージ済み。AWS credential・OIDC・resource操作なし |

@@ -16,19 +16,20 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-036 | COLLAB-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/collab-001-membership-notification-design` | 2026-09-11 | Draft PRのマージまたは作業中止 | Membership / Activity Status / Notification docsのみ。runtime、delivery provider、DynamoDB physical key、AWS / Cognito / infraは対象外 |
+| LOCK-037 | CLOUD-003C-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-003c-bootstrap-execution-record` | 2026-09-13 | Draft PRのマージまたは作業中止 | Human-operated bootstrapの事実とtrackingだけ。AWS / IAM / OIDC / infra / runtime変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-036 | COLLAB-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #36。mainへのマージを確認して解除。runtime / physical DB変更なし |
 | LOCK-035 | CREATIVE-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #35。mainへのマージを確認して解除。runtime / DynamoDB physical design変更なし |
 | LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #34。mainへのマージを確認して解除。Cognito / runtime実装なし |
 | LOCK-033 | CLOUD-OIDC-001-DESIGN | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #33。mainへのマージを確認して解除。OIDC / IAM / workflow実装なし |
 | LOCK-032 | STORAGE-001-DESIGN | Codex | `docs/API.md`、`docs/DATABASE.md`、`docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #32。mainへのマージを確認して解除。S3/AWS resource作成なし |
 | LOCK-031 | AUTHZ-001 | Codex | `docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #31。mainへのマージを確認して解除。AWS resource作成なし |
 | LOCK-030 | CLOUD-DATA-001 | Codex | `docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #30。mainへのマージを確認して解除。AWS resource作成なし |
-| LOCK-029 | CLOUD-003C-DECISION | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #29。mainへのマージを確認して解除。actual bootstrapは別Human Gateで未承認 |
+| LOCK-029 | CLOUD-003C-DECISION | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #29。mainへのマージを確認して解除。別Human Gateを経て2026-09-13にactual bootstrap完了 |
 | LOCK-028 | CLOUD-003C-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #28。mainへのマージを確認して解除 |
 | LOCK-027 | CLOUD-003C-PREP | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #27。mainへのマージを確認して解除 |
 | LOCK-026 | CLOUD-003B-CI | Codex | `.github/workflows/ci.yml`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-10 | 完了・PR #26。mainへのマージを確認して解除 |

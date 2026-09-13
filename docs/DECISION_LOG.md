@@ -28,7 +28,7 @@
 | DEC-013 | 2026-09-09 | 2026年末Private AlphaのCloud targetとhuman gatesを定める | 承認済み | Cloud architecture / Phase 2 | - |
 | DEC-014 | 2026-09-10 | Phase 2 Cloud foundation / IaC policyを定める | 承認済み | AWS account / IaC / deployment safety | - |
 | DEC-015 | 2026-09-10 | Private AlphaのNext.js hosting候補を定める | 承認済み | Web hosting / deployment | - |
-| DEC-016 | 2026-09-11 | Dedicated nonprodのCDK bootstrap permission planを定める | 提案中 | AWS bootstrap / temporary privilege | - |
+| DEC-016 | 2026-09-11 | Dedicated nonprodのCDK bootstrap permission planを定める | 承認済み | AWS bootstrap / temporary privilege | - |
 | DEC-017 | 2026-09-11 | Cloud MVP metadataをOn-Demand single-tableで設計する | 提案中 | DynamoDB physical design | - |
 | DEC-018 | 2026-09-11 | Band authorizationをrole bundleとserver capabilityで判定する | 提案中 | Authorization / BandMembership | - |
 | DEC-019 | 2026-09-11 | Private Assetをenvironment単位のS3 bucketと短命instructionで扱う | 提案中 | S3 / Asset security | - |
@@ -249,16 +249,21 @@
 ## DEC-016: Dedicated nonprodのCDK bootstrap permission planを定める
 
 - 日付: 2026-09-11
-- ステータス: 提案中
+- 実行日: 2026-09-13
+- ステータス: 承認済み
 - 提案者: Codex（CLOUD-003C-DECISION）
-- Human decision: PR reviewでapprove / rejectする。actual bootstrap commandは、このDecisionの承認とは別の明示Human Gateを必要とする
+- Human decision: CLOUD-003C-DECISION後の別Human Gateで「実際のbootstrap実行を承認します」と明示承認し、人間が実行した
 - Bootstrapper recommendation: 既存のStreamBand専用human IAM userへ、AWS CDK公式が示す`cloudformation:*`、`ecr:*`、`ssm:*`、`s3:*`、`iam:*` / `Resource: "*"`のcustomer-managed policyを実行直前だけattachし、bootstrap直後にdetach・削除する。long-lived access keyは作らず、temporary `aws login` sessionを使う
 - Alternative not selected: 専用same-account bootstrap roleは継続運用ではisolationに優れるが、初回一回の作業にrole / trust / caller policy / profileが増える。現行`aws login` sessionがMFA必須AssumeRole trustを満たす保証を公式資料から確認できないため、推測で採用しない
 - CloudFormation execution recommendation: synthetic dataだけのisolated nonprod accountに限り、bootstrapが作るCloudFormation execution roleへAWS managed `AdministratorAccess`を明示指定する。human userの日常policyには付けず、cross-account trustを追加しない
 - Risk acceptance: execution roleのblast radiusはaccount-wide。nonprod account分離、real / unreleased data禁止、review済みCDK template、deploy principal制限で緩和する。Private Alphaへpolicyを持ち越さず、real data前にfresh reviewする
 - Bootstrap configuration: `ap-northeast-1`、profile `streamband-nonprod`、`CDKToolkit`、default qualifier、termination protection / public access block enabled、customer-managed bootstrap KMS keyなし、cross-account trustなし、express modeなし
 - OIDC sequence: human bootstrapとtemporary privilege撤去を先に完了し、GitHub OIDC / deployment roleは別task、その後にfirst nonprod application deploymentとする
-- 実装状態: docs-only recommendation。AWS接続、IAM / policy / role、OIDC、resource、bootstrap、deployは未実施で、CLOUD-003C actual bootstrapは未承認
+- 実行結果: repository-local CDK CLI `2.1141.0`を使い、StreamBand `nonprod` / `ap-northeast-1`へdefault qualifier `hnb659fds`の`CDKToolkit`を作成した。CloudFormationは`CREATE_COMPLETE`、termination protectionとbootstrap S3 public access blockは有効、customer-managed bootstrap KMS key / extra trusted account / custom qualifierは追加していない
+- Permission cleanup: 実行時だけcustomer-managed policy `StreamBandCdkBootstrapTemporary`をhuman IAM userへattachし、成功確認後にdetach / deleteした。Rootはcleanup後logout済み。Root / IAMのlong-lived access keyは作成していない
+- Execution-policy boundary: AWS managed `AdministratorAccess`はCloudFormation execution roleにだけ指定し、human IAM userへ恒久付与していない。Nonprodだけのrisk acceptanceで、Private Alphaへ自動継承しない
+- 実装状態: CLOUD-003C nonprod deployment foundationは完了。GitHub OIDC、Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、notification infrastructure、hosting、application deployは未実装
+- Next gate: 継続deployment identityはGitHub OIDCとし、CLOUD-OIDC-001でprovider、nonprod role、bootstrap role delegation、GitHub Environment / workflowを別Human Gateとして実装する。Human temporary bootstrap permissionはroutine deployへ再利用しない
 - 見直し条件: current CDK template / CLI変更、existing `CDKToolkit`検出、account / Region差異、KMS / trust差異、Private Alpha開始、real data投入、custom execution policyへ移行する時
 - 関連: CLOUD-003C-REVIEW、CLOUD-003C-DECISION、[AWS.md](AWS.md)
 
@@ -320,7 +325,7 @@
 - Permission boundary: OIDC roleはreview済みCDK bootstrap deploy / file publishing / lookup roleだけをassumeするcandidateとし、container assetが必要になるまでimage publishing roleを省く。CloudFormation execution roleを直接assumeせず、AdministratorAccessをGitHub roleへ付けない
 - Session: role maximumは3,600秒、workflow requested durationは1,800秒候補。run ID / attemptを含む非個人session nameで監査し、human console loginとaccess keyを持たせない
 - Sequence: human bootstrapとtemporary privilege撤去、OIDC provider / role、deployment workflow、first application deployを別taskに分ける。nonprod roleをPrivate Alphaへ再利用しない
-- Implementation state: docs-only proposal。OIDC provider、IAM role / policy、GitHub Environment、workflow permission、secret / variable、AWS resourceは未作成。CLOUD-003C actual bootstrapも未承認
+- Implementation state: OIDC provider、IAM role / policy、GitHub Environment、workflow permission、secret / variableは未作成。CLOUD-003C actual bootstrapは2026-09-13に別Human Gateで完了し、temporary human permissionは撤去済み
 - Human Gate: provider、audience、immutable subject、role名、exact trust / permission、session、workflow trigger、Environment protection、revocationを実装前に提示して明示承認を得る
 - 見直し条件: GitHub OIDC subject customization / immutable format変更、CDK bootstrap template / qualifier / role変更、container asset導入、deploymentが1時間を超える、Private Alpha開始、GitHub plan制約が判明した場合
 - 関連: CLOUD-OIDC-001-DESIGN、CLOUD-003C-REVIEW、CLOUD-003C-DECISION、DEC-014、DEC-016、[AWS.md](AWS.md)、[TESTING.md](TESTING.md)

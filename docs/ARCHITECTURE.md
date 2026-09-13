@@ -2,7 +2,7 @@
 
 ## 文書の位置付け
 
-現在の実装事実と、将来の構成候補を分けて共有する文書です。UI プロトタイプと非永続インタラクションは実装済みですが、DB、API / Server Actions、認証・認可、AWS、ストレージ、課金、本番デプロイは未実装です。将来候補は採用済みと扱わず、各領域の比較・承認・実装を別タスクに分けます。
+現在の実装事実と、将来の構成候補を分けて共有する文書です。UI プロトタイプと非永続インタラクション、AWS CDKのnonprod deployment foundationは実装済みですが、DB、API / Server Actions、認証・認可、application AWS resource、ストレージ、課金、本番デプロイは未実装です。将来候補は採用済みと扱わず、各領域の比較・承認・実装を別タスクに分けます。
 
 ## 現在採用済みの構成
 
@@ -136,7 +136,7 @@ Vercel Proのbase / usage costはPrivate Alphaの通常目標を超える可能�
 
 ### Foundation / Infrastructure as Code boundary
 
-CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infra/` packageにapplication sourceと分離したtoolchainを置きます。現時点の`StreamBandNonprodFoundation`はresourceを定義しない空Stackで、unit testと`--no-lookups`のoffline synthだけを対象とします。
+CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infra/` packageにapplication sourceと分離したtoolchainを置きました。`StreamBandNonprodFoundation`は引き続きapplication resourceを定義しない空Stackで、unit testと`--no-lookups`のoffline synthをCIで検証します。
 
 - environment: `local`、AWS `nonprod`、`private-alpha`だけを初期境界とする
 - account: 本物の未公開曲を入れる前にnonprodとPrivate Alphaを別AWS accountへ分ける
@@ -145,7 +145,9 @@ CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infr
 - rollback: application、infrastructure、data recoveryを分け、IaC rollbackをuser data restoreと見なさない
 - source layout: repository rootの`infra/`をapp packageや`src/**`と分離する。root npm workspaceやroot dependencyには含めない
 
-AWSへの接続、account binding、IAM / OIDC、Budgets、bootstrap resource、deployed stack、deployment workflowは未作成です。通常のPR `Quality checks`はAWS accessを持たず、将来のdeploymentはprotected `main`から別workflow / jobと`nonprod` Environment gateを通す設計候補です。最初のAWS接続とbootstrapはCLOUD-003C、OIDC provider / role / workflowは別Human Gateです。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003章を参照します。
+2026-09-13に別Human Gateを通過したhuman-operated CLOUD-003Cで、`ap-northeast-1`のnonprodにCDK deployment foundation `CDKToolkit`をbootstrapしました。Stackは`CREATE_COMPLETE`、termination protectionとbootstrap S3 public access blockは有効、customer-managed bootstrap KMS key / cross-account trustは追加していません。実行時だけ使ったhuman bootstrap policyはdetach / delete済みで、long-lived access keyも作成していません。
+
+これはapplication deployではありません。IAM OIDC provider / deployment role、Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、hosting、deployment workflowは未作成です。通常のPR `Quality checks`はAWS accessを持たず、次候補CLOUD-OIDC-001でprotected `main`、GitHub Environment `nonprod`、short-lived OIDC deployment identityを別Human Gateとして扱います。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003章を参照します。
 
 ## 自動テスト
 
@@ -213,7 +215,7 @@ Browser
 - Route 53: DNS 管理候補
 - IAM: 人とサービスの最小権限管理
 
-これらはplanning targetであり、resourceは未作成です。具体的な利用条件は [AWS.md](AWS.md) に記載します。
+これらはapplication planning targetであり、resourceは未作成です。例外はdeployment foundationの`CDKToolkit`だけで、application runtimeではありません。具体的な利用条件は [AWS.md](AWS.md) に記載します。
 
 ## 想定する責務の分け方
 
