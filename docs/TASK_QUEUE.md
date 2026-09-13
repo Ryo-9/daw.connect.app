@@ -12,19 +12,18 @@
 
 ## 現在の状態と次候補
 
-2026-09-13 時点で、CLOUD-003C-EXECUTION-RECORD / PR #37までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-OIDC-001-PREPで、GitHub OIDC provider / deployment role候補をAWS接続なしのIaC、unit test、offline synthとしてreviewしています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCloud laneと独立したSURFACE-015Cでcustom 404を整えています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-OIDC-001-PREP | GitHub OIDC deployment trust IaC preparation | レビュー待ち。Provider / entry role / exact trust / bootstrap role delegationをparameterized IaCとoffline testへ限定。AWS / GitHub settings / workflow変更なし |
-| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREPのsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
+| 1 | SURFACE-015C | custom 404の追加 | レビュー待ち。App Router標準のnot-found、既存visual token、日本語案内、ホーム復帰導線を追加。Cloud critical pathとは独立 |
+| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREP / PR #38のsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
 | 5 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
-| 6 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
-| 7 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
+| 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
 
 ## Data Design Lane
 
@@ -55,7 +54,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C-DECISION | P0 | Final nonprod bootstrap permission and execution plan | 完了（PR #29）。bootstrapper temporary policy、execution role、proposed command、runbook、STOP条件を一案へ確定。AWS接続・変更なし |
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 完了（2026-09-13 human-operated）。`CDKToolkit`は`CREATE_COMPLETE`、termination protection有効。Temporary bootstrap policyはdetach / delete済み。Application deployなし |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
-| CLOUD-OIDC-001-PREP | P0 | GitHub Actions OIDC deployment trust IaC preparation | レビュー待ち。Immutable owner / repository IDをparameter化し、`main` + `nonprod` exact trustとdeploy / file / lookup role delegationだけをoffline検証。AWS / GitHub変更なし |
+| CLOUD-OIDC-001-PREP | P0 | GitHub Actions OIDC deployment trust IaC preparation | 完了（PR #38）。Immutable owner / repository IDをparameter化し、`main` + `nonprod` exact trustとdeploy / file / lookup role delegationだけをoffline検証。AWS / GitHub適用なし |
 | CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust activation | PREPのreview後の別Human Gate。GitHub Environment保護とdeployment-trust Stack適用を分離確認し、application resourceをdeployしない |
 | CLOUD-OIDC-001-VERIFY | P0 | Manual OIDC credential verification workflow | Activation後の別PR。通常CIへ`id-token`を付けず、manual jobでshort-lived credential acquisitionだけを検証 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
@@ -146,7 +145,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-015 | P1 | 主要画面のモバイル確認 | 完了（PR #11）。4 viewportで主要画面を監査し、Low issue 3件を独立した修正候補へ分割 |
 | SURFACE-015A | P2 | モバイルのタップ領域調整 | 完了（PR #12）。主要操作を44px目安へ調整し、320 / 375 / 390 / 768pxで横overflowがないことを確認 |
 | SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 完了（PR #14）。320pxで全section itemを表示し、navigation領域内の横scrollを解消 |
-| SURFACE-015C | P2 | custom 404の追加 | 監査ISSUE-003。日本語案内とダッシュボード / バンド一覧への復帰導線を追加する |
+| SURFACE-015C | P2 | custom 404の追加 | レビュー待ち。監査ISSUE-003として日本語案内とホームへの復帰導線をApp Router標準not-foundで追加 |
 | SURFACE-016 | P2 | 長い楽曲名の境界確認 | 長文fixtureを使い、主要card、見出し、breadcrumbの折返しと横overflowを確認する |
 | SURFACE-017 | P1 | 楽曲作成・編集フォームの非保存プロトタイプ | 完了（PR #18）。保存処理なしで入力、review preview、未保存状態の見せ方を検証済み |
 

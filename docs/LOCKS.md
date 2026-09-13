@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-038 | CLOUD-OIDC-001-PREP | Codex | `infra/bin/streamband-infra.ts`、`infra/lib/nonprod-deployment-trust-stack.ts`、`infra/test/*.ts`、`infra/README.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `chore/cloud-oidc-001-prep` | 2026-09-13 | Draft PRのマージまたは作業中止 | Repository-only OIDC trust IaC / offline validation。AWS / GitHub settings / workflow / application deploy変更なし |
+| LOCK-039 | SURFACE-015C | Codex | `src/app/not-found.tsx`、`tests/component/not-found.test.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `ui/surface-015c-custom-404` | 2026-09-14 | Draft PRのマージまたは作業中止 | App Router custom 404と関連test / trackingだけ。Cloud、Auth、Data、infra、workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-038 | CLOUD-OIDC-001-PREP | Codex | `infra/bin/streamband-infra.ts`、`infra/lib/nonprod-deployment-trust-stack.ts`、`infra/test/*.ts`、`infra/README.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #38。mainへのマージを確認して解除。AWS / GitHub適用なし |
 | LOCK-037 | CLOUD-003C-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #37。mainへのマージを確認して解除。Human-operated bootstrap事実のdocs同期のみ |
 | LOCK-036 | COLLAB-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #36。mainへのマージを確認して解除。runtime / physical DB変更なし |
 | LOCK-035 | CREATIVE-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #35。mainへのマージを確認して解除。runtime / DynamoDB physical design変更なし |
