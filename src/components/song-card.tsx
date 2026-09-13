@@ -6,7 +6,7 @@ export function SongCard({ song }: { song: Song }) {
   return (
     <Link
       href={`/songs/${song.id}`}
-      className="instrument-panel group block rounded-xl border border-line bg-panel p-5 transition hover:-translate-y-1 hover:border-accent/55 hover:bg-panel-raised hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-6"
+      className="instrument-panel group block min-w-0 rounded-xl border border-line bg-panel p-5 transition hover:-translate-y-1 hover:border-accent/55 hover:bg-panel-raised hover:shadow-[0_22px_48px_rgba(0,0,0,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas sm:p-6"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">

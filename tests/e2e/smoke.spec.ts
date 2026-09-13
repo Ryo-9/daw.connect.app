@@ -73,6 +73,63 @@ test("320pxで楽曲詳細セクションナビが横スクロールなしで収
   expect(fitsWithoutHorizontalScroll).toBe(true);
 });
 
+test("長い楽曲名が主要surfaceでpage overflowを起こさない", async ({ page }) => {
+  const longTitle =
+    "夜明け前の街で何度も書き直したメロディーとまだ名前のない僕たちの長い長いデモソング Final Arrangement Version 2026 MixReviewCheckpointABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  for (const width of [320, 375, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/bands/lumen-echo/songs");
+
+    const card = page
+      .locator('a[href="/songs/afterglow"]')
+      .filter({ has: page.locator("h3") })
+      .first();
+    const cardTitle = card.locator("h3");
+    await cardTitle.evaluate((element, title) => {
+      element.textContent = title;
+    }, longTitle);
+
+    const cardBox = await card.boundingBox();
+    const cardTitleBox = await cardTitle.boundingBox();
+    expect(cardBox).not.toBeNull();
+    expect(cardTitleBox).not.toBeNull();
+    expect(cardTitleBox!.x).toBeGreaterThanOrEqual(cardBox!.x);
+    expect(cardTitleBox!.x + cardTitleBox!.width).toBeLessThanOrEqual(
+      cardBox!.x + cardBox!.width,
+    );
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+
+    await page.goto("/songs/afterglow");
+    const detailTitle = page.getByRole("heading", { level: 1 });
+    const breadcrumbTitle = page
+      .getByRole("navigation", { name: "パンくず" })
+      .locator("span.text-muted");
+    await detailTitle.evaluate((element, title) => {
+      element.textContent = title;
+    }, longTitle);
+    await breadcrumbTitle.evaluate((element, title) => {
+      element.textContent = title;
+    }, longTitle);
+
+    for (const title of [detailTitle, breadcrumbTitle]) {
+      const box = await title.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+  }
+});
+
 test("楽曲詳細のreview flowから5つの対象sectionへ移動できる", async ({
   page,
 }) => {
