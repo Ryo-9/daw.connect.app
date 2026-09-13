@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-037 | CLOUD-003C-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-003c-bootstrap-execution-record` | 2026-09-13 | Draft PRのマージまたは作業中止 | Human-operated bootstrapの事実とtrackingだけ。AWS / IAM / OIDC / infra / runtime変更なし |
+| LOCK-038 | CLOUD-OIDC-001-PREP | Codex | `infra/bin/streamband-infra.ts`、`infra/lib/nonprod-deployment-trust-stack.ts`、`infra/test/*.ts`、`infra/README.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `chore/cloud-oidc-001-prep` | 2026-09-13 | Draft PRのマージまたは作業中止 | Repository-only OIDC trust IaC / offline validation。AWS / GitHub settings / workflow / application deploy変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-037 | CLOUD-003C-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/ROADMAP.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #37。mainへのマージを確認して解除。Human-operated bootstrap事実のdocs同期のみ |
 | LOCK-036 | COLLAB-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-13 | 完了・PR #36。mainへのマージを確認して解除。runtime / physical DB変更なし |
 | LOCK-035 | CREATIVE-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TESTING.md`、`docs/SCREEN_LIST.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-11 | 完了・PR #35。mainへのマージを確認して解除。runtime / DynamoDB physical design変更なし |
 | LOCK-034 | AUTH-001-DESIGN | Codex | `docs/API.md`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md`、`docs/DECISION_LOG.md` | 2026-09-11 | 完了・PR #34。mainへのマージを確認して解除。Cognito / runtime実装なし |

@@ -12,18 +12,19 @@
 
 ## 現在の状態と次候補
 
-2026-09-13 時点で、COLLAB-001-DESIGN / PR #36までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-003C-EXECUTION-RECORD / PR #37で、その成功とtemporary privilege撤去を機密識別子なしでreviewしています。次のCloud候補は設計済みCLOUD-OIDC-001の実装で、AWS / GitHub変更には別taskとhuman approvalが必要です。
+2026-09-13 時点で、CLOUD-003C-EXECUTION-RECORD / PR #37までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-OIDC-001-PREPで、GitHub OIDC provider / deployment role候補をAWS接続なしのIaC、unit test、offline synthとしてreviewしています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-003C-EXECUTION-RECORD | Nonprod bootstrap execution record | レビュー待ち（PR #37）。`CDKToolkit`成功、safety option、temporary permission撤去、application resource未作成をdocs / trackingへ同期 |
-| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust implementation | CLOUD-OIDC-001-DESIGN / PR #33は完了。Provider / role / Environment / workflowを別taskとhuman approvalで実装し、application deployと分離する |
-| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
-| 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
-| 5 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
-| 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
+| 1 | CLOUD-OIDC-001-PREP | GitHub OIDC deployment trust IaC preparation | レビュー待ち。Provider / entry role / exact trust / bootstrap role delegationをparameterized IaCとoffline testへ限定。AWS / GitHub settings / workflow変更なし |
+| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREPのsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
+| 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
+| 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
+| 5 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
+| 6 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
+| 7 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
 
 ## Data Design Lane
 
@@ -54,7 +55,9 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C-DECISION | P0 | Final nonprod bootstrap permission and execution plan | 完了（PR #29）。bootstrapper temporary policy、execution role、proposed command、runbook、STOP条件を一案へ確定。AWS接続・変更なし |
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 完了（2026-09-13 human-operated）。`CDKToolkit`は`CREATE_COMPLETE`、termination protection有効。Temporary bootstrap policyはdetach / delete済み。Application deployなし |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
-| CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust implementation | 次候補。OIDC provider、nonprod deploy role、bootstrap role delegation、GitHub Environment、manual deployment workflowを別Human Gateで扱う。Application resource deployは禁止 |
+| CLOUD-OIDC-001-PREP | P0 | GitHub Actions OIDC deployment trust IaC preparation | レビュー待ち。Immutable owner / repository IDをparameter化し、`main` + `nonprod` exact trustとdeploy / file / lookup role delegationだけをoffline検証。AWS / GitHub変更なし |
+| CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust activation | PREPのreview後の別Human Gate。GitHub Environment保護とdeployment-trust Stack適用を分離確認し、application resourceをdeployしない |
+| CLOUD-OIDC-001-VERIFY | P0 | Manual OIDC credential verification workflow | Activation後の別PR。通常CIへ`id-token`を付けず、manual jobでshort-lived credential acquisitionだけを検証 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | 完了（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
 | AUTH-001 | P0 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003 foundationは完了。OIDC / deployment boundaryを含む別Human Gate後に、Cognito、BFF session、callback、secretを専用実装taskで検証 |

@@ -1411,7 +1411,7 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 11. Environment protection / reviewer / bypass設定
 12. rollback、trust removal、session revocation、provider removalの手順
 
-このreview後もOIDC provider / role / Environment / workflowは**not implemented / not approved for execution**です。CLOUD-003C actual bootstrapはその後2026-09-13に完了し、temporary human privilegeも撤去済みです。
+このreview後、CLOUD-OIDC-001-PREPではprovider / role候補をreview可能なrepository IaCとして追加しましたが、AWSへは未適用です。Environment / workflowも未実装で、実行は引き続き未承認です。CLOUD-003C actual bootstrapは2026-09-13に完了し、temporary human privilegeも撤去済みです。
 
 ### Official references（2026-09-11確認）
 
@@ -1424,6 +1424,116 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 - [AWS CDK: Security best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html)
 - [AWS CDK: Deploy applications](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html)
 - [AWS CDK: Bootstrap an environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+
+## CLOUD-OIDC-001-PREP: deployment trust repository preparation
+
+### Status and implementation boundary
+
+確認日: 2026-09-13。CLOUD-OIDC-001-DESIGN / DEC-020を、AWSへ接続しないCDK source、unit test、`--no-lookups` offline synthへ具体化しました。`StreamBandNonprodDeploymentTrust`は**proposed infrastructure only**であり、AWSへdeployされていません。GitHub Environment、repository settings、workflow、secret / variable、`id-token: write`も変更していません。
+
+このStackはapplication resourceを含みません。Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、CloudWatch、hosting、application deployは対象外です。実在のGitHub numeric identity、AWS account ID、ARN、credentialもsource / test / docsへ保存しません。
+
+### Reviewable stack contents
+
+| definition | synthesized intent | safety boundary |
+| --- | --- | --- |
+| Native `AWS::IAM::OIDCProvider` | issuer `https://token.actions.githubusercontent.com`、audience `sts.amazonaws.com`だけ | thumbprintをhard-codeせず、追加audienceなし |
+| `streamband-nonprod-github-deploy` role | `AssumeRoleWithWebIdentity`をexact claimsで許可、maximum session 3,600秒 | access key / console loginなし、GitHub roleへ`AdministratorAccess`なし |
+| Inline delegation policy | default qualifier `hnb659fds`のdeploy / file-publishing / lookup roleだけに`sts:AssumeRole` | image-publishing / CloudFormation execution roleなし、direct IAM / CloudFormation / SSM actionなし |
+
+OIDC providerにはcurrent `aws-cdk-lib`のnative CloudFormation constructを使います。Legacy custom-resource based providerを使わないため、provider定義のためだけのLambdaやsupport roleは生成されません。Generated templateのresource categoryはOIDC provider、deployment role、inline IAM policyに限定されます。
+
+### Immutable identity and exact trust
+
+このrepositoryは2026-08-10作成のため、GitHubが2026-07-15以降のrepositoryへ適用するimmutable default subject formatを使用する前提です。Identity-specific numberは`GitHubOwnerId` / `GitHubRepositoryId`という`NoEcho` CloudFormation parameterとしてdeployment gateで渡し、repositoryへ値を固定しません。
+
+```text
+repo:Ryo-9@${GitHubOwnerId}/daw.connect.app@${GitHubRepositoryId}:environment:nonprod
+```
+
+Trustは`StringEquals`で次を同時に要求します。
+
+- `aud = sts.amazonaws.com`
+- `sub =` 上記immutable repository identity + `environment:nonprod`
+- `environment = nonprod`
+- `ref = refs/heads/main`
+
+AWS IAMのcurrent web-identity condition keysはGitHubの`ref` / `environment` claimをサポートします。Repository / owner / branch wildcard、`StringLike`、legacy name-only subject、PR subject、tag、feature branch、Environmentなしjobは許可しません。実装直前にはGitHub側のactual subject configurationを人が確認し、parameter値とexact trustを再reviewします。値の不一致をwildcardへ広げて解決しません。
+
+### Bootstrap role delegation and direct SSM decision
+
+Repository-local CDK CLI `2.1141.0`のdefault bootstrap templateをoffline確認した結果、対象role名は次のpatternです。
+
+```text
+cdk-hnb659fds-deploy-role-<ACCOUNT>-<REGION>
+cdk-hnb659fds-file-publishing-role-<ACCOUNT>-<REGION>
+cdk-hnb659fds-lookup-role-<ACCOUNT>-<REGION>
+```
+
+IaCでは`AWS::AccountId` / `AWS::Region` pseudo parameterを使い、実値をsourceへ書きません。Permissionは上記3 role ARNと`aws-cdk:bootstrap-role = deploy / file-publishing / lookup` tag条件を重ねます。現在container image assetを使わないためimage-publishing roleは含めず、CloudFormation execution roleをGitHub roleから直接assumeさせません。
+
+`ssm:GetParameter`はGitHub entry roleへ**追加しません**。Current bootstrap templateではbootstrap versionのread permissionがdeploy role側にあり、CDK deploymentはentry roleからdeploy roleをassumeしてversion check / CloudFormation operationへ進みます。Offline synthesized templateに`BootstrapVersion` parameterが現れること自体はGitHub roleへのdirect SSM permissionを意味しません。この前提がcurrent CLI / bootstrap templateで変わった場合は、実行前reviewへ戻し、推測で権限を追加しません。
+
+### Offline verification contract
+
+Unit testは次をsynthesized templateへassertします。
+
+- native OIDC providerが1件でissuer / audienceがexact、thumbprint hard-codeなし
+- `AssumeRoleWithWebIdentity`、immutable ID parameter、`nonprod` environment、`refs/heads/main`がexact match
+- role maximum session 3,600秒
+- deploy / file-publishing / lookupだけがassume可能
+- image-publishing / execution role、`AdministratorAccess`、`iam:*`、`cloudformation:*`、direct `ssm:GetParameter`なし
+- wildcard / PR / feature branch trust、実account ID、実GitHub numeric identityなし
+
+通常PR `Quality checks`はAWS credentialなしでinfra build / test / offline synthを行います。`.github/workflows/ci.yml`の`permissions: contents: read`を維持し、このtaskでは`id-token: write`を追加しません。
+
+### Future GitHub Environment and workflow gate
+
+GitHub `nonprod` Environmentはまだ作りません。後続Human Gateでは次を確認します。
+
+- Environment nameは`nonprod`、deployment branchはprotected `main`だけ
+- Current GitHub planで利用できるreviewer / protectionとadministrator bypassの挙動
+- Environment variable候補は`AWS_ROLE_ARN` / `AWS_ACCOUNT_ID`。実値をrepository sourceへcommitしない
+- Secretにlong-lived AWS credentialを置かない
+- Future deployment workflowは`workflow_dispatch`だけ、`environment: nonprod`、`contents: read` + job-scoped `id-token: write`
+- AWS credential actionは2026-09-13確認時点でofficial current release `v6.2.4`ですが、このtaskでは追加しません。実装時に再確認し、可能ならimmutable commit SHAでpinします
+
+PR / fork / feature branchからcredentialを取得するworkflowは作りません。Environment未作成の状態でworkflowを先にmergeして、意図せず無保護Environmentを生成する順序も避けます。
+
+### Future activation order — separate Human Gates
+
+1. CLOUD-OIDC-001-PREPのIaC / testをreviewしてmergeする
+2. Exact synthesized OIDC trust templateを、account-specific valueをrepositoryへ残さずhuman reviewする
+3. GitHub `nonprod` Environmentを人が作成し、`main`限定と利用可能なprotectionを設定する
+4. `StreamBandNonprodDeploymentTrust`をhuman-approved one-time methodで作成する
+5. AWS側のactual provider / trust / permissionをread-only確認する
+6. GitHub Environmentへrole / account variableを設定し、long-lived keyがないことを確認する
+7. 別PRでmanual OIDC verification workflowを追加する
+8. Workflowでshort-lived credential取得だけをtestする
+9. Application resource deploymentはさらに別task / Human Gateとする
+
+Step 3以降はこのtaskで未実施です。OIDC resource作成とapplication deploymentを同じapprovalへまとめません。
+
+### Remaining Human Gate
+
+AWS適用前に、少なくとも次を実値込みでrepository外の安全なreviewへ提示し、明示承認を得ます。
+
+1. Target account / RegionがStreamBand nonprod / `ap-northeast-1`であること
+2. Actual immutable owner / repository IDとGitHub OIDC subject configuration
+3. Exact synthesized CloudFormation templateとresource replacement / removal behavior
+4. OIDC provider、role name、trust、delegation policy、3,600秒session maximum
+5. GitHub Environment `nonprod`のbranch / reviewer / bypass protection
+6. One-time trust-stack creation identity / commandとrollback手順
+7. No application resources、no real / unreleased music、no Private Alpha data
+
+### Official references（2026-09-13確認）
+
+- [GitHub: OpenID Connect reference and immutable subject claims](https://docs.github.com/en/actions/reference/security/oidc)
+- [AWS IAM: GitHub OIDC condition keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_iam-condition-keys.html#condition-keys-wif)
+- [AWS IAM: Create a role for a GitHub OIDC provider](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)
+- [AWS CDK: Security best practices](https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html)
+- [AWS CDK: Bootstrap an environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+- [AWS-maintained GitHub Action: configure-aws-credentials changelog](https://github.com/aws-actions/configure-aws-credentials/blob/main/CHANGELOG.md)
 
 ## AUTH-001-DESIGN: Cognito authentication and Web session contract
 

@@ -147,7 +147,11 @@ CLOUD-003BではAWS CDK + TypeScriptを採用し、repository rootの独立`infr
 
 2026-09-13に別Human Gateを通過したhuman-operated CLOUD-003Cで、`ap-northeast-1`のnonprodにCDK deployment foundation `CDKToolkit`をbootstrapしました。Stackは`CREATE_COMPLETE`、termination protectionとbootstrap S3 public access blockは有効、customer-managed bootstrap KMS key / cross-account trustは追加していません。実行時だけ使ったhuman bootstrap policyはdetach / delete済みで、long-lived access keyも作成していません。
 
-これはapplication deployではありません。IAM OIDC provider / deployment role、Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、hosting、deployment workflowは未作成です。通常のPR `Quality checks`はAWS accessを持たず、次候補CLOUD-OIDC-001でprotected `main`、GitHub Environment `nonprod`、short-lived OIDC deployment identityを別Human Gateとして扱います。詳細は[AWS.md](AWS.md)のCLOUD-002 / CLOUD-003章を参照します。
+これはapplication deployではありません。Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、hosting、deployment workflowは未作成です。
+
+CLOUD-OIDC-001-PREPでは、別Stack `StreamBandNonprodDeploymentTrust`としてnative GitHub OIDC provider、short-lived entry role、default CDK deploy / file-publishing / lookup roleだけへのdelegationをrepository上に定義しました。Immutable GitHub owner / repository IDはdeploy-time parameterで受け、`aud`、`sub`、`environment: nonprod`、`ref: refs/heads/main`をexact matchします。GitHub roleへAdministratorAccess、direct CloudFormation execution、image publishing、direct SSM permissionは与えません。
+
+これはreview用IaCでありAWSへ未deployです。GitHub Environment / settings / workflowも未変更で、通常のPR `Quality checks`はAWS accessと`id-token: write`を持ちません。Environment保護、trust Stackのone-time作成、short-lived credential verification、application deployをそれぞれ別Human Gateへ分けます。詳細は[AWS.md](AWS.md)のCLOUD-003 / CLOUD-OIDC章を参照します。
 
 ## 自動テスト
 
