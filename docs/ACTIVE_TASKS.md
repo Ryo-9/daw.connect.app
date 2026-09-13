@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-PREP | GitHub OIDC deployment trust IaC preparation | Codex | レビュー待ち | `chore/cloud-oidc-001-prep` | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、作業状態文書 | 2026-09-13 | 未作成 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synth。AWS / GitHub変更なし |
+| CLOUD-OIDC-001-PREP | GitHub OIDC deployment trust IaC preparation | Codex | レビュー待ち | `chore/cloud-oidc-001-prep` | `infra/**`、`docs/AWS.md`、`docs/ARCHITECTURE.md`、作業状態文書 | 2026-09-13 | #38 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synth。AWS / GitHub変更なし |
 
 ## 完了・中止履歴
 
