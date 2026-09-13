@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-13 時点で、COLLAB-001-DESIGN / PR #36までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-003C-EXECUTION-RECORDで、その成功とtemporary privilege撤去を機密識別子なしでreviewしています。次のCloud候補は設計済みCLOUD-OIDC-001の実装で、AWS / GitHub変更には別taskとhuman approvalが必要です。
+2026-09-13 時点で、COLLAB-001-DESIGN / PR #36までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-003C-EXECUTION-RECORD / PR #37で、その成功とtemporary privilege撤去を機密識別子なしでreviewしています。次のCloud候補は設計済みCLOUD-OIDC-001の実装で、AWS / GitHub変更には別taskとhuman approvalが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-003C-EXECUTION-RECORD | Nonprod bootstrap execution record | レビュー待ち。`CDKToolkit`成功、safety option、temporary permission撤去、application resource未作成をdocs / trackingへ同期 |
+| 1 | CLOUD-003C-EXECUTION-RECORD | Nonprod bootstrap execution record | レビュー待ち（PR #37）。`CDKToolkit`成功、safety option、temporary permission撤去、application resource未作成をdocs / trackingへ同期 |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust implementation | CLOUD-OIDC-001-DESIGN / PR #33は完了。Provider / role / Environment / workflowを別taskとhuman approvalで実装し、application deployと分離する |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
