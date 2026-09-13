@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-016 | Long song title boundary verification | Codex | レビュー待ち | `ui/surface-016-long-song-title-boundary` | `src/components/song-card.tsx`、`src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、作業状態文書 | 2026-09-14 | 未作成 | 長い日本語・英数字混在titleを5 viewportで検証し、主要card、見出し、breadcrumbのpage overflowを最小修正 |
+| SURFACE-016 | Long song title boundary verification | Codex | レビュー待ち | `ui/surface-016-long-song-title-boundary` | `src/components/song-card.tsx`、`src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、作業状態文書 | 2026-09-14 | #40 | 長い日本語・英数字混在titleを5 viewportで検証し、主要card、見出し、breadcrumbのpage overflowを最小修正 |
 
 ## 完了・中止履歴
 
