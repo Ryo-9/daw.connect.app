@@ -24,7 +24,7 @@ export class NonprodDeploymentTrustStack extends Stack {
       ...props,
       description:
         props.description ??
-        "StreamBand nonprod GitHub OIDC deployment trust (not deployed)",
+        "StreamBand nonprod GitHub OIDC deployment trust",
     });
 
     const githubOwnerId = new CfnParameter(this, "GitHubOwnerId", {
