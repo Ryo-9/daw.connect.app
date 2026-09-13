@@ -12,15 +12,15 @@
 
 ## 現在の状態と次候補
 
-2026-09-11 時点で、CREATIVE-001-DESIGN / PR #35までがmainへマージ済みです。現在の操作データはブラウザ内の一時状態で、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。mainはPR経由と`Quality checks`成功がGitHub rulesetで必須化されています。現在はCOLLAB-001-DESIGN / PR #36で、Band leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / CenterのUX contractをreviewしています。CLOUD-003C actual bootstrap、OIDC、Cognito / session runtime実装はそれぞれ別Human Gateのままです。
+2026-09-13 時点で、COLLAB-001-DESIGN / PR #36までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCLOUD-003C-EXECUTION-RECORD / PR #37で、その成功とtemporary privilege撤去を機密識別子なしでreviewしています。次のCloud候補は設計済みCLOUD-OIDC-001の実装で、AWS / GitHub変更には別taskとhuman approvalが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | COLLAB-001-DESIGN | Membership lifecycle / Activity Status / Notification UX | レビュー待ち（PR #36）。Leave / remove、Owner invariant、Activity Status、preset / frequency / Quiet Hours / Center / deep link / retentionをdocs化。Runtime / provider / physical DB変更なし |
-| 2 | CLOUD-003C | Nonprod AWS Foundation Bootstrap | 未承認。PR #29のdecision merge後もactual command実行には別Human Gateが必要 |
-| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。CLOUD-003の必要なfoundation execution gate完了後、Cognito / session runtimeを別taskで実装 |
+| 1 | CLOUD-003C-EXECUTION-RECORD | Nonprod bootstrap execution record | レビュー待ち（PR #37）。`CDKToolkit`成功、safety option、temporary permission撤去、application resource未作成をdocs / trackingへ同期 |
+| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust implementation | CLOUD-OIDC-001-DESIGN / PR #33は完了。Provider / role / Environment / workflowを別taskとhuman approvalで実装し、application deployと分離する |
+| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
 | 5 | SURFACE-015C | custom 404の追加 | Cloud critical pathと別lockで並行可能。SURFACE-015のISSUE-003 |
 | 6 | SURFACE-016 | 長い楽曲名の境界確認 | Cloud critical pathと別lockで並行可能。長文fixtureで折返しを確認 |
@@ -45,23 +45,24 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-001 | P0 | Phase 2 Cloud MVP Architecture Plan | 完了（PR #22）。2 user / 1 private BandのAuth、API、metadata、private Asset、monitoring、cost、recovery、critical pathをdocs化。resource作成なし |
 | CLOUD-002 | P0 | Cloud foundation / environment / IaC decision | 完了（PR #23）。account分離、Region、IaC、credential、naming、cost、rollback、destroyの方針をdocs化。resource作成なし |
 | HOST-001 | P0 | Next.js Private Alpha hosting decision | 完了（PR #24）。Vercel Pro primary candidate、Amplify conditional fallback、AWS-native last resortを比較。契約・project・deploymentなし |
-| CLOUD-003 | P0 | Nonprod AWS Foundation Bootstrap | 進行中。CLOUD-003A、CLOUD-003B、CLOUD-003B-CI、CLOUD-003C-PREP、CLOUD-003C-REVIEW、CLOUD-003C-DECISIONは完了。actual bootstrapは別Human Gate待ち |
+| CLOUD-003 | P0 | Nonprod AWS Foundation Bootstrap | 完了。CLOUD-003A / B / B-CI / C-PREP / C-REVIEW / C-DECISIONを経て、2026-09-13にhuman-operated bootstrap成功。Application resourceは未作成 |
 | CLOUD-003A | P0 | Nonprod account readiness | 人間側で完了報告済み。StreamBand用nonprod account、root MFA、monitoring用Budget、MFA付きhuman IAM user、temporary local authenticationを確認。機密識別子・credentialはrepositoryへ保存しない |
 | CLOUD-003B | P0 | CDK Repository Foundation | 完了（PR #25）。AWS CDK + TypeScriptの`infra/`、空Stack、offline unit test / synthを追加。AWS接続・resource作成なし |
 | CLOUD-003B-CI | P0 | Infrastructure CI Integration | 完了（PR #26）。Node.js 24の既存`Quality checks`へ独立infra packageのbuild / test / offline synthを統合。AWS credential・OIDC・resource操作なし |
 | CLOUD-003C-PREP | P0 | AWS nonprod readiness checkpoint | 完了（PR #27）。人間確認済みreadinessとactual bootstrap前のHuman Gateを機密識別子なしで同期。AWS接続・resource変更なし |
 | CLOUD-003C-REVIEW | P0 | CDK bootstrap resource / cost / permission review | 完了（PR #28）。現行default bootstrap、billing driver、temporary permission、execution policy、OIDC原則と明示Human Gateを公式資料で整理。AWS接続・resource変更なし |
 | CLOUD-003C-DECISION | P0 | Final nonprod bootstrap permission and execution plan | 完了（PR #29）。bootstrapper temporary policy、execution role、proposed command、runbook、STOP条件を一案へ確定。AWS接続・変更なし |
-| CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 未承認。CLOUD-003C-DECISIONのhuman review / merge後も、actual command実行には別の明示承認が必要 |
+| CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 完了（2026-09-13 human-operated）。`CDKToolkit`は`CREATE_COMPLETE`、termination protection有効。Temporary bootstrap policyはdetach / delete済み。Application deployなし |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
+| CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust implementation | 次候補。OIDC provider、nonprod deploy role、bootstrap role delegation、GitHub Environment、manual deployment workflowを別Human Gateで扱う。Application resource deployは禁止 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | 完了（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
-| AUTH-001 | P0 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003のfoundation execution gate完了までblock。Cognito、BFF session、callback、secretは専用実装taskで検証 |
+| AUTH-001 | P0 | Private Alpha authentication prototype | AUTH-001-DESIGN承認とCLOUD-003 foundationは完了。OIDC / deployment boundaryを含む別Human Gate後に、Cognito、BFF session、callback、secretを専用実装taskで検証 |
 | CLOUD-DATA-001 | P0 | Metadata persistence physical design | 完了（PR #30）。On-Demand single-table + sparse GSI 1本を選び、key / access pattern / transaction / concurrency / PITR / PostgreSQL再評価条件をreview。resource作成なし |
 | AUTHZ-001 | P0 | Band Membership authorization | 完了（PR #31）。5 roleのcapability matrix、resource ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。実装なし |
 | API-001 | P0 | Band / Song core read-write | DATA-002 contractの最小slice。Auth/Authz/Dataのgate後のみ |
 | STORAGE-001-DESIGN | P0 | Private Preview / MIDI storage contract | 完了（PR #32）。bucket、encryption、opaque key、format / size、state、short-lived upload/access、retention、recoveryを設計。resource作成なし |
-| STORAGE-001 | P0 | Private Preview / MIDI Asset implementation | CLOUD-003 foundation execution gateとSTORAGE-001-DESIGN承認後のみ。S3 / API / IAM実装は別task |
+| STORAGE-001 | P0 | Private Preview / MIDI Asset implementation | CLOUD-003 foundationとSTORAGE-001-DESIGNは完了。S3 / API / IAM実装はOIDC / deployment boundaryを含む別task / Human Gate後のみ |
 | VERSION-001 | P0 | Persisted Version workflow | DAW export後の明示Version作成。Proposal Decisionによる自動作成なし |
 | COMMENT-001 | P0 | Persisted Version Comment | Version-scoped Comment + Anchorとpermission / conflict test |
 | PROPOSAL-001 | P1 | Persisted MIDI Proposal + Decision | SOURCE_MIDIを上書きしない別Asset / entityとDecision履歴 |
@@ -93,7 +94,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
-| COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | レビュー待ち（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
+| COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
 | COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
 | NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | Security / direct / ordinary category、preset、digest、retry、provider比較を設計。Email / push provider採用とresource作成は別Human Gate |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
@@ -181,13 +182,14 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| COLLAB-001-DESIGN | #36 | 2026-09-13 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerを設計。runtime / DynamoDB physical design変更なし |
 | CREATIVE-001-DESIGN | #35 | 2026-09-11 | 創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus Modeを設計。runtime / DynamoDB physical design変更なし |
 | AUTH-001-DESIGN | #34 | 2026-09-11 | invitation-gated signup、Cognito Managed Login、BFF session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
 | CLOUD-OIDC-001-DESIGN | #33 | 2026-09-11 | GitHub Environment限定OIDC trust、CDK role delegation、PR safety、revocation contractを設計。OIDC / IAM / workflow実装なし |
 | STORAGE-001-DESIGN | #32 | 2026-09-11 | private Preview / MIDIのbucket、encryption、opaque key、upload / access、retention、recovery contractを設計。AWS resource作成なし |
 | AUTHZ-001 | #31 | 2026-09-11 | 5 roleのBand capability、canonical ownership、strong Membership check、cross-Band denial、AuditEvent、future test contractを設計。AWS resource作成なし |
 | CLOUD-DATA-001 | #30 | 2026-09-11 | Cloud MVPのOn-Demand single-table、sparse GSI、access pattern、transaction、concurrency、PITR / restoreを設計。AWS resource作成なし |
-| CLOUD-003C-DECISION | #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定。actual bootstrapは別Human Gateで未承認 |
+| CLOUD-003C-DECISION | #29 | 2026-09-11 | nonprod bootstrapの一時permission、execution policy、proposed command、runbookを一案へ確定。別Human Gateを経て2026-09-13にactual bootstrap完了 |
 | CLOUD-003C-REVIEW | #28 | 2026-09-11 | 現行CDK bootstrapのresource、cost、permission、execution policy、OIDC原則をAWS公式資料で整理。AWS接続・resource変更なし |
 | CLOUD-003C-PREP | #27 | 2026-09-11 | 人間確認済みのAWS nonprod readinessとactual bootstrap前のHuman Gateを機密識別子なしで同期。AWS接続・resource変更なし |
 | CLOUD-003B-CI | #26 | 2026-09-10 | Node.js 24の既存`Quality checks`へinfra build / test / offline synthを統合。AWS credential・OIDC・resource操作なし |

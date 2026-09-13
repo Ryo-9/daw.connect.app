@@ -47,6 +47,8 @@
 
 ```text
 Cloud foundation / IaC decision
+→ Nonprod CDK deployment foundation（2026-09-13完了）
+→ GitHub OIDC deployment trust implementation
 → Authentication
 → Band Membership / authorization
 → Song / Version metadata persistence
@@ -57,6 +59,8 @@ Cloud foundation / IaC decision
 → Decision
 → Private Alpha web deployment
 ```
+
+完了したnonprod foundationは`CDKToolkit`だけで、application resourceやdeployment pipelineではありません。OIDC provider / role / GitHub Environment / workflow、Cognito、DynamoDB、application S3、Lambda / API Gateway、hostingは各専用taskとHuman Gateを経て追加します。
 
 Web hosting、IaC、AWS account / environment分離は実装前のblocking decisionです。CloudFront、WebSocket、server transcoding、formal invitation emailは初期loopに必須とせず、実測で必要になった時に追加します。具体的な構成、cost guardrail、security、backup、failure handlingは[AWS.md](AWS.md)を参照します。
 

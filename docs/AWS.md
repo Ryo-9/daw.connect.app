@@ -739,7 +739,7 @@ Private Alpha accountの準備とbootstrapは、nonprodのrunbookと失敗時手
 - localで`aws sts get-caller-identity --profile streamband-nonprod`の成功を確認済み。ただしoutput、account number、ARNその他のcredential由来識別子は記録しない
 - 現在のIAM permissionはlocal sign-in supportへ意図的に限定されており、AWS administrationまたはbootstrapに必要なpermissionが準備済みとは扱わない
 - このcheckpointではapplication AWS resourceを作成していない
-- CDK bootstrap / deployと、それに必要な権限変更は未承認のまま維持する
+- このcheckpoint時点ではCDK bootstrap / deployと必要な権限変更は未承認だった。その後2026-09-13にbootstrapだけが別Human Gateで完了し、application deployは未承認のまま
 
 この記録は人間から報告されたreadinessの状態同期であり、AWS account、IAM、Budget、CLI認証をCodexが検証または変更したことを意味しません。
 
@@ -758,9 +758,9 @@ CLOUD-003Bで許可されるのは、AWSに接続しないrepository toolchain�
 
 この段階ではS3、ECR、IAM、OIDC、Budgets、SNS、CloudWatch、Cognito、Lambda、API Gateway、DynamoDBを定義しません。AWS connection、API call、bootstrap、deploy、diff、destroyも行いません。そのためAWS runtime resourceとAWS runtime costは0です。
 
-### CLOUD-003C: First AWS connection / bootstrap（pending Human Gate）
+### CLOUD-003C: First AWS connection / bootstrap（completed 2026-09-13）
 
-CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、permission、cost、rollbackを再確認したうえで最初のAWS接続とnonprod bootstrapを行う将来taskです。CLOUD-003Bの承認には含まれず、明示的な別Human Gateが必要です。Private Alphaや本物の未公開曲も対象にしません。
+CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、permission、cost、rollbackのreviewと明示Human Gateを経て、2026-09-13に人間がStreamBand `nonprod`で実行し完了しました。作成されたのはCDK deployment foundationの`CDKToolkit`であり、Private Alpha、本物の未公開曲、application stackは対象にしていません。
 
 実際の`cdk bootstrap`より前に、別のhuman-gated taskで次を順番に行います。
 
@@ -770,7 +770,7 @@ CLOUD-003Cは、対象account / Region / role、bootstrap template、trust、per
 4. 作成予定resource、対象account / Region、必要permission、rollback / removal境界を実行前に人へ提示する
 5. 提示内容に対する明示的なhuman approvalを得た後だけ`cdk bootstrap`を実行する
 
-CLOUD-003C-PREPでは上記の調査、権限設計、OIDC / IAM変更、bootstrap、deployを実施しません。CLOUD-003自体は未完了で、actual bootstrapはHuman Gateによりblockされたままです。
+CLOUD-003C-PREP自体は上記の調査、権限設計、OIDC / IAM変更、bootstrap、deployを実施しないdocs-only checkpointでした。その後CLOUD-003C-REVIEW / DECISIONと別のexecution approvalを経てactual bootstrapが完了しています。GitHub OIDC、application deploy、Private Alpha foundationは引き続き別Human Gateです。
 
 ### CLOUD-003C-REVIEW: CDK bootstrap resource / cost / permission review
 
@@ -880,7 +880,7 @@ OIDC deployment roleはhuman bootstrap permissionとは別の設計対象です�
 9. **Data boundary**: bootstrapには未公開楽曲、production data、application assetを投入しない
 10. **Explicit approval**: 上記command、resource、permission、execution policy、cost、rollbackを提示後、人の明示承認があるまで実行禁止
 
-`AUTH-001`その他の実装taskは、必要なfoundation gateが完了するまでblockしたままにします。CLOUD-003 actual bootstrapは未承認です。
+このreview時点では`AUTH-001`その他の実装taskとCLOUD-003 actual bootstrapをblockしていました。その後2026-09-13にCLOUD-003Cだけが別Human Gateを通過して完了しました。Application実装は引き続き各専用task / approvalを必要とします。
 
 #### Official references（2026-09-11確認）
 
@@ -901,9 +901,9 @@ OIDC deployment roleはhuman bootstrap permissionとは別の設計対象です�
 
 判断日: 2026-09-11
 
-状態: **Review recommendation — actual bootstrapは未承認**
+状態: **Human-approved — 2026-09-13 actual bootstrap完了**
 
-この節はCLOUD-003C-REVIEWを、専用StreamBand nonprod accountで1回だけ行うbootstrapの推奨案へ絞り込んだものです。AWSへ接続せず、policy、role、resourceを作成・変更せず、commandも実行していません。人がこの案を承認した後も、実行は別taskとし、直前にcurrent CLI / template / priceを再確認します。
+この節はCLOUD-003C-REVIEWを、専用StreamBand nonprod accountで1回だけ行うbootstrapの推奨案へ絞り込んだ実行前記録です。このdocs decision作成時点ではAWSへ接続せず、policy、role、resourceを作成・変更せず、commandも実行していません。その後、別の明示Human Gateを通過し、2026-09-13に人間が実行しました。実績は後段のexecution recordを正とします。
 
 #### Human bootstrap permission model
 
@@ -1061,6 +1061,62 @@ human performs one approved bootstrap
 
 初回bootstrapにGitHub OIDCは技術的な必須条件ではありません。bootstrap permission、OIDC trust、継続deploy permissionを同時に作ると、失敗原因とprivilege boundaryが混ざるため分離します。このPR後もOIDCは未実装です。
 
+### CLOUD-003C-EXECUTION-RECORD: Human-operated nonprod bootstrap
+
+実行日: 2026-09-13
+
+この節は人間側で確認された実行結果を、account ID、ARN、UserId、email、credential、token、command outputなしで記録します。Codexはこの記録taskでAWSへ接続せず、AWS / CDK commandを実行していません。
+
+#### Target and preflight
+
+- Environment: `nonprod`
+- Region: `ap-northeast-1`
+- Local AWS CLI profile label: `streamband-nonprod`
+- 実行前に`CDKToolkit`が存在しないことを人間が確認した
+- 実行前に、StreamBand専用AWS accountのnon-root identityであることとRegionを人間が確認した。Identity outputやidentifierはrepositoryへ保存しない
+- `infra/package-lock.json`を正として`npm ci`を実行し、repository-local CDK CLI `2.1141.0`を使用した
+- 人間の明示承認「実際のbootstrap実行を承認します」を得た後だけ実行した
+
+#### Bootstrap outcome
+
+| Item | Human-confirmed result |
+| --- | --- |
+| Toolkit stack | `CDKToolkit`作成成功 |
+| CloudFormation status | `CREATE_COMPLETE` |
+| Termination protection | enabled (`True`、`--termination-protection`) |
+| Bootstrap S3 public access block | enabled（`--public-access-block-configuration true`） |
+| Customer-managed bootstrap KMS key | 作成しない指定（`--no-bootstrap-customer-key`） |
+| CloudFormation execution policy | AWS managed `AdministratorAccess`をCloudFormation execution roleへ指定 |
+| Extra trusted accounts | none |
+| Custom qualifier | none。default `hnb659fds`を維持 |
+
+`AdministratorAccess`はbootstrapが作るCloudFormation execution roleのためのpolicyで、human IAM userへroutine `AdministratorAccess`を付与したものではありません。このexecution roleは後続のreview済みCDK deploymentでのみ使うfoundationです。Broad permissionのblast radiusはnonprod account内に残るため、OIDC trust、workflow trigger、CDK diff / review、Private Alphaとのaccount分離を後続gateで維持します。
+
+#### Temporary bootstrap permission cleanup
+
+- Bootstrap直前にroot consoleを一時使用し、human IAM userへone-time customer-managed policy `StreamBandCdkBootstrapTemporary`をattachした
+- Policy scopeはbootstrapに必要なCloudFormation、ECR、SSM、S3、IAMのservice familyに限定するconceptで、ongoing permissionではない
+- `CDKToolkit`成功確認後にhuman IAM userからdetach済み
+- Customer-managed policy本体も削除済み
+- Root userはcleanup後にlogout済みで、routine developmentには使用しない
+- Root access keyとlong-lived IAM access keyは作成していない
+- Account ID、ARN、UserId、root email、credential、MFA情報、tokenはrepositoryへ保存していない
+
+Human local authenticationはlong-lived access keyではなくtemporary authenticationを使用しました。今後の継続deployment identityはCLOUD-OIDC-001-DESIGNに従うGitHub OIDCを候補とし、human bootstrap permissionを再attach・再作成してroutine deployへ流用しません。
+
+#### Completion boundary
+
+CLOUD-003C / CLOUD-003のnonprod CDK deployment foundationは完了です。ただし、次は未実装・未作成です。
+
+- GitHub OIDC provider、nonprod deployment role、GitHub Environment / deployment workflow
+- Cognito User Pool、BFF session、authentication runtime
+- DynamoDB application metadata table
+- private application Asset S3 bucket
+- API Gateway、Lambda、notification delivery infrastructure
+- Vercel / Amplify hosting deployment、Private Alpha environment、application deployment pipeline
+
+`CDKToolkit`はapplication runtime resourceではありません。次候補のCLOUD-OIDC-001はOIDC provider、nonprod deploy role、CDK bootstrap role delegation、GitHub Environment `nonprod`、protected `main`からのmanual deployment workflowを別task / Human Gateで扱い、最初のapplication resource deploymentとは分離します。
+
 #### Official references（2026-09-11再確認）
 
 - [AWS CLI: Login for local development using console credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html)
@@ -1082,7 +1138,7 @@ human performs one approved bootstrap
 
 調査日: 2026-09-11。これはnonprod継続deployment用のtrust / permission設計であり、OIDC provider、IAM role / policy、GitHub Environment、secret / variable、workflow、AWS resourceを作成・変更していません。AWS接続、CDK bootstrap / deployも行っていません。実装には本章末尾のHuman Gateと専用taskが必要です。
 
-既存のPR `Quality checks`は`pull_request`で動くread-only CIのまま維持し、AWS credentialを取得させません。actual CLOUD-003C bootstrapも別Human Gateで未承認です。
+既存のPR `Quality checks`は`pull_request`で動くread-only CIのまま維持し、AWS credentialを取得させません。CLOUD-003C bootstrapは2026-09-13に別Human Gateで完了しましたが、GitHub OIDC、Environment、deployment workflow、application deployは未実装・未承認です。
 
 ### Three identities are separate
 
@@ -1355,7 +1411,7 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 11. Environment protection / reviewer / bypass設定
 12. rollback、trust removal、session revocation、provider removalの手順
 
-このreview後もOIDC provider / role / Environment / workflowは**not implemented / not approved for execution**です。CLOUD-003C actual bootstrapも別Human Gateです。
+このreview後もOIDC provider / role / Environment / workflowは**not implemented / not approved for execution**です。CLOUD-003C actual bootstrapはその後2026-09-13に完了し、temporary human privilegeも撤去済みです。
 
 ### Official references（2026-09-11確認）
 
@@ -1373,7 +1429,7 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 
 ### Status and boundary
 
-初回調査日: 2026-09-11。Human review revision: 2026-09-11。この章は、2人のinvitation-gated friend test向けにAmazon Cognito User Poolsとbrowser sessionの境界を実装前に定める設計です。Cognito user pool / domain / app client / user、invitation、callback URL、client secret、session / device store、API integration、AWS resourceは作成していません。AUTH-001 runtime実装はCLOUD-003Cのfoundation execution gateと、このrevised designのreviewが完了するまでblockします。
+初回調査日: 2026-09-11。Human review revision: 2026-09-11。この章は、2人のinvitation-gated friend test向けにAmazon Cognito User Poolsとbrowser sessionの境界を実装前に定める設計です。Cognito user pool / domain / app client / user、invitation、callback URL、client secret、session / device store、API integration、application AWS resourceは作成していません。CLOUD-003C foundation execution gateは2026-09-13に完了しましたが、AUTH-001 runtime実装はOIDC / deployment boundaryを含む別taskと明示Human Gateまで未承認です。
 
 認証と認可を次のように分けます。
 
@@ -1905,7 +1961,7 @@ Current feature、quota、pricing、Managed Login behaviorはresource / runtime�
 
 ### Status and scope
 
-設計日: 2026-09-11。この章はCloud MVPの事前設計であり、S3 bucket、IAM、API、Lambda、KMS key、CORS、lifecycle、AWS resourceは作成していません。AWS接続、CDK bootstrap / deployも行っていません。実装はCLOUD-003 foundation execution gateと本設計のhuman review後に、別taskで行います。
+設計日: 2026-09-11。この章はCloud MVPの事前設計であり、application S3 bucket、IAM、API、Lambda、KMS key、CORS、lifecycle、application AWS resourceは作成していません。この設計task自体はAWS接続、CDK bootstrap / deployを行わず、その後CLOUD-003C foundation bootstrapだけが2026-09-13に完了しました。Storage実装は本設計のreviewと別task / Human Gateを必要とします。
 
 初回friend testの対象は次の3 kindだけです。
 
