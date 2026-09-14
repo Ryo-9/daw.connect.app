@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | Codex | レビュー待ち | `ui/creative-surface-001` | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、作業状態文書 | 2026-09-14 | 未作成 | Memo / Idea / Taskの統合surfaceとpresentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
+| CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | Codex | レビュー待ち | `ui/creative-surface-001` | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、作業状態文書 | 2026-09-14 | #44 | Memo / Idea / Taskの統合surfaceとpresentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
 
 ## 完了・中止履歴
 

@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | レビュー待ち。Memo / Idea / Task、filter、Anchor marker、presentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
+| 1 | CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | レビュー待ち（PR #44）。Memo / Idea / Task、filter、Anchor marker、presentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | ACTIVATION-REVIEW / PR #43完了後の別Human Gate。Trust Stack 1件の作成とread-only verificationだけを扱い、Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -88,7 +88,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | 完了（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更なし |
 | CREATIVE-DATA-001 | P1 | Creative item persistence extension | 完了（PR #42）。1つのCreativeItem entity、既存ScopeIndex、relationship / idempotency / transaction / tombstone / structural historyをDEC-025として承認。新table / GSI、resource、runtime変更なし |
 | CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | 完了（PR #41）。Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingし、DEC-024を承認済み。Runtime / DB physical schema変更なし |
-| CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | レビュー待ち。Song DetailにMemo / Idea / Taskの統合surface、種類filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。既存memo / TODOは残し、playback / Version作成をblockしない |
+| CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | レビュー待ち（PR #44）。Song DetailにMemo / Idea / Taskの統合surface、種類filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。既存memo / TODOは残し、playback / Version作成をblockしない |
 
 ## Collaboration Experience Lane
 
