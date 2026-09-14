@@ -74,6 +74,19 @@ StreamBandはproject management appではありません。作者やBand member�
 
 Taskのhard delete / tombstone、completion metadata、assignee離脱処理、Memo / Idea / Taskの物理保存形式は実装前のdata / authorization gateで決めます。
 
+### Creative itemの権限境界
+
+Creative itemはprivate Band dataです。全操作でcanonical Song / itemからBandを導出し、strong readしたACTIVE Membershipとrole capabilityを確認します。Creator、assignee、URL上のBand ID、client表示のroleだけでは権限を付与しません。
+
+- Owner / Admin / Editorは通常のMemo / Idea / Task作成・編集・変換とTask管理を行える。Editorは他人が作成したitemを削除できない
+- Commenterはreview contributionとしてMemo / Ideaを直接作成でき、自分のCommentから未割当Taskを作成できるが、一般Taskのstate / assignee / priority / due dateは変更しない
+- GuestはCreative itemを閲覧できるが、作成・変更・削除は行わない
+- 「不要にする」とreopenはOwner / Admin / Editorが扱い、制作上の判断変更を失敗や罰として扱わない
+- Owner / Adminはshared itemの論理削除要求を扱える。Editor / Commenterのself-delete候補は、自分が作成し他memberの履歴・linkがないitemだけに狭め、physical delete方式は後続data gateで決める
+- Assigneeは任意の担当表示であってcapabilityではない。MemberがREMOVEDになった時点でmutationをdenyし、Taskは履歴として残してcurrent assigneeを未割当に扱う
+
+詳細なoperation matrix、Comment → Taskのownership、error / concurrency / Audit契約は[API.md](API.md)のCREATIVE-AUTHZ-001節を正とします。
+
 ## Band participationとNotification
 
 Band MembershipのRole / stateとActivity Statusを分離します。Roleは`Owner / Admin / Editor / Commenter / Guest`のauthorization capability、Activity StatusはBand内で現在の参加状況を伝えるinformational profile metadataです。

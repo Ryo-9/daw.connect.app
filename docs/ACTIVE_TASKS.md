@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SURFACE-016 | Long song title boundary verification | Codex | レビュー待ち | `ui/surface-016-long-song-title-boundary` | `src/components/song-card.tsx`、`src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、作業状態文書 | 2026-09-14 | #40 | 長い日本語・英数字混在titleを5 viewportで検証し、主要card、見出し、breadcrumbのpage overflowを最小修正 |
+| CREATIVE-AUTHZ-001 | Creative item authorization design | Codex | レビュー待ち | `docs/creative-authz-001` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | 未作成 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityをCREATIVE-001とAUTHZ-001へ統合 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| SURFACE-016 | 完了 | Codex | `ui/surface-016-long-song-title-boundary` / #40 | 2026-09-14 | 主要Song card、detail見出し、breadcrumbの長文境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eをmainへマージ済み |
 | SURFACE-015C | 完了 | Codex | `ui/surface-015c-custom-404` / #39 | 2026-09-14 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加してmainへマージ済み |
 | CLOUD-OIDC-001-PREP | 完了 | Codex | `chore/cloud-oidc-001-prep` / #38 | 2026-09-14 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synthしmainへマージ済み。AWS / GitHub適用なし |
 | CLOUD-003C-EXECUTION-RECORD | 完了 | Codex | `docs/cloud-003c-bootstrap-execution-record` / #37 | 2026-09-13 | Human-operated nonprod bootstrapの成功、temporary privilege撤去、application resource未作成を機密識別子なしで記録しmainへマージ済み |

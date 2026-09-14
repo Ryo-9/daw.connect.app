@@ -164,6 +164,30 @@ Creative workflowの実装時は、制作をblockしないこととVersion histo
 
 Integration testは将来承認されたAUTHZ capabilityとphysical modelを使い、private content、実user、未公開曲をfixture / logへ入れません。
 
+### CREATIVE-AUTHZ-001 future authorization contract
+
+Creative item実装では、CREATIVE-AUTHZ-001のrole bundleをserver-side table-driven testにし、UI表示やcreator / assignee fieldだけではpermissionが増えないことを検証します。現在はdocs-onlyで、runtime test / fixture / DB schemaを追加しません。
+
+- `Owner / Admin / Editor / Commenter / Guest`の各capabilityをallow / conditional / denyまでparameterized testする
+- GuestはCreative itemをviewできるが、create / edit / convert / Task mutation / link / delete / Audit readをすべてdenyされる
+- CommenterはMemo / Ideaを作成し、自分のMemo / Ideaだけをedit / Memo ↔ Idea変換 / Anchor更新できる。Direct Task createと一般Task mutationはdenyされる
+- Commenterは自分のnon-tombstoned Commentからだけunassigned `OPEN / NORMAL` Taskを作れ、他人Commentからの変換はdenyされる
+- Owner / Admin / Editorは通常のCreative item edit / conversionとTask state / assignee / priority / due / Anchorを更新できる
+- Editorが他人作成itemをdeleteできず、Owner / Adminだけがshared itemのlogical deletion requestを行える
+- Editorのself-deleteとCommenterのown Memo / Idea deleteは、他member history / linkがある場合にdenyされる
+- Owner / Admin / EditorはTaskを`CANCELED`へ「不要にする」ことができ、`DONE / CANCELED`からreopenできる。Commenter / Guestはdenyされる
+- Cross-Band item / Song / Version / Anchor / source Comment mismatchとforged client `bandId`を404候補でdenyする
+- inactive / REMOVED memberはcreator / author / assigneeでも次のprotected requestからread / mutationをdenyされる
+- Assigneeに設定されてもrole capabilityは増えず、Guest / CommenterがTask status permissionを取得しない
+- Stale `expectedRevision`は409となり、他memberの本文 / kind / state / assignmentをsilent overwriteしない
+- Payloadは有効でもcurrent stateから不可能なTask transitionは409、不正enum / date / Anchor inputは422となる
+- Same Commentに対するretry / double actionは同じlinked Taskへ収束し、accidental duplicateを作らない
+- Source Comment authorとTask creatorが異なっても両attributionを保持し、元Commentをedit / tombstoneしない
+- Former memberはmutationできず、authorized remaining memberには共有production historyが残り、account deletion後の表示はanonymization contractに従う
+- Unfinished / DONE / CANCELED Taskとauthorization denialのAuditを、Version作成blockや個人生産性scoreへ使用しない
+
+Logical deletion / tombstone、link / history判定、removed assignee reconciliation、idempotencyのphysical integration testはCREATIVE-DATA-001でschemaを承認した後に追加します。
+
 ### COLLAB-001-DESIGN future membership / notification contract
 
 Membership lifecycleとNotificationを実装する場合は、sessionやclient表示ではなくstrong Membership / canonical sourceを正として次を検証します。現在はtest code、provider、AWS resourceを追加しません。
