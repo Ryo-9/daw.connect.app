@@ -36,6 +36,7 @@
 | DEC-021 | 2026-09-11 | Invitation-gated CognitoとBFF Web session方針を定める | 承認済み | Authentication / Signup / Session / Device security | - |
 | DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
+| DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
 
 ---
 
@@ -395,6 +396,26 @@
 - Physical design: Activity Status、Preference、QuietHours、Notification、TTL / index / digest / providerは後続gate。CLOUD-DATA-001のPK / SK / GSIを変更しない
 - 実装状態: docs-only。Runtime、AWS、Cognito、DynamoDB resource、delivery provider、workflow、package、infraは変更していない
 - 関連: COLLAB-001-DESIGN、AUTHZ-001、AUTH-001-DESIGN、CREATIVE-001-DESIGN、CLOUD-DATA-001、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-024: Creative itemのrole capabilityとdestructive境界を定める
+
+- 日付: 2026-09-14
+- ステータス: 承認済み
+- 提案者: Codex（CREATIVE-AUTHZ-001）
+- Authorization: Creative operationはcanonical item / Song / source CommentからBandをderiveし、strong ACTIVE BandMembershipとrole capability、relationship / state / revisionを順に確認する。Creator、assignee、Activity Status、URL、client role、GSI / cacheだけでは許可しない
+- Owner / Admin: 全Creative itemの通常操作とshared itemのlogical deletion requestを扱い、sanitized Creative Auditを読める
+- Editor: Memo / Idea / Taskの作成・編集・相互変換、Task state / reopen / unnecessary / assignee / priority / due / Anchorを扱う。通常制作を止めない一方、他人作成itemのdeleteはdenyする
+- Commenter: Memo / Ideaを直接作成し、自分のMemo / Ideaだけをedit / Memo ↔ Idea変換 / Anchor更新できる。自分のCommentからunassigned Taskを作れるが、direct Task createと一般Task管理は行わない
+- Guest: ACTIVE same-Band memberとしてsafe Creative item readだけを許可し、mutation / Audit readをdenyする
+- Delete: Owner / Adminだけがbroader shared deletionを扱う。Editorのown item、Commenterのown Memo / Ideaは他memberのhistory / linkがない場合だけlogical self-delete候補とし、hard delete / tombstone / restore / retentionはCREATIVE-DATA-001で決める
+- Task flexibility: Owner / Admin / EditorはTaskを`CANCELED`へ「不要にする」ことができ、`DONE / CANCELED`からreopenできる。これは失敗評価ではなく、Song / Version作成をblockしない
+- Comment → Task: Owner / Admin / Editorはsame-Song Comment、Commenterは自分のCommentだけをTask化できる。元Commentとauthorを保持し、Task creatorを別記録し、1 source Commentあたりnon-deleted Task 1件としてretry / double actionをdeduplicateする
+- Assignee: optionalなsame-Band ACTIVE member 1人で、permissionを付与しない。REMOVED後は本人のaccessを即denyし、Task / historyを残したままcurrent assignmentを未割当に扱う
+- Error / concurrency: 未認証401、same-Band capability不足403、hidden / cross-Band / inactive Membership 404、stale revision / invalid current transition / duplicate conflict 409、input validation 422。Mutable fieldは`expectedRevision`でsilent overwriteを防ぐ
+- Audit: create、convert、status、reopen、unnecessary、assign / unassign、delete request、Comment → Task / linkとsensitive destructive denialをsafe event候補にする。本文やtitleを複製せず、個人の生産性評価へ使わない
+- 実装状態: docs-only proposal。Runtime、UI、API route、Cognito、DynamoDB physical key / GSI、migration、AWS、infra、workflow、packageは変更していない
+- Human review: PR #41のhuman reviewでDEC-024のmatrixを承認済み。Role permissionを実装時のad hoc例外で広げず、変更は別authorization reviewへ戻す
+- 関連: CREATIVE-AUTHZ-001、AUTHZ-001、CREATIVE-001-DESIGN、COLLAB-001-DESIGN、DEC-018、DEC-022、DEC-023、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

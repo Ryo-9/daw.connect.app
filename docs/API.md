@@ -1014,13 +1014,138 @@ Timeline marker cluster、playhead連動highlight、Creative Board filter、Focu
 
 - `Memo / Idea / Task`をsingle physical item + kindで持つか、既存`SongMemo / Task`を分けるか
 - Idea、current target、source Comment link、completion metadataのphysical representationとindex
-- Creative item capability / moderation / delete matrix、hard delete / tombstone / retention / AuditEvent
+- Creative itemのhard delete / tombstone / retentionと、self-delete可能性を判定するphysical relationship / history表現
 - Comment-to-Task idempotency scopeと、同じCommentからintentionalに複数Taskを作る将来要件
 - bar / beat / time range、Track code、duration、Version変更時のvalidation
 - outstanding projectionのquery / pagination / consistency。CLOUD-DATA-001のkey / GSIをこのtaskで変更しない
 - Focus Mode / filter preferenceの保存先と、Timeline clusterの表示計算
 
 これらの未決事項を理由に、創作をblockするworkflow、Task完了率の評価、Anchor自動remap、SOURCE_MIDI上書き、ProposalからのVersion自動作成を導入しません。
+
+## CREATIVE-AUTHZ-001: Creative item authorization contract
+
+### Status and decision
+
+この章はCREATIVE-001-DESIGNとAUTHZ-001を統合したCloud MVPの推奨authorization契約です。設計日: 2026-09-14。Draft PRでhuman reviewを受ける提案であり、API route、runtime policy、DynamoDB physical key / GSI、migration、UI、AWS resourceは実装しません。
+
+- `Owner / Admin / Editor / Commenter / Guest`はAUTHZ-001と同じcapability bundleで、数値hierarchyとして比較しない
+- `Memo / Idea / Task`はmandatory pipelineではなく、permissionがあるactorは許可された種類を直接作成または相互変更できる
+- すべてのread / mutationはcanonical Creative itemまたはsource Comment / SongからBandをderiveし、base itemのACTIVE Membershipをstrong readしてから判定する
+- Creatorとassigneeはrelationship / historyであり、単独ではcapabilityを付与しない。Activity Statusもauthorizationへ使用しない
+- Creative operationがunfinishedであることをSong / Version作成のdeny条件にせず、Auditを生産性評価へ使わない
+
+### Capability legend
+
+- `A`: role bundleとして許可。Same Band、ACTIVE Membership、item state、revision等の条件は引き続き必須
+- `C`: 表に記載するcreator / source / relationship条件を追加で満たす場合だけ許可
+- `D`: deny
+- `Same Band`は全行で必須。Cross-Band、missing / inactive Membershipは外向き404候補
+- Failure列は未認証401を省略する。同じBandでcapability不足は403、stale / state conflictは409、入力不正は422
+
+### Capability matrix
+
+| Capability | Owner | Admin | Editor | Commenter | Guest | Scope / ownership / state condition | Audit | Failure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `creative:item:create` | A | A | A | C | D | ACTIVE Song。Owner / Admin / EditorはMemo / Idea / Task、CommenterはMemo / Ideaだけ。Creatorはserver identityから設定 | **Yes** | 403 / 409 / 422 |
+| `creative:item:view` | A | A | A | A | A | canonical item → Song → Band chain一致。Logically deleted本文はsafe tombstone projectionだけ | No | 404 |
+| `creative:item:edit` | A | A | A | C | D | active item、`expectedRevision`。Commenterは自分が作成したMemo / Ideaの本文だけ。Kind、Task state、assignee、priority、due、Anchorは各専用capabilityで判定 | revision history候補 | 403 / 409 / 422 |
+| `creative:item:convert` | A | A | A | C | D | active item、`expectedRevision`。Owner / Admin / EditorはMemo / Idea / Task間、Commenterは自分のMemo ↔ IdeaだけでTaskへの変換は不可 | **Yes** | 403 / 409 / 422 |
+| `creative:item:status-change` | A | A | A | D | D | Taskだけ。OPEN / IN_PROGRESS / DONEのallowed transition、`expectedRevision` | **Yes** | 403 / 409 |
+| `creative:item:reopen` | A | A | A | D | D | Taskだけ。DONE / CANCELEDからOPENまたはIN_PROGRESSへ明示変更、`expectedRevision` | **Yes** | 403 / 409 |
+| `creative:item:mark-unnecessary` | A | A | A | D | D | Taskだけ。非deleted stateからCANCELEDへ明示変更、`expectedRevision`。Version作成等を連動blockしない | **Yes** | 403 / 409 |
+| `creative:item:assign` | A | A | A | D | D | Taskだけ。assigneeは0またはACTIVE same-Band member 1人。Assign / unassignとも`expectedRevision` | **Yes** | 403 / 409 / 422 |
+| `creative:item:set-priority` | A | A | A | D | D | Taskだけ。NORMAL / IMPORTANT、`expectedRevision` | revision history候補 | 403 / 409 / 422 |
+| `creative:item:set-due-date` | A | A | A | D | D | Taskだけ。optional date-only、`expectedRevision`。期限超過でstateを自動変更しない | revision history候補 | 403 / 409 / 422 |
+| `creative:item:anchor` | A | A | A | C | D | Owner / Admin / Editorはactive item、Commenterは自分のMemo / Idea。Canonical Version / Song / Track relationshipとpoint / rangeを検証し、origin Anchorは自動remapしない | revision history候補 | 403 / 409 / 422 |
+| `creative:item:delete` | A | A | C | C | D | logical deletion request、`expectedRevision`必須。Editorは自分のitem、Commenterは自分のMemo / Ideaだけで、いずれも他memberのedit / Comment link / production historyがない場合。Editorによる他人item削除はdeny | **Yes** | 403 / 409 |
+| `creative:comment-to-task` | A | A | A | C | D | non-tombstoned CommentとSong chain一致。Commenterは自分のCommentだけ。TaskはOPEN / NORMAL / unassignedでserver作成し、source Commentを保持 | **Yes** | 403 / 409 / 422 |
+| `creative:link-comment` | A | A | A | C | D | same-Songのnon-tombstoned Commentとactive item。Commenterは自分のCommentと自分のMemo / Idea間だけ。Task conversion linkは上の専用commandを使う | **Yes** | 403 / 409 / 422 |
+| `creative:audit:view` | A | A | D | D | D | sanitized Band-scoped Audit page。Creative body、Comment body、title等を含めない | access log候補 | 403 / 404 |
+
+`creative:audit:view`はCreative eventだけをfilterする契約上の呼称で、実装時はAUTHZ-001の既存`audit:read`を再利用して構いません。どちらの場合もOwner / Adminだけに限定し、新しい広いAudit roleやclient-side filterで代替しません。
+
+`creative:item:delete`はclientから物理削除を直接実行するpermissionではありません。Owner / Adminのbroader shared deletionと、条件付きself-deleteはいずれもlogical deletion / tombstone要求として扱い、hard delete、retention、restore、reference判定のphysical implementationはCREATIVE-DATA-001へ残します。条件を確実に判定できない場合はdeleteをdenyし、Taskなら「不要にする」を案内します。
+
+### Selected role boundaries
+
+| Question | Recommendation |
+| --- | --- |
+| Commenter direct creation | Memo / Ideaだけを許可し、direct Task createはdenyする。Review observationを残せる一方、一般Task管理へroleを広げない |
+| Commenter Comment → Task | 自分のnon-tombstoned Commentだけ許可する。作成Taskはunassigned / OPEN / NORMALで、以後のTask管理はEditor以上 |
+| Commenter Task status | deny。AssigneeやTask creatorであってもstatus capabilityを得ない |
+| Editor other-created delete | deny。通常編集と「不要にする」は許可するが、他人itemの削除はOwner / Adminだけ |
+| Assignee changes | Owner / Admin / Editorがassign / unassignできる。Assignee対象になってもrole capabilityは増えない |
+| Unnecessary / CANCELED | Owner / Admin / Editorがsame-Band TaskをCANCELEDにでき、同じroleが後でreopenできる。Commenter / Guestはdeny |
+| Guest | Creative itemのsafe readだけ。MutationとAudit readはdeny |
+| Different Comment / Task owners | 許可する。Comment authorは不変、Task creatorはcommand actor、linkはserver管理。どちらのcreator fieldもcurrent authorityにしない |
+
+この境界は「CommenterをEditor相当にする」「Editorの通常制作を止める」「過去の判断を消せないようにする」のいずれも避けます。Roleが細かすぎることがfriend testで判明した場合はcapability bundleをreviewしますが、client-side例外では緩和しません。
+
+### Ownership, relationship, and mutation rules
+
+1. Serverはidentityからinternal Userを解決する
+2. Target Creative item、またはcreate先Song / source Commentをcanonical IDで取得する
+3. Stored relationshipからSongとBandをderiveし、URL / payloadのBand IDと不一致ならfail closedにする
+4. Base tableからactorのBandMembershipをstrongly consistent readし、`ACTIVE`を要求する
+5. Role bundleにoperation capabilityがあるか評価する
+6. Creator、source Comment author、assignee、item kind / state、Anchor、relationship条件を評価する
+7. `expectedRevision`とallowed transitionをconditional writeで検証する
+8. 必須operationはprivate本文を複製しないsafe AuditEventを記録する
+
+Client supplied `createdBy`、`authorUserId`、`assigneeUserId`、`bandId`、`songId`、`sourceCommentId`をauthorityとして信用しません。Serverがcanonical entitiesからrelationshipを構築し、creator / author attributionはimmutable historyとして保持します。Editor以上が他人itemをedit / convertしても元creatorは変えず、`updatedBy / updatedAt / revision`候補で変更主体を追跡します。
+
+### Task state and concurrency
+
+- Normal transitionは`OPEN ↔ IN_PROGRESS`、`OPEN / IN_PROGRESS → DONE`
+- `creative:item:reopen`は`DONE / CANCELED → OPEN / IN_PROGRESS`
+- `creative:item:mark-unnecessary`はnon-deleted Taskを`CANCELED`にする。失敗・penaltyとは表示しない
+- DONE、CANCELED、due date超過、unfinished件数はSong / Version mutationをblockしない
+- TaskからMemo / Ideaへconvertしてもorigin / link historyを失わせない。Task-only metadataをどうinactive / restoreするかはphysical design gate
+- Task state、assignee、priority、due date、Anchor、kind、本文updateはcurrent `revision`を読み、mutationへ`expectedRevision`を要求する
+- Conditional failure / stale revisionは409。Serverはsilent last-write-winsやautomatic retryで他memberの変更を上書きしない
+- Payloadとして不可能なenum / date / Anchor formatは422、valid payloadだがcurrent stateから不可能なtransitionは409
+
+### Comment to Task and link ownership
+
+Comment → Taskは元Commentをedit / tombstoneせず、Comment authorとTask creatorが異なってもよいものとします。Owner / Admin / Editorはaccess可能なsame-Song Commentを変換でき、Commenterは自分のCommentだけを変換できます。
+
+- MVPでは1つのsource Commentに対しnon-deleted linked Taskは1件とし、idempotency keyとconditional uniquenessでdouble click / retryを同じ結果へ収束させる
+- Existing linked TaskがDONE / CANCELEDでも新Taskを黙って増やさず、safe summaryを返す。意図的な複数Task化は後続review対象
+- Task本文の初期値、source Comment ID、origin Anchorはserverがcanonical Commentから設定する
+- Commenterが作るlinked Taskは`OPEN / NORMAL / assigneeなし`で、CommenterへTask管理権限を付与しない
+- General linkとconversion linkを混同せず、CommentからTaskを新規作成する場合は`creative:comment-to-task`を必ず使う
+
+### Assignee and removed-member behavior
+
+Assigneeはoptionalなsame-Band ACTIVE Membership 1人で、担当表示やNotification sourceにはなってもauthorization sourceではありません。Owner / Admin / Editorだけがassign / unassignでき、Guestを含むmemberをassigneeに選べても、そのmemberのrole capabilityは一切増えません。
+
+Memberがleave / removeされて`REMOVED`になった場合、actor本人は次のprotected requestから404候補でCreative item read / mutationを拒否されます。Taskとcreator historyは残し、remaining ACTIVE memberのauthorized viewではremoved assigneeをcurrent assignmentとして扱わず「未割当」へ戻します。Membership mutationを全Taskの同期更新完了に依存させず、read / next mutationでcanonical Membership stateを正とします。Denormalized assignee参照のcleanup方法はCREATIVE-DATA-001で決めます。
+
+Former memberはACTIVE capabilityを持たず、creator / author / contributorであってもmutationできません。Authorized remaining memberはBand historyとしてitemを閲覧でき、attribution / anonymizationはAUTH-001-DESIGNのaccount deletion contractに従います。
+
+### Error, audit, and privacy contract
+
+| Outcome | Outward behavior |
+| --- | --- |
+| unauthenticated / invalid identity | `401 UNAUTHENTICATED` |
+| same-Band ACTIVE memberだがcapability不足 | `403 FORBIDDEN` |
+| missing item、cross-Band chain、inactive / REMOVED Membership、hidden source | `404 NOT_FOUND`。存在理由を区別しない |
+| stale revision、duplicate link conflict、invalid current-state transition | `409 REVISION_CONFLICT / STATE_CONFLICT` |
+| invalid kind、date、Anchor、relationship input | `422 VALIDATION_ERROR`。Cross-Band秘匿が優先する場合は404 |
+
+AuditEvent必須候補はcreate、kind convert、Task status change、reopen、mark unnecessary、assign / unassign、logical delete request、Comment → Task、Comment linkです。Sensitive destructive denialはreason categoryとrequest IDをrate-limit / deduplicateして記録する候補です。通常の本文edit、priority、due date、Anchor updateはrevision history候補とし、full AuditEvent要否をphysical designで最終確認します。
+
+Auditはpermission review / incident recovery用で、個人のTask消化数、活動率、production score、rankingに使いません。Creative / Comment本文、Song / Band title、filename、Anchorの自由記述、signed URL、object key、token、credentialをAuditEvent / denial logへ複製しません。Safe fieldはrequest ID、opaque actor / item / Band ID、action code、before / after kind・state code、revision、result、safe reason category、timeです。
+
+### Implementation gates
+
+- Logical delete / tombstone / restore / retention、self-deleteで「他memberのhistory / linkなし」を判定するphysical representation
+- Creative item、source Comment link、origin / current target、completion / assignee metadataのphysical itemとindex
+- Removed assigneeを未割当に投影し、denormalized referenceをreconcileする方法
+- Comment-to-Task idempotency key、conditional uniqueness、intentional multiple Taskを将来許可する場合のmigration
+- Creative mutationのendpoint / command shape、runtime validation、capability constantの実装
+
+これらのgateはmatrixを曖昧にする理由ではありません。実装はこのdeny-by-default role boundaryを満たし、より広いpermissionが必要なら別authorization reviewを要求します。
 
 ## COLLAB-001-DESIGN: Membership lifecycle and notification contract
 

@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38とSURFACE-015C / PR #39までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCloud laneと独立したSURFACE-016で長い楽曲名の表示境界を検証しています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38とSURFACE-016 / PR #40までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCREATIVE-AUTHZ-001でCreative itemの5 role authorization contractをreviewしています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | SURFACE-016 | 長い楽曲名の境界確認 | レビュー待ち。長文fixtureで主要card、見出し、breadcrumbの折返しとpage overflowを5 viewportで検証。Cloud critical pathとは独立 |
+| 1 | CREATIVE-AUTHZ-001 | Creative item authorization design | レビュー待ち。Memo / Idea / Task、Comment→Task、assignee、state、deleteを5 role capabilityへ統合。Runtime / DB physical schema変更なし |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREP / PR #38のsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -86,7 +86,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | --- | --- | --- | --- |
 | CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | 完了（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更なし |
 | CREATIVE-DATA-001 | P1 | Creative item persistence extension | CREATIVE-001承認後の候補。Physical item / index / transaction / retention / Auditをreviewし、既存single-tableを変更する場合は専用Decisionとmigration planを要求 |
-| CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingする設計候補 |
+| CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | レビュー待ち。Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmapping。Runtime / DB physical schema変更なし |
 | CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | Data / Authz contract後の小規模surface候補。Timeline marker、cluster、Focusを非永続mockから検証し、playback / Version作成をblockしない |
 
 ## Collaboration Experience Lane
@@ -145,7 +145,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 | SURFACE-015A | P2 | モバイルのタップ領域調整 | 完了（PR #12）。主要操作を44px目安へ調整し、320 / 375 / 390 / 768pxで横overflowがないことを確認 |
 | SURFACE-015B | P2 | 320pxの楽曲詳細セクションナビ改善 | 完了（PR #14）。320pxで全section itemを表示し、navigation領域内の横scrollを解消 |
 | SURFACE-015C | P2 | custom 404の追加 | 完了（PR #39）。日本語案内とホームへの復帰導線をApp Router標準not-foundで追加 |
-| SURFACE-016 | P2 | 長い楽曲名の境界確認 | レビュー待ち。長文fixtureを使い、主要card、見出し、breadcrumbを320 / 375 / 390 / 768 / 1280pxで検証し、最小のoverflow修正を追加 |
+| SURFACE-016 | P2 | 長い楽曲名の境界確認 | 完了（PR #40）。主要card、見出し、breadcrumbを320 / 375 / 390 / 768 / 1280pxで検証し、最小のoverflow修正とE2Eを追加 |
 | SURFACE-017 | P1 | 楽曲作成・編集フォームの非保存プロトタイプ | 完了（PR #18）。保存処理なしで入力、review preview、未保存状態の見せ方を検証済み |
 
 ## Visual Lane
@@ -183,6 +183,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| SURFACE-016 | #40 | 2026-09-14 | 長い日本語・英数字混在titleの主要card / detail / breadcrumb境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eを追加 |
 | SURFACE-015C | #39 | 2026-09-14 | App Router標準のcustom not-foundで日本語案内とホームへの復帰導線を追加。AWS / Auth / Data / infra変更なし |
 | COLLAB-001-DESIGN | #36 | 2026-09-13 | Leave / remove、Owner invariant、Activity Status、Notification preset / Quiet Hours / Centerを設計。runtime / DynamoDB physical design変更なし |
 | CREATIVE-001-DESIGN | #35 | 2026-09-11 | 創作を管理せず支えるMemo / Idea / Task、Version履歴、Anchor、Focus Modeを設計。runtime / DynamoDB physical design変更なし |
