@@ -580,7 +580,7 @@ SK = META
 | `sourceCommentId` / `sourceCommentVersionId` / `sourceCommentCreatedAt` | Comment → Taskだけ | canonical source Commentのserver-managed locator。一般linkとは区別 |
 | `originAnchor` | optional | 作成時の位置履歴。別Versionへ自動remapしない |
 | `currentTargetAnchor` | optional | userが明示した現在target。Originとは別に更新可能 |
-| `hasExternalContribution` | required boolean | creator以外のstructural contributionが一度でも存在したかをserverがmonotonicに記録。Conditional self-delete guard |
+| `hasExternalContribution` | required boolean | creator以外による、self-delete不可にすべき共有contributionが一度でも存在したことをserverがmonotonicに記録。Title / body editを含む全対象mutationで更新し、一度`true`になったら`false`へ戻さない |
 | `commentLinkCount` | required integer | active general Comment edge数。Edge transactionと同時更新しself-delete guardに使用 |
 | `deletedAt` / `deletedBy` | `DELETED`時 | logical deletion metadata。Private bodyをAuditへコピーしない |
 | `GSI1PK` / `GSI1SK` | `ACTIVE` itemだけ | Song Creative Board用sparse ScopeIndex keys |
@@ -660,7 +660,7 @@ Leave / remove時にSong内の全Taskをfan-out updateしません。Membership�
 
 Authorized remaining memberがdirect Getした場合、repository layerはtombstone DTOとしてID、kind candidate、lifecycle、deletedAt、safe attributionだけを返し、title、body、Anchor、Task detailを返しません。Storage上のprivate contentをいつpurgeするか、restore API、retention、legal deletionは別Human Gateであり、TTLやautomatic hard purgeをこの提案へ追加しません。
 
-Editor / Commenterのconditional self-deleteは、actorがimmutable `createdBy`と一致し、`hasExternalContribution = false`、`commentLinkCount = 0`、`sourceCommentId`なし、`ACTIVE`、revision一致をすべて満たす場合だけ許可します。General Comment link作成やcreator以外のstructural mutationは同じtransactionでguard fieldsを更新します。Owner / AdminはDEC-024に従いshared itemをlogical deleteできます。Guardを完全に評価できない旧dataや不整合ではfail closedにします。
+Editor / Commenterのconditional self-deleteは、actorがimmutable `createdBy`と一致し、`hasExternalContribution = false`、`commentLinkCount = 0`、`sourceCommentId`なし、`ACTIVE`、revision一致をすべて満たす場合だけ許可します。`hasExternalContribution`はstructural eventの有無ではなく、creator以外によるtitle / body edit、kind conversion、Task state change、reopen / unnecessary、assign / unassign、priority / due date update、Anchor update、general Comment link、その他DEC-024上の他member edit / production historyに該当するmutationをすべて含みます。該当mutationではserverがactorとstored `createdBy`を比較し、同じatomic update / transaction内で値をmonotonicに`true`へ設定します。Client側判定や後続集計へ依存せず、creator自身だけのmutationでは`false`から変更しません。Owner / AdminはDEC-024に従いshared itemをlogical deleteできます。Guardを完全に評価できない旧dataや不整合ではfail closedにします。
 
 ### Structural history versus AuditEvent
 
@@ -682,6 +682,7 @@ AuditEventはauthorization、destructive operation、incident review用のBand-s
 | Operation | Atomic write / condition | Idempotency / history / Audit |
 | --- | --- | --- |
 | Create CreativeItem | Membership condition + `attribute_not_exists(Creative META)` + META Put | Idempotency Put + safe create Audit。Creator / Song chainはserver値 |
+| Edit title / body | ACTIVE actor Membership + capability + `revision = expectedRevision`でMETA Update。`actor != createdBy`なら同じatomic updateで`hasExternalContribution = true` | Idempotency candidate。Private title / bodyをAudit / structural eventへコピーせず、full text edit historyを作らない |
 | Convert kind | Membership + `revision = expectedRevision` + allowed lifecycle/kindでMETA Update | Idempotency + `KIND_CHANGED` + Audit |
 | Update Task status | Membership + revision + allowed current transition + `kind=TASK` | Idempotency + `TASK_STATUS_CHANGED` + Audit |
 | Reopen | Membership + revision + `status IN (DONE,CANCELED)`でMETA Update | Idempotency + `REOPENED` + Audit |
@@ -690,6 +691,8 @@ AuditEventはauthorization、destructive operation、incident review用のBand-s
 | Comment → Task | Actor Membership + source Comment condition + Creative Put + unique guard Put | Idempotency + `CREATED_FROM_COMMENT` + Audit。Guardがoperation IDを越えてduplicateを防止 |
 | Link Comment | Actor Membership + canonical Comment condition + Creative revision Update + edge Put | Idempotency + `COMMENT_LINKED` + Audit。Link count / external contribution guardも同時更新 |
 | Logical delete | Membership + capability / self-delete guard + revisionでMETA tombstone Update | Idempotency + `DELETE_REQUESTED` + Audit。Source guardがあれば`TASK_DELETED`へ同時更新 |
+
+Creator以外がCreativeItemを変更するすべてのmutation pathは、structural eventを作るかどうかに関係なく、同じMETA update / transaction内で`hasExternalContribution = true`を設定します。対象にはkind / state / reopen / unnecessary / assignment / priority / due / Anchor / Comment linkと、将来追加するDEC-024上の共有contributionが含まれます。この値をclearするoperationは設けません。
 
 各transactionはboundedな6〜9 item程度を想定し、DynamoDBの100 unique item / 4 MB制限内に保ちます。大量linkの一括mutationやSong全体fan-outは同じtransactionへ詰め込まず、実装時にcommand上限を設けます。Validation / permission / revision conflictは自動retryせず、throttle / retryable 5xxだけをbounded backoff対象にします。
 

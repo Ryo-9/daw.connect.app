@@ -213,6 +213,9 @@ DEC-025のhuman approval後に、DynamoDB Local / test repository等のAWS conne
 - `revision = expectedRevision`のconditionがkind / state / assignee / priority / due / Anchor / deleteのstale writeを409にする
 - Logical deleteでGSI keysを外し、direct Getはprivate title / body / Anchorを含まないsafe tombstoneを返す
 - Editor / Commenterのself-delete guardがcreator以外のhistory、Comment link、source Comment relationshipを検出してfail closedにする
+- Creator以外がtitle / bodyを一度編集した後は`hasExternalContribution`がmonotonicに`true`となり、creatorのconditional self-deleteをdenyする
+- Creator以外によるkind / Task state / reopen / unnecessary / assignment / priority / due / Anchor / Comment link等のstructural mutation後もconditional self-deleteをdenyする
+- Creator自身だけによるtitle / body editまたはその他mutationでは、`hasExternalContribution`を`false`から`true`へ変更しない
 - Owner / Adminのshared logical deleteでもhard purge、relationship cascade、restoreを暗黙に実行しない
 - Structural eventとAuditEventがsafe code / opaque IDだけを持ち、creative本文、Comment本文、signed URL、object key、tokenを複製しない
 - Transactionが100 unique item / 4 MBを超えるunbounded batchを受け付けず、large collectionsをpaginateする
