@@ -36,7 +36,7 @@
 | DEC-021 | 2026-09-11 | Invitation-gated CognitoとBFF Web session方針を定める | 承認済み | Authentication / Signup / Session / Device security | - |
 | DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
-| DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 提案中 | Creative authorization / Comment→Task / assignee / Audit | - |
+| DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
 
 ---
 
@@ -400,7 +400,7 @@
 ## DEC-024: Creative itemのrole capabilityとdestructive境界を定める
 
 - 日付: 2026-09-14
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（CREATIVE-AUTHZ-001）
 - Authorization: Creative operationはcanonical item / Song / source CommentからBandをderiveし、strong ACTIVE BandMembershipとrole capability、relationship / state / revisionを順に確認する。Creator、assignee、Activity Status、URL、client role、GSI / cacheだけでは許可しない
 - Owner / Admin: 全Creative itemの通常操作とshared itemのlogical deletion requestを扱い、sanitized Creative Auditを読める
@@ -414,7 +414,7 @@
 - Error / concurrency: 未認証401、same-Band capability不足403、hidden / cross-Band / inactive Membership 404、stale revision / invalid current transition / duplicate conflict 409、input validation 422。Mutable fieldは`expectedRevision`でsilent overwriteを防ぐ
 - Audit: create、convert、status、reopen、unnecessary、assign / unassign、delete request、Comment → Task / linkとsensitive destructive denialをsafe event候補にする。本文やtitleを複製せず、個人の生産性評価へ使わない
 - 実装状態: docs-only proposal。Runtime、UI、API route、Cognito、DynamoDB physical key / GSI、migration、AWS、infra、workflow、packageは変更していない
-- Human review: Draft PRでmatrixを承認または修正する。Role permissionを実装時のad hoc例外で広げず、変更は別authorization reviewへ戻す
+- Human review: PR #41のhuman reviewでDEC-024のmatrixを承認済み。Role permissionを実装時のad hoc例外で広げず、変更は別authorization reviewへ戻す
 - 関連: CREATIVE-AUTHZ-001、AUTHZ-001、CREATIVE-001-DESIGN、COLLAB-001-DESIGN、DEC-018、DEC-022、DEC-023、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
