@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CREATIVE-DATA-001 | Creative item DynamoDB physical design | レビュー待ち。CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加する提案。DEC-025はhuman review待ち |
+| 1 | CREATIVE-DATA-001 | Creative item DynamoDB physical design | PR #42のhuman reviewでDEC-025を承認済み。CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyのdocs-only designで、resource / runtime実装は未着手 |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREP / PR #38のsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |

@@ -112,7 +112,7 @@
 | ReviewRequest | Versionの確認依頼 | `id`, `songVersionId`, `requestedBy`, `status`, `dueAt?`, `createdAt`, `closedAt?` |
 | ReviewResponse | reviewerごとの回答 | `id`, `reviewRequestId`, `reviewerId`, `status`, `commentId?`, `createdAt`, `updatedAt` |
 | Task | 制作TODO | `id`, `songId`, `songVersionId?`, `songPartId?`, `assigneeMembershipId?`, `title`, `description?`, `status`, `priority?`, `dueAt?`, `createdBy`, `createdAt`, `updatedAt`, `completedAt?` |
-| CreativeItem（CREATIVE-DATA-001 proposal） | UI上のMemo / Idea / Taskを同じCreative Boardで扱うsingle physical entity候補。DEC-025はhuman review待ち | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision |
+| CreativeItem（CREATIVE-DATA-001 design） | UI上のMemo / Idea / Taskを同じCreative Boardで扱うsingle physical entity。DEC-025でdocs-only designを承認済み | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision |
 | ActivityStatus（論理metadata） | Role / Membership stateと独立したBand内参加状況 | `membershipId`, `statusCode`, `updatedBy`, `updatedAt`候補。Physical placementは未決定 |
 | NotificationPreference（論理contract） | User自身のpreset / event / channel / frequency選択 | `userId`, `preset`, category / channel overrides候補、timestamps。Authorizationとは無関係 |
 | QuietHours（論理contract） | ordinary deliveryをhold / digestする時間帯 | `userId`, `startLocalTime`, `endLocalTime`, `timeZone`, `enabled`, timestamps候補 |
@@ -192,7 +192,7 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 
 ## CREATIVE-001 conceptual model（CREATIVE-DATA-001の前提）
 
-CREATIVE-001-DESIGNでは「創作を管理せず、創作を支える」をproduct contractとし、Memo / Idea / Taskを同じCreative Boardで扱います。この章はdomain relationshipの前提で、具体的なsingle-table key、`ScopeIndex`、transaction、tombstone / history proposalは後段のCREATIVE-DATA-001を正とします。DEC-025はhuman review待ちで、resource / runtimeは未実装です。
+CREATIVE-001-DESIGNでは「創作を管理せず、創作を支える」をproduct contractとし、Memo / Idea / Taskを同じCreative Boardで扱います。この章はdomain relationshipの前提で、具体的なsingle-table key、`ScopeIndex`、transaction、tombstone / history designは後段のCREATIVE-DATA-001を正とします。DEC-025はdocs-only designとして承認済みで、resource / runtimeは未実装です。
 
 ### Creative item semantics
 
@@ -384,7 +384,7 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - Membership変更、Proposal Decision、Song archive、Asset削除等に限定した`AuditEvent`
 - authentication subjectからUserを引くlookup recordと、二重送信を防ぐidempotency record
 
-CLOUD-DATA-001時点では`CreativeItem`（Memo / Idea / Task）、`ActivityStatus`、`NotificationPreference`、`QuietHours`、`Notification`、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification delivery、search projection、Presence / Call、DAW Bridgeを最初のsliceからDEFERしました。CreativeItemだけは後続のCREATIVE-DATA-001 / DEC-025でsingle-table extensionを提案していますが、human approvalと実装は未着手です。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
+CLOUD-DATA-001時点では`CreativeItem`（Memo / Idea / Task）、`ActivityStatus`、`NotificationPreference`、`QuietHours`、`Notification`、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification delivery、search projection、Presence / Call、DAW Bridgeを最初のsliceからDEFERしました。CreativeItemだけは後続のCREATIVE-DATA-001 / DEC-025でsingle-table extensionのdocs-only designを承認済みですが、実装は未着手です。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
 
 ### Single-tableを選ぶ理由
 
@@ -555,7 +555,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 
 ### Status and selected model
 
-この章は、DEC-022のcreative workflowとDEC-024のauthorization contractを、CLOUD-DATA-001の既存single-tableへ追加する**提案中**のphysical contractです。設計日: 2026-09-14。DEC-025のhuman approval、runtime command / validation設計、resource変更は別gateであり、このtaskではDynamoDB table、GSI、migration、API routeを作成しません。
+この章は、DEC-022のcreative workflowとDEC-024のauthorization contractを、CLOUD-DATA-001の既存single-tableへ追加する**承認済みのdocs-only physical design**です。設計日: 2026-09-14。Runtime command / validation、migration、resource変更は別gateであり、このtaskではDynamoDB table、GSI、migration、API routeを作成しません。
 
 Memo / Idea / Taskは別entityへ分割せず、1つの`CreativeItem` entityと`kind = MEMO | IDEA | TASK`で表現します。同じitemを相互変換してもopaque immutable IDを維持するため、Comment link、origin、history、notification sourceが別itemへ分散せず、Memo → Idea → Taskをmandatory workflowにも変えません。Separate entity方式はTask-only fieldの型を分けやすい一方、変換時にID・link・idempotencyを移送するtransactionが増え、同一itemとしての制作履歴が曖昧になるためMVPでは採用しません。
 
@@ -776,7 +776,7 @@ Principal cost driverはCreativeItem数、ScopeIndex key write / storage、Comme
 - Auth provider、session、招待、capability policyの実装mapping
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
-- CreativeItem physical contractはCREATIVE-DATA-001 / DEC-025でsingle entity、既存ScopeIndex、relationship guard / edge、structural historyを提案中。Human approval、runtime schema / migration / resource実装は未着手
+- CreativeItem physical contractはCREATIVE-DATA-001 / DEC-025でsingle entity、既存ScopeIndex、relationship guard / edge、structural historyをdocs-only designとして承認済み。Runtime schema / migration / resource実装は未着手
 - Activity Status、NotificationPreference、QuietHours、Notificationのphysical item / index / TTL、90日cleanup、source projection、digest / delivery、security retention
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ

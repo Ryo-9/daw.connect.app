@@ -1139,7 +1139,7 @@ Auditはpermission review / incident recovery用で、個人のTask消化数、�
 
 ### Implementation gates
 
-- CREATIVE-DATA-001 / DEC-025で提案したCreativeItem、Comment guard / edge、origin / current target、assignee、tombstone、structural historyをhuman review後にruntime schemaへmappingする
+- CREATIVE-DATA-001 / DEC-025で承認したCreativeItem、Comment guard / edge、origin / current target、assignee、tombstone、structural historyを別実装taskでruntime schemaへmappingする
 - Logical delete後のhard purge / retention / restore APIとprivate content removalは別Human Gateで決める
 - Comment-to-Taskのintentional re-create / multiple Taskを将来許可する場合はguard record migrationとauthorizationを再reviewする
 - Creative mutationのendpoint / command shape、runtime validation、capability constantの実装
@@ -1148,7 +1148,7 @@ Auditはpermission review / incident recovery用で、個人のTask消化数、�
 
 ### CREATIVE-DATA-001 persistence handoff
 
-Physical proposalは[DATABASE.md](DATABASE.md)を正とし、API contractは次の境界を維持します。DEC-025は提案中であり、endpoint / DTO / runtime validationはまだ実装しません。
+承認済みのdocs-only physical designは[DATABASE.md](DATABASE.md)を正とし、API contractは次の境界を維持します。Endpoint / DTO / runtime validationはまだ実装しません。
 
 - Memo / Idea / Taskはsame opaque `creativeItemId`を保つ1つのCreativeItem + kind候補
 - Song Board listはexisting ScopeIndexのcandidate IDsを取得し、canonical itemsとstrong ACTIVE Membershipを再確認する。GSI resultだけではread / mutationを許可しない

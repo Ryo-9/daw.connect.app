@@ -190,7 +190,7 @@ Logical deletion / tombstone、link / history判定、removed assignee reconcili
 
 ### CREATIVE-DATA-001 future persistence contract
 
-DEC-025のhuman approval後に、DynamoDB Local / test repository等のAWS connectionを使わないfixtureから始め、次をphysical integration testへ追加します。このtaskではtable、runtime schema、test codeを追加しません。
+DEC-025のdocs-only designは承認済みです。別実装taskではDynamoDB Local / test repository等のAWS connectionを使わないfixtureから始め、次をphysical integration testへ追加します。このtaskではtable、runtime schema、test codeを追加しません。
 
 - Memo / Idea / Taskが1つのCreativeItem canonical keyを使い、kind変換でも`creativeItemId / createdBy / originAnchor`が変わらない
 - Memo / Idea itemへTask-only status、assignee、priority、due、completion fieldを不要に保存しない

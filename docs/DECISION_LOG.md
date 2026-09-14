@@ -37,7 +37,7 @@
 | DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
 | DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
-| DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 提案中 | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
+| DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 承認済み | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
 
 ---
 
@@ -421,7 +421,7 @@
 ## DEC-025: CreativeItemのsingle-table physical persistence contractを定める
 
 - 日付: 2026-09-14
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（CREATIVE-DATA-001）
 - 背景: DEC-022のMemo / Idea / TaskとDEC-024のcapabilityを実装する前に、identityを失わないkind変換、Comment → Task duplicate防止、optional Anchor、removed assignee、logical deletion、safe historyをCLOUD-DATA-001のsingle-table上で一貫して扱う必要がある
 - 提案: Memo / Idea / Taskを`PK=CREATIVE#<creativeItemId> / SK=META`の1つのCreativeItem + kindで扱い、相互変換でもID、creator、originを維持する。Task-only fieldはTask時だけcurrent METAへ保存する
@@ -435,8 +435,8 @@
 - Cost: 新GSIを避けてもCreative item、ScopeIndex key、edge / guard / history / Audit / idempotency、transaction、BatchGet、PITR、item sizeがbilling driverになる。Freeは保証せず、resource変更直前にcurrent priceを確認する
 - 見直し条件: Per-Song item数が約1,000件を継続超過、filtered listが5 page / 250 candidatesを頻繁に使い切る、assignee横断 / global search / reporting / Timeline window queryが必要、またはitem / transaction / hot-key / relational保守性が実測問題になった場合
 - Privacy: Credential、token、presigned URL、S3 keyをCreativeItemへ保存せず、title / body / Comment本文をCloudWatch、Audit、idempotency logへ複製しない
-- 実装状態: docs-only proposal。DynamoDB table / GSI、CDK、migration、runtime schema、API route、UI、AWS、workflow、dependencyは変更していない
-- Human review: 未実施。DEC-025は承認前であり、実装 / migration / resource変更へ進めない
+- 実装状態: human-approved docs-only design。DynamoDB table / GSI、CDK、migration、runtime schema、API route、UI、AWS、workflow、dependencyは変更していない
+- Human review: PR #42のhuman reviewで承認済み。承認対象はphysical designであり、実装 / migration / resource変更は別task / Human Gateを必要とする
 - 関連: CREATIVE-DATA-001、CLOUD-DATA-001、CREATIVE-001-DESIGN、CREATIVE-AUTHZ-001、DEC-017、DEC-022、DEC-024、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
