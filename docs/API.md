@@ -1367,3 +1367,99 @@ Selection criteriaはprivacy、Region / data handling、cost model、bounce / co
 - Event-specific override UI、timezone migration、digest size / retry countの実測調整
 
 DEC-026のhuman approval前にこのmatrixをruntimeへ実装せず、実装後もNotificationをproductivity evaluation、playback interruption、Version / creative workflow blockへ使いません。
+
+## COLLAB-DATA-001: persistence-facing collaboration contract
+
+### Status and boundary
+
+この章は、DEC-023と提案中のDEC-026をexisting CLOUD-DATA-001 single-tableへ配置するDEC-027候補のAPI-facing behaviorです。Docs-onlyであり、endpoint、runtime validation、DynamoDB resource、provider、queue、workflow、AWS変更はありません。DEC-026 / DEC-027のHuman approval前に実装しません。
+
+### Activity Status and personal settings
+
+Activity StatusはBandMembershipと別recordに保存しますが、server contractでは必ずcanonical Membershipに従属します。
+
+1. Authenticateしinternal Userを解決する
+2. Canonical Band / Membershipをstrong readする
+3. Membershipが`ACTIVE`で、承認済みcapabilityを満たすことを確認する
+4. `expectedRevision`付きでActivity Status recordを更新する
+5. Role、Membership status、Task assignee、NotificationPreferenceを変更しない
+
+Activity Status recordがない場合は`REGULAR`として返します。`REMOVED` Membershipのhistorical Activity Statusをauthorization、通知量、自動assignmentへ使いません。Activity Status moderation capability自体は別authorization gateです。
+
+Notification Preference / Quiet Hoursはauthenticated User本人のsettingです。
+
+- Preference absent時はversioned `STANDARD` preset + explicit overrideなしを返す
+- Preset / event / channel overrideはRoleやActivity Statusと独立する
+- Quiet Hours absent時はdisabled。Enabled時はIANA timezoneとlocal `HH:mm` start / endを受け、overnight rangeをserverで解釈する
+- SECURITYはordinary settingでOFFにせずQuiet Hoursをbypassする。DIRECT / ORDINARY external deliveryだけをhold / catch-up候補にする
+- Mutationsは`expectedRevision`を要求し、absent defaultからの初回writeは`expectedRevision = 0`、stale valueは`409 CONFLICT`。Invalid timezone、time、override key / valueは`422 VALIDATION_ERROR`
+- Account suspension / deletion lifecycleはAUTH-001を正とし、Band removalだけでUser settingを削除しない
+
+### Notification Center list and read behavior
+
+Center listは`すべて / 未読 / 要対応`のviewを一つのprivate User feedから構築します。
+
+1. Authenticateしinternal Userをserverで決定する。Client supplied recipient User IDをauthorityにしない
+2. Existing ScopeIndexからcurrent UserのNotification candidateをnewest-firstで取得する
+3. Canonical Notificationを取得し、recipient、logical expiry、read stateを確認する
+4. Band-scoped itemはstored `bandId / recipientUserId`でcanonical Membershipをstrong readし、そのitemが`ACTIVE`かつ`membershipId`がstored `recipientMembershipId`と一致する場合だけ残す
+5. `要対応`ではcanonical source stateを取得し、Invitation / Task / Proposal等のcurrent stateからderiveする
+6. Opaque cursorとprivacy-safe projectionだけを返す
+
+Initial page contractは50 candidates、filtered viewは最大5 page / 250 candidatesを一度に評価します。結果が表示上限に届かなくてもbounded cursorを返し、`Scan`やunbounded fillを行いません。Eventual GSI lagを理由にauthorizationやremoved member accessを許可せず、canonical base item / Membershipを正とします。
+
+Mark READはNotification IDからcanonical itemをstrong readし、authenticated recipient一致、logical non-expiry、`revision = expectedRevision`を条件に`UNREAD → READ`へ更新します。Already READのsame requestはcurrent resultへ安全に収束できる候補です。READはsource accept、Task completion、Proposal review、Invitation acceptance、delivery retryを実行しません。
+
+Deleted / inaccessible sourceはgeneric unavailable projectionへ戻します。Notificationそのもののread可否とdeep-link source accessを分け、deep linkでは必ずcanonical source → Band → strong ACTIVE Membership → capabilityを再実行します。Cross-Band、REMOVED、old membership lifecycle、hidden sourceは外向き404候補です。
+
+### Event, dedup, and delivery sequence
+
+DIRECT / ORDINARYの基本順序は次です。
+
+```text
+canonical collaboration mutation succeeds
+→ server-stable sourceEventId is handed to notification generation
+→ Notification + recipient dedup guard are written atomically
+→ current preference / account / membership / Quiet Hours are evaluated
+→ channel delivery record is conditionally created
+→ provider / scheduler implementation performs bounded retry later
+```
+
+Canonical mutationとrecipient fan-out / deliveryを同じtransactionへ含めません。Notification生成失敗をComment / Version / CreativeItem等の失敗としてclientへ返さず、同じserver-generated `sourceEventId`でretryします。Security eventはより強いdelivery guaranteeが必要になり得るため、ordinary collaboration eventと同じpost-commit failure policyへ固定せず別reliability gateに残します。
+
+Dedup keyはserver-owned `sourceEventId + recipientKey + recipientRelation`です。Idempotent commandのresultまたはcommitted resource ID + resulting revision + event typeから同じopaque event IDへ収束させ、private inputをIDへ含めません。Client supplied event ID、category、recipient、Band IDを信用しません。External channelは`notificationId + channel`を1 logical deliveryとし、retryは同じrecordのstate / attemptを更新します。
+
+Delivery state candidateは`QUEUED / ATTEMPTING / RETRY_WAIT / ACCEPTED / FAILED_PERMANENT / CANCELED`です。`ACCEPTED`はprovider受付だけを表し、actual device / inbox deliveryを断定しません。Transient errorはjitter付きexponential backoffで最大5回候補、permanent errorと上限到達はsafe categoryで停止します。別channelへのfallbackはconsent / privacy確認なしに行いません。
+
+Provider message ID、request / response body、private source copyは既定で保存しません。Provider receipt相関が必要と実証された場合だけ、opaque reference、retention、accessをprovider gateで決めます。
+
+### Removal, expiry, and non-blocking behavior
+
+- Membership `REMOVED`後はBand DIRECT / ORDINARY Notificationを新規生成せず、send直前にもsame `recipientMembershipId`のstrong ACTIVE checkを行う
+- Queued deliveryは`CANCELED`候補にできるが、一括Notification cleanup成功をMembership removalの条件にしない
+- Existing Center itemはphysical delete前でもlist時に隠し、old deep linkからのsource accessを即denyする
+- Rejoinでnew membershipIdが作られてもold Notificationを再表示 / 再送しない
+- Non-security DIRECT / ORDINARYは90日でlogical expiryとし、TTL lag中もAPIから返さず送信しない
+- Expiry / TTLでsource、Security Notification、AuditEvent、Membership historyを変更しない
+- Notification failure、unread count、action-required count、delivery retryをVersion作成や制作進行のblock / productivity metricに使わない
+
+### Persistence-facing error mapping
+
+| Condition | Outward candidate | Behavior |
+| --- | --- | --- |
+| unauthenticated | `401` | User feed / preferenceを返さない |
+| same-user setting policy denied | `403` | Account state等のnon-disclosing reason |
+| hidden / cross-Band / removed lifecycle / inaccessible source | `404` | Notification knowledgeで存在を漏らさない |
+| stale revision / invalid delivery current state / dedup conflict | `409` | Silent overwrite / duplicate sendをしない |
+| invalid preset / override / timezone / time range | `422` | Safe field errorのみ |
+
+Logs / AuditへComment / Creative body、lyrics、Song title、filename、presigned URL、S3 key、token、session、credential、raw email、provider payloadを出しません。Safe operation metadataはrequest ID、opaque Notification / event ID、event type、channel、attempt number、result、safe error categoryに限定します。
+
+### Remaining implementation gates
+
+- Endpoint / DTO / validation、activity moderation、account lifecycle cleanup
+- Event handoff / outbox / repair、Security reliability、queue / scheduler / DLQ、digest timing
+- Provider / receipt / bounce / complaint、channel fallback、security retention
+- DynamoDB / TTL / PITR / IAM / migration、measured pagination and retry limits
+
+これらのgateはHuman-approved UXを変更して解決せず、DEC-026 / DEC-027のreview後に別taskへ分離します。

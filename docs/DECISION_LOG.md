@@ -39,6 +39,7 @@
 | DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
 | DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 承認済み | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
 | DEC-026 | 2026-09-14 | Notification category / delivery matrix contractを定める | 提案中 | Notification / channel / digest / retry / privacy | - |
+| DEC-027 | 2026-09-15 | Activity StatusとNotificationのsingle-table physical persistence contractを定める | 提案中 | Membership profile / preference / Notification / delivery tracking | - |
 
 ---
 
@@ -460,6 +461,28 @@
 - 実装状態: proposal-only documentation。Notification runtime、email / push、provider契約、API、physical DB、AWS resource、Cognito、infra、workflow、dependency、UIは変更していない
 - Human review: 未実施。PRのhuman review前に承認済みにせず、event matrix、Quiet Hours、external privacy、retry上限を確認する
 - 関連: NOTIFY-001-DESIGN、COLLAB-001-DESIGN、DEC-023、AUTH-001-DESIGN、AUTHZ-001、CREATIVE-001-DESIGN、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-027: Activity StatusとNotificationのsingle-table physical persistence contractを定める
+
+- 日付: 2026-09-15
+- ステータス: 提案中
+- 提案者: Codex（COLLAB-DATA-001）
+- 背景: DEC-023の承認済みMembership / Notification UXと、提案中DEC-026のdelivery matrixを実装する前に、authorization recordとの分離、User feed、dedup、delivery retry、90日retention、Membership removalをCLOUD-DATA-001のsingle-table上で安全に扱う必要がある
+- Activity Status: `BAND#<bandId> / MEMBER_PROFILE#<membershipId>`のseparate itemを使い、BandMembership itemへ埋め込まない。Absentは`REGULAR`、informational updateはRole / Membership / assignee / preferenceを変更せず、removed / replaced membershipIdのhistoryをnew lifecycleへ自動復活させない
+- Preference: `USER#<userId> / NOTIFICATION_PREFERENCE`へpreset、defaultとの差分だけのbounded override、policy / schema version、revisionを保存する。Absentはversioned `STANDARD` + overrideなしで、default readだけではitemを作らない
+- Quiet Hours: `USER#<userId> / QUIET_HOURS`へenabled、local start / end、IANA timezone、revisionを保存する。UTC固定時刻だけを正にせず、overnight / DSTをtimezone ruleで評価する。SECURITYだけbypassし、authorizationやActivity Statusを変更しない
+- Notification: `NOTIFICATION#<notificationId> / META`をcanonical itemとし、existing sparse `ScopeIndex`へ`USER#<recipientUserId> / NOTIFICATION#<occurredAt>#<notificationId>`で載せる。Indexは`KEYS_ONLY`のまま、read stateをkeyへ入れず、新table / GSI / Scanを追加しない
+- Center access: ScopeIndex candidateをcanonical BatchGetし、all / unreadをbounded paginationする。Band-scoped itemはstored `recipientMembershipId`のsame lifecycleをstrong readし、current `ACTIVE`の場合だけ表示する。Action-requiredはcanonical source stateからderiveし、Notification / GSIをaccess proofにしない
+- Source / privacy: Server-generated `sourceEventId`、opaque source / recipient relation、Band filtering reference、時刻だけを保持し、Comment / Creative body、lyrics、Song title、filename、presigned URL、S3 key、token、session、credential、raw provider payload / emailを複製しない
+- Dedup: Existing command IdempotencyとNotification guardを分離する。Notification + `sourceEventId + recipientKey + recipientRelation` guardだけをsmall transactionにし、canonical source mutationやrecipient fan-out全体を同じtransactionへ入れない。Client supplied event ID / category / recipientを信用しない
+- Delivery: `NOTIFICATION#<notificationId> / DELIVERY#<channel>`を1 logical deliveryとし、`QUEUED / ATTEMPTING / RETRY_WAIT / ACCEPTED / FAILED_PERMANENT / CANCELED`とrevision、attempt、next time、safe errorだけを保存する。Retryは同じrecord、jitter付きexponential backoff最大5回候補。Provider message IDは既定で保存しない
+- Removal: Membership removalをNotification cleanup transactionへ依存させない。Removal後は新規Band deliveryを止め、list / send / deep linkでsame membershipIdのstrong ACTIVE checkを行い、old itemをphysical delete前から隠す。Rejoin後のnew membershipIdでold Notificationを復活させない
+- Retention: Non-security `DIRECT / ORDINARY` Notification / deliveryは90日logical expiry + DynamoDB TTL候補。TTL lagを前提にapplicationが`expiresAt`を評価し、source、SECURITY、AuditEvent、Membership historyへcascadeしない。SECURITY retentionは別Human Gate
+- Reliability: DIRECT / ORDINARY Notification failureでComment / Version / CreativeItem等のcanonical mutationをrollbackしない。Stable event handoff / outbox / repair、SECURITY fail-closed要件、queue / scheduler / DLQはruntime reliability taskで確定する
+- Cost / scale: On-Demand single-tableとexisting ScopeIndexを維持する。Item / delivery channel / retry / transaction / BatchGet / TTL lag / PITRと、NotificationごとのScopeIndex keyがbilling driver。Userあたり5 page / 250 candidate filterを常時使い切る、delivery due query、large fan-out / digest、hot partition等が実測問題になった場合だけ新projection / GSI / queue index / PostgreSQLを再reviewする
+- 実装状態: proposal-only documentation。DynamoDB table / GSI / TTL resource、migration、runtime、API route、provider、queue、AWS、infra、workflow、dependency、UIは変更していない
+- Human review: 未実施。DEC-026も提案中のままであり、どちらも承認済みとしてruntimeへ実装しない
+- 関連: COLLAB-DATA-001、CLOUD-DATA-001、COLLAB-001-DESIGN、NOTIFY-001-DESIGN、DEC-017、DEC-023、DEC-026、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

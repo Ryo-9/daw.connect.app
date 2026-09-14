@@ -762,6 +762,199 @@ Principal cost driverはCreativeItem数、ScopeIndex key write / storage、Comme
 
 公式仕様、quota、priceはresource作成直前に再確認します。
 
+## COLLAB-DATA-001: Activity Status and Notification physical persistence contract
+
+### Status and scope
+
+設計日: 2026-09-15。これはDEC-023と、提案中のDEC-026をCLOUD-DATA-001の既存On-Demand single-tableへ追加する**提案中のdocs-only physical design**です。新table / GSI、DynamoDB resource、runtime、API route、provider、queue / scheduler、AWS、infra、workflow、migrationは作成・変更しません。Human review前のDecision candidateはDEC-027です。
+
+Notificationは制作を促進・評価するworkflowではなく、重要事項と制作contextへ戻るための補助です。Notification生成失敗でComment、Version、CreativeItem等のcanonical mutationを巻き戻さず、READ / expiry / delivery stateでsourceを変更しません。
+
+### Domain separation and item placement
+
+| Record | PK | SK | Core fields | Physical boundary |
+| --- | --- | --- | --- | --- |
+| Activity Status | `BAND#<bandId>` | `MEMBER_PROFILE#<membershipId>` | `entityType`, `bandId`, `membershipId`, `activityStatus`, `updatedBy`, `updatedAt`, `revision`, `schemaVersion` | BandMembershipとは別item。Absentは`REGULAR`。Role / Membership / assignee / preferenceを変更しない |
+| Notification Preference | `USER#<userId>` | `NOTIFICATION_PREFERENCE` | `entityType`, `userId`, `preset`, bounded `overrides`, `policyVersion`, `schemaVersion`, timestamps, `revision` | User-owned application setting。Authorizationには使わない |
+| Quiet Hours | `USER#<userId>` | `QUIET_HOURS` | `entityType`, `userId`, `enabled`, `startLocalTime`, `endLocalTime`, `timeZone`, timestamps, `revision`, `schemaVersion` | External delivery timingだけに使用。Membership / accessへ影響しない |
+| Notification | `NOTIFICATION#<notificationId>` | `META` | recipient、category / event、source reference、presentation state、timestamps、retention、`revision`, `schemaVersion` | Source entityやAuditEventではない。Center対象だけScopeIndexへ載せる |
+| Notification dedup guard | `NOTIFY_EVENT#<sourceEventId>` | `RECIPIENT#<recipientKey>#RELATION#<recipientRelation>` | `notificationId`, `createdAt`, optional retention | 同じserver event / recipient relationのCenter itemを1件へ収束 |
+| Delivery tracking | `NOTIFICATION#<notificationId>` | `DELIVERY#<channel>` | `deliveryState`, `deliveryMode`, attempt / schedule / safe failure fields、timestamps、`revision`, retention | External channelごとに1 record。Provider payload / contentを保存しない |
+
+すべてのIDはserver生成のopaque値です。`recipientKey`はinternal `USER#<userId>`を基本とし、未登録invitation deliveryを将来扱う場合だけserver生成の`INVITATION#<opaqueRecipientId>`を使います。Raw emailをPK / SK、dedup key、logへ入れません。Center itemはinternal Userへmap済みの場合だけ作成します。
+
+### Activity Status placement decision
+
+Private Alpha候補は、Activity StatusをBandMembership itemへ埋め込まず、同じBand partitionの`MEMBER_PROFILE#<membershipId>`へ分離します。
+
+| Concern | Membership field | Separate member profile item |
+| --- | --- | --- |
+| authorization contention | Informational updateでもauthorization recordのrevision / write pathへ触れる | Role / `ACTIVE / REMOVED`のwriteと分離できる |
+| lifecycle / history | Rejoinやremove時にauth stateと表示metadataが混ざる | Old membershipIdにhistoryを固定し、new membershipIdへ自動復活させない |
+| read pattern | Membership 1 itemで取得できる | Member list後、表示対象profileをbounded `BatchGetItem`する |
+| future extension | Profile field増加がsecurity-critical itemを膨らませる | Informational fieldsをprofile item内でboundedに拡張できる |
+
+Absent profileは`REGULAR`として投影し、default itemを一斉生成しません。初回の非default変更は`expectedRevision = 0`と`attribute_not_exists`で作成し、その後`REGULAR`へ戻してもrecordとrevisionは保持します。更新はactor / target Membershipが`ACTIVE`であることをstrong read / transaction conditionで確認しますが、Activity Status変更とMembership role / status変更を同じatomic mutationにはしません。Membership `REMOVED`後もhistorical profileは保持し、authorizationや再参加には使いません。
+
+### Preference and Quiet Hours
+
+Notification Preferenceがない場合、serverはcurrent versioned defaultとして`STANDARD` preset、explicit overrideなしを適用します。Default適用だけで巨大なrecordを作らず、本人が初めて変更したときにcompact itemを作ります。
+
+- `preset = FOCUS | STANDARD | ALL`はbundleの選択だけを保存する
+- `overrides`はserver-defined event type / channelごとの、defaultと異なる値だけをbounded mapとして保存する
+- Unknown key、重複、unbounded entryを拒否し、DEC-026変更時も`policyVersion / schemaVersion`で解釈を分ける
+- Existing explicit overrideをpreset変更で暗黙削除しない。Resetは別の明示operationとする
+- Mutable settingはinteger `revision + expectedRevision`で更新し、stale writeは409候補
+- Absent defaultからの初回writeは`expectedRevision = 0`と`attribute_not_exists`を要求し、同時初期化をsilent overwriteしない
+- Account `SUSPENDED` / `DELETION_PENDING`ではcollaboration preference mutationを停止してrecordを保持し、final account deletion時のcleanup / PII boundaryはAUTH-001へ従う。Band removalでは削除しない
+
+Quiet HoursはPreferenceと別revisionで変更します。Absent itemはdisabledです。`startLocalTime / endLocalTime`は`HH:mm`のlocal wall-clock、`timeZone`はIANA timezone IDを保存し、UTCへ固定変換した時刻だけを正にしません。Enabled時はstartとendを異なる値とし、`start > end`を日跨ぎrangeとして扱います。DST / timezone変更時は保存したtimezone rulesで次のboundaryを再計算し、元のlocal timeを保持します。SECURITYはbypassし、DIRECT / ORDINARYだけをhold / catch-up候補にします。
+
+### Notification canonical item and ScopeIndex
+
+Notification canonical itemの主要fieldは次です。
+
+- `notificationId`, `recipientUserId`, `category = SECURITY | DIRECT | ORDINARY`, `eventType`
+- `sourceEventId`, `sourceType`, opaque `sourceId`, `recipientRelation`, `occurredAt`, `createdAt`
+- Band-scopedの場合だけ`bandId`, `recipientMembershipId`
+- `readState = UNREAD | READ`, optional `readAt`, integer `revision`
+- Non-security retention用`expiresAt`とDynamoDB TTL attribute候補`ttlEpochSeconds`
+- `GSI1PK = USER#<recipientUserId>`
+- `GSI1SK = NOTIFICATION#<occurredAt>#<notificationId>`
+
+既存sparse `ScopeIndex`を`KEYS_ONLY`のまま再利用し、新GSIを追加しません。Sort keyへread stateを入れないため、READ変更でGSI keyを書き換えず、安定したnewest-first cursorを維持します。
+
+- 「すべて」はScopeIndexをdescending Queryし、canonical Notificationを`BatchGetItem`する
+- 「未読」は同じQuery結果のcanonical `readState`をbounded filterする。初期候補は50 candidates/page、最大5 page / 250 candidatesで一度応答し、続きはopaque cursorで取得する
+- 「要対応」は保存済みbooleanをworkflowの正にせず、eligible candidateのcanonical source stateからderiveする
+- ScopeIndexはeventual consistencyなので、mark-read直後はcommand responseを画面へ反映し、次回Query候補もcanonical itemを再確認する
+- `Scan`、unread専用GSI、category / Band / status別GSIはPrivate Alphaでは追加しない
+
+User単位で90日内のNotificationが増え、unread / action-requiredで5 pageのbounded filterを常時使い切る、latency / read costが目標を外れる、または複数Band横断の高頻度Centerが必要になった場合だけ、read-state projection / dedicated sparse indexを別Decisionとして再評価します。
+
+### Source reference and authorization
+
+Notificationにはsourceのprivate本文を複製せず、次だけを保持します。
+
+- server-generated opaque `sourceEventId`
+- server-defined `sourceType`とopaque `sourceId`
+- Band-scoped filtering用の`bandId / recipientMembershipId`
+- server-defined `recipientRelation`
+- `occurredAt`
+
+Comment / Creative body、lyrics、Song title、filename、presigned URL、S3 key、Cognito token、session ID、credential、raw provider payload、不要なemailは保存しません。`actionRequired`はsnapshotを正にせず、canonical Invitation / Task / Proposal等からderiveします。Sourceが削除・非表示ならgeneric unavailable projectionだけを返します。
+
+Center listはNotification ownershipを確認した後、Band-scoped candidateごとに`BAND#<bandId> / MEMBERSHIP#<recipientUserId>`をstrong `BatchGetItem`し、取得したitemが現在`ACTIVE`かつその`membershipId`がstored `recipientMembershipId`と一致する場合だけ表示します。Deep linkではさらにcanonical source → stored Band → strong ACTIVE Membership → capabilityを再実行します。Notification ID、GSI result、old URL、過去の別Membershipはaccess proofではありません。
+
+### Deduplication and idempotency
+
+Canonical commandの`clientOperationId`を扱う既存Idempotency recordと、Notification dedup guardは別責務です。
+
+- Command idempotencyはcanonical mutation自体のduplicateを防ぐ
+- Notification guardは成功済みcanonical mutationから生成された同じ`sourceEventId + recipientKey + recipientRelation`のCenter duplicateを防ぐ
+- `sourceEventId`、category、recipient relationはserverがcanonical resultから発行し、client入力を信用しない
+- Retryで同じIDを再利用できるよう、idempotent commandは既存Idempotency resultへsafe `sourceEventId`を保持し、revisioned mutationはcommitted resource ID + resulting revision + event typeからserver-sideでstable opaque IDを導出する候補とする。Private inputをIDやlogへ含めず、exact algorithmはruntime gateで固定する
+- Notification Putと`attribute_not_exists`付きguard Putは小さな`TransactWriteItems`にまとめ、片方だけを残さない
+- Same guard retryはstored `notificationId`へ収束し、別Notificationを作らない
+- Guard retentionは対応Notification以上とし、TTL lag中もapplicationの`expiresAt`判定後に同じ古いeventを復活させない
+- Guardをphysical deleteした後のold event replayは、serverが`occurredAt`をretention windowと照合して拒否し、期限切れNotificationを再生成しない
+
+Canonical source mutation、Notification作成、external delivery schedulingを一つの巨大transactionへ入れません。DIRECT / ORDINARYのNotification生成やdeliveryが失敗しても、Comment、Version、CreativeItem等の制作mutationは成功を維持します。Stable event handoff / outbox / repair mechanismとSECURITY eventのfail-closed要件はruntime reliability taskで決め、通知を理由に制作をblockしない原則を崩しません。
+
+### Delivery tracking
+
+External deliveryは`notificationId + channel`で1 logical recordとし、retryでNotificationやdelivery recordを増やしません。
+
+| Field / state | Contract |
+| --- | --- |
+| `deliveryState` | `QUEUED | ATTEMPTING | RETRY_WAIT | ACCEPTED | FAILED_PERMANENT | CANCELED`。`ACCEPTED`はprovider受付であり、end-device delivery保証ではない |
+| scheduling | `deliveryMode`, `scheduledFor`, optional `nextAttemptAt`, `preferenceRevisionUsed`, `policyVersion` |
+| attempts | `attemptCount`, `lastAttemptAt`, `acceptedAt?`, `lastSafeErrorCategory?`。最大5回候補、jitter付きexponential backoff |
+| concurrency | `revision + expectedRevision`とallowed transition condition。Terminal stateからのblind retryを拒否 |
+| privacy | Notification本文、private source、provider request / responseを保存しない。Provider message IDは既定で保存しない |
+| retention | Non-securityは親Notificationの`expiresAt / ttlEpochSeconds`に合わせる。Expired / removed recipientはsend前に`CANCELED`へ進める候補 |
+
+Provider webhook相関にprovider receipt IDが不可欠と確認された場合だけ、opaque最小reference、access、encryption、retentionをprovider Human Gateで追加します。Queue、scheduler、DLQ、providerが未選定のため、`nextAttemptAt`検索用GSIは追加しません。DynamoDBをretry queueの正にする要件が確定した場合は、access patternとwrite amplificationを示す別Decisionが必要です。
+
+Digestはdelivery layerでrecipient + channel + delivery windowを単位にgroupし、Notification canonical itemsをsourceとして参照します。Same Song / threadのORDINARY summaryはまとめられますが、DIRECT logical targetとSECURITY eventをcollapseで失いません。Digestが0件なら送信せず、送信直前にexpiry、account state、Membership、current preference、Quiet Hoursを再評価します。
+
+### Access-pattern matrix
+
+| # | Access pattern | Operation / key | Consistency / authorization | Pagination / count |
+| --- | --- | --- | --- | --- |
+| 1 | Get / update Activity Status | `GetItem(BAND#id, MEMBER_PROFILE#membershipId)`、conditional Put / Update | Actor / target Membershipはstrong。Profileはeventual表示可 | 1 profile |
+| 2 | Get Preference + Quiet Hours | `BatchGet(USER#id, NOTIFICATION_PREFERENCE / QUIET_HOURS)` | User ownership。Absent defaultをserver適用 | 最大2 items |
+| 3 | Update Preference / Quiet Hours | conditional Put / Update | `revision = expectedRevision`。Authorizationとは分離 | 1 item |
+| 4 | List Center newest-first | `Query ScopeIndex(USER#id, begins_with(NOTIFICATION#))` → canonical BatchGet | GSI eventual。User ownership + Band membership filter | 50 candidates/page + opaque cursor |
+| 5 | List UNREAD / action candidates | #4を最大5 pageまでbounded filter | Canonical read state / source stateを確認 | 最大250 candidates/response |
+| 6 | Get / mark READ | `GetItem(NOTIFICATION#id, META)` + conditional Update | Strong Get、recipient一致、revision / current state | 1 item。Source mutationなし |
+| 7 | Dedup Notification | `Get/TransactWrite(NOTIFY_EVENT#event, RECIPIENT#...#RELATION#...)` | Server event identityのみ | 1 guard + 1 Notification |
+| 8 | Read / update delivery | `Get/Update(NOTIFICATION#id, DELIVERY#channel)` | Worker identity + state / revision condition | Channelごと1 item |
+| 9 | Filter removed member | `BAND#bandId / MEMBERSHIP#recipientUserId`をstrong BatchGetし、stored membershipIdと比較 | Current same membershipIdが`ACTIVE`の場合だけ表示 / send | Page内unique Membershipだけ |
+| 10 | Handle expiry / TTL lag | Canonical `expiresAt`をread時に評価 | TTL delete完了をprivacy / accessに使わない | Expired candidateを除外してcursor継続 |
+
+### Transaction and consistency matrix
+
+| Operation | Atomic boundary | Failure policy |
+| --- | --- | --- |
+| Change Activity Status | ACTIVE Membership ConditionCheck + profile Put / Update、expected revision | Conflictは409。Role / Membership / preferenceを変更しない |
+| Change Preference | 1 item conditional Put / Update | Stale revisionは409。Notificationやsourceへcascadeしない |
+| Change Quiet Hours | 1 item conditional Put / Update | Invalid local time / timezoneは422。Delivery timingだけへ反映 |
+| Create Notification | canonical mutation成功後、Notification + dedup guardのsmall transaction | DIRECT / ORDINARY失敗でcanonical workをrollbackしない。Retryはsame sourceEventIdへ収束 |
+| Mark READ | Notification METAのconditional Update | Source / action-required business stateを変更しない |
+| Create delivery record | `attribute_not_exists`付きchannel record Put | Existing recordへ収束。Notification duplicateを作らない |
+| Retry / accept / fail delivery | allowed current state + expected revisionのconditional Update | 最大5回候補。Permanent errorはchannel停止、別channelへ無断fallbackしない |
+| Remove Membership | Existing Membership mutation + Auditを正とし、Notification一括cleanupを含めない | Access / send時のstrong checkで即deny。Cleanup失敗でremoveをblockしない |
+
+DynamoDB transactionの100 unique item / 4 MB制限を維持し、recipient全員分のNotificationをsource mutation transactionへ詰め込みません。GSI listはeventualでよい一方、Membership removal、deep-link source access、mark-read ownership、protected mutationはbase itemをstrong readします。
+
+### TTL, recovery, and retention
+
+Non-securityの`DIRECT / ORDINARY` Center itemとdelivery trackingは、`occurredAt`から90日後を`expiresAt`とする初期候補です。`ttlEpochSeconds`はDynamoDB TTL用のepoch secondsですが、TTL deleteは即時保証ではなく期限後も残り得ます。API / UIはserver timeで`expiresAt <= now`をlogical expiryとして非表示・配送停止し、physical deleteを待ちません。
+
+- Notification TTLはComment、CreativeItem、Version、Proposal、Invitation、Membership history等のsourceへcascadeしない
+- SECURITY Notificationには90日TTLを自動設定せず、retention / access / deletionを別Human Gateで決める
+- AuditEvent、canonical source、Membership historyをNotification TTLへ含めない
+- PITR restoreではexpired itemが復元され得るため、restore後も`expiresAt` filter、Membership check、source authorizationを再適用する
+- Restored tableのTTL / PITR / GSI等はCLOUD-DATA-001のrestore runbookどおり再確認し、Notification復元だけでsource accessを復活させない
+
+### Cost, scale, and reconsideration
+
+On-Demand single-tableを維持します。追加billing driverはActivity / Preference / QuietHours items、Notification + dedup + delivery items、ScopeIndex key write / storage、transaction write、BatchGet、retry state update、PITR / restore、TTL lag中storageです。新GSIは作らないためindex resourceは増えませんが、Centerへ載せるNotificationごとにexisting ScopeIndexのwrite / storage amplificationが1件発生します。External channelが増えるとdelivery child itemもchannel数に比例します。
+
+2 users / 1 private Bandではbounded filterとBatchGetを優先し、高scale用read modelを先に作りません。次の場合はseparate projection / GSI / queue-backed retry index / PostgreSQLを別reviewします。
+
+- Userあたり90日Notificationが増え、5 page / 250 candidate filterを継続的に使い切る
+- Unread、action-required、delivery due検索が実測latency / cost目標を外れる
+- Multi-Band / many-user fan-out、high-volume digest、provider webhook reconciliationが必要になる
+- Dedup / delivery child growth、hot partition、400 KB item、100-item transaction、PITR costが問題になる
+
+### COLLAB-DATA-001 physical summary
+
+| Item | Proposed decision |
+| --- | --- |
+| Table / capacity | Existing `streamband-<environment>-metadata` On-Demand single-table |
+| Activity Status | `BAND#bandId / MEMBER_PROFILE#membershipId` separate item。Absent=`REGULAR` |
+| Preference | `USER#userId / NOTIFICATION_PREFERENCE`、absent=`STANDARD` + no overrides |
+| Quiet Hours | `USER#userId / QUIET_HOURS`、IANA timezone + local start/end、separate revision |
+| Notification | `NOTIFICATION#notificationId / META` canonical item |
+| Center index | Existing sparse `ScopeIndex`: `USER#userId / NOTIFICATION#occurredAt#notificationId`, `KEYS_ONLY` |
+| New GSI / table | none |
+| Dedup | Server `sourceEventId + recipientKey + recipientRelation` guard + atomic Notification Put |
+| Delivery | `NOTIFICATION#id / DELIVERY#channel`、one logical record per channel、max 5 retry candidate |
+| Read state | Canonical mutable `UNREAD / READ`; SK / GSI keyへ入れない |
+| Membership removal | No fan-out delete。List / send / deep linkでcurrent same Membershipをstrong check |
+| Retention | Non-security DIRECT / ORDINARYは90日logical expiry + TTL候補。SECURITY / Auditは別gate |
+| Reliability | Canonical creative mutationをNotification failureでrollbackしない。SECURITY reliability / outboxは別gate |
+
+### Remaining implementation gates
+
+- DEC-026 / DEC-027 Human review、runtime DTO / validation、API、migration、DynamoDB / TTL / PITR resource
+- Stable event handoff / outbox / repair、queue / scheduler / DLQ、digest aggregation、delivery due lookup
+- Provider selection、provider receipt / bounce / complaint、security retention、mobile push token
+- Formal invitationの未登録recipient persistence、account deletion cleanup、Activity Status moderation capability
+- Measured page / item / retry limitとobservability、restore drill、cost recheck
+
 ## 開発運用
 
 - 永続化を始めてもlocalStorageやcookieを共同制作dataの正にしない
@@ -777,7 +970,7 @@ Principal cost driverはCreativeItem数、ScopeIndex key write / storage、Comme
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
 - CreativeItem physical contractはCREATIVE-DATA-001 / DEC-025でsingle entity、既存ScopeIndex、relationship guard / edge、structural historyをdocs-only designとして承認済み。Runtime schema / migration / resource実装は未着手
-- Activity Status、NotificationPreference、QuietHours、Notificationのphysical item / index / TTL、90日cleanup、source projection、digest / delivery、security retention
+- Activity Status、NotificationPreference、QuietHours、Notification / delivery trackingのphysical contractはCOLLAB-DATA-001 / DEC-027で提案中。Runtime schema、resource、migration、provider / queue、security retentionは未着手
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲
