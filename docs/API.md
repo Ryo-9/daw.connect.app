@@ -1026,7 +1026,7 @@ Timeline marker cluster、playhead連動highlight、Creative Board filter、Focu
 
 ### Status and decision
 
-この章はCREATIVE-001-DESIGNとAUTHZ-001を統合したCloud MVPの推奨authorization契約です。設計日: 2026-09-14。Draft PRでhuman reviewを受ける提案であり、API route、runtime policy、DynamoDB physical key / GSI、migration、UI、AWS resourceは実装しません。
+この章はCREATIVE-001-DESIGNとAUTHZ-001を統合し、PR #41のhuman reviewで承認されたCloud MVPのauthorization契約です。設計日: 2026-09-14。API route、runtime policy、DynamoDB physical key / GSI、migration、UI、AWS resourceはまだ実装していません。
 
 - `Owner / Admin / Editor / Commenter / Guest`はAUTHZ-001と同じcapability bundleで、数値hierarchyとして比較しない
 - `Memo / Idea / Task`はmandatory pipelineではなく、permissionがあるactorは許可された種類を直接作成または相互変更できる
@@ -1139,13 +1139,25 @@ Auditはpermission review / incident recovery用で、個人のTask消化数、�
 
 ### Implementation gates
 
-- Logical delete / tombstone / restore / retention、self-deleteで「他memberのhistory / linkなし」を判定するphysical representation
-- Creative item、source Comment link、origin / current target、completion / assignee metadataのphysical itemとindex
-- Removed assigneeを未割当に投影し、denormalized referenceをreconcileする方法
-- Comment-to-Task idempotency key、conditional uniqueness、intentional multiple Taskを将来許可する場合のmigration
+- CREATIVE-DATA-001 / DEC-025で提案したCreativeItem、Comment guard / edge、origin / current target、assignee、tombstone、structural historyをhuman review後にruntime schemaへmappingする
+- Logical delete後のhard purge / retention / restore APIとprivate content removalは別Human Gateで決める
+- Comment-to-Taskのintentional re-create / multiple Taskを将来許可する場合はguard record migrationとauthorizationを再reviewする
 - Creative mutationのendpoint / command shape、runtime validation、capability constantの実装
 
 これらのgateはmatrixを曖昧にする理由ではありません。実装はこのdeny-by-default role boundaryを満たし、より広いpermissionが必要なら別authorization reviewを要求します。
+
+### CREATIVE-DATA-001 persistence handoff
+
+Physical proposalは[DATABASE.md](DATABASE.md)を正とし、API contractは次の境界を維持します。DEC-025は提案中であり、endpoint / DTO / runtime validationはまだ実装しません。
+
+- Memo / Idea / Taskはsame opaque `creativeItemId`を保つ1つのCreativeItem + kind候補
+- Song Board listはexisting ScopeIndexのcandidate IDsを取得し、canonical itemsとstrong ACTIVE Membershipを再確認する。GSI resultだけではread / mutationを許可しない
+- Comment → Taskはsource Commentごとのuniqueness guardとidempotency recordを同じtransactionに含め、double actionを同じresultへ収束させる
+- General Comment linkはedge itemで扱い、unbounded link arrayをclient DTO / METAへ要求しない
+- AssigneeはBand-specific Membership referenceで、permissionを与えない。Removed / replaced Membershipはcurrent responseでunassignedに投影する
+- Mutationは`expectedRevision`、allowed state、canonical relationshipをconditional transactionで確認し、409 / 422 / hidden 404の既存error contractを変えない
+- Logical delete responseはsafe tombstone projectionとし、private title / body / Anchorを返さない。Hard purge / restoreは未承認
+- Structural history / Auditへprivate bodyを複製せず、Song / Version creationをunfinished Taskでblockしない
 
 ## COLLAB-001-DESIGN: Membership lifecycle and notification contract
 

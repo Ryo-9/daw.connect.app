@@ -112,7 +112,7 @@
 | ReviewRequest | Versionの確認依頼 | `id`, `songVersionId`, `requestedBy`, `status`, `dueAt?`, `createdAt`, `closedAt?` |
 | ReviewResponse | reviewerごとの回答 | `id`, `reviewRequestId`, `reviewerId`, `status`, `commentId?`, `createdAt`, `updatedAt` |
 | Task | 制作TODO | `id`, `songId`, `songVersionId?`, `songPartId?`, `assigneeMembershipId?`, `title`, `description?`, `status`, `priority?`, `dueAt?`, `createdBy`, `createdAt`, `updatedAt`, `completedAt?` |
-| CreativeItem（論理contract） | UI上のMemo / Idea / Taskを同じCreative Boardで扱う概念。物理entity構成は未決定 | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision候補 |
+| CreativeItem（CREATIVE-DATA-001 proposal） | UI上のMemo / Idea / Taskを同じCreative Boardで扱うsingle physical entity候補。DEC-025はhuman review待ち | `id`, `bandId`, `songId`, `kind`, `body/title`, `originAnchor?`, `currentTargetAnchor?`, `sourceCommentId?`, Task時だけの`status/assignee/priority/dueDate/completion?`, actor / timestamps / revision |
 | ActivityStatus（論理metadata） | Role / Membership stateと独立したBand内参加状況 | `membershipId`, `statusCode`, `updatedBy`, `updatedAt`候補。Physical placementは未決定 |
 | NotificationPreference（論理contract） | User自身のpreset / event / channel / frequency選択 | `userId`, `preset`, category / channel overrides候補、timestamps。Authorizationとは無関係 |
 | QuietHours（論理contract） | ordinary deliveryをhold / digestする時間帯 | `userId`, `startLocalTime`, `endLocalTime`, `timeZone`, `enabled`, timestamps候補 |
@@ -135,6 +135,7 @@ User --< BandMembership >-- Band --< Song --< SongVersion
                                   |       |--< Decision
                                   |       |--< SongPart --< SongTrack --< Asset
                                   |       |--< Comment --0..1 CommentAnchor
+                                  |       |--< CreativeItem --< CommentLink / StructuralEvent
                                   |       `--< Task
                                   `--< AuditEvent
 ```
@@ -144,6 +145,7 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 - MidiProposalの`sourceMidiAssetId`と`proposalAssetId`は別IDとし、source objectを上書きしない
 - CommentAnchorでtime/bar/beat/trackを使う場合は、対象SongVersionを必須にする候補
 - Taskの担当はUser IDではなく、対象Band内のMembership IDを参照する候補
+- CREATIVE-DATA-001ではMemo / Idea / TaskをCreativeItemへ統合する提案で、既存`SongMemo / Task`候補を別physical itemとして同時実装しない
 
 ## enum草案
 
@@ -188,9 +190,9 @@ User --< BandMembership >-- Band --< Song --< SongVersion
 - position付きCommentは必ず対象Versionを持ち、別versionへ暗黙に引き継がない
 - AnchorなしのSong全体Commentも許容する
 
-## CREATIVE-001 conceptual model（physical designは未変更）
+## CREATIVE-001 conceptual model（CREATIVE-DATA-001の前提）
 
-CREATIVE-001-DESIGNでは「創作を管理せず、創作を支える」をproduct contractとし、Memo / Idea / Taskを同じCreative Boardで扱います。この章はdomain relationship候補であり、CLOUD-DATA-001のsingle-table key、`ScopeIndex`、transaction matrixを変更しません。独立itemの永続化は後続physical-design taskまでdeferします。
+CREATIVE-001-DESIGNでは「創作を管理せず、創作を支える」をproduct contractとし、Memo / Idea / Taskを同じCreative Boardで扱います。この章はdomain relationshipの前提で、具体的なsingle-table key、`ScopeIndex`、transaction、tombstone / history proposalは後段のCREATIVE-DATA-001を正とします。DEC-025はhuman review待ちで、resource / runtimeは未実装です。
 
 ### Creative item semantics
 
@@ -367,7 +369,7 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 
 この章は、2 user / 1 private Bandのfriend testに必要なmetadata persistenceを、resource作成前に具体化した設計です。選択する形は、On-Demand capacityの**単一DynamoDB table + sparse GSI 1本**です。table名候補は`streamband-<environment>-metadata`、primary keyは`PK` / `SK`、GSIは`ScopeIndex`（`GSI1PK` / `GSI1SK`）とします。`<environment>`は`nonprod`または`private-alpha`で、実名・曲名・email等を含めません。
 
-この選択はphysical designのreview案であり、table、PITR、index、TTL、alarm、IAM、APIはまだ作成していません。CLOUD-003C actual bootstrapも別Human Gateのままです。
+この選択はphysical designのreview案であり、table、PITR、index、TTL、alarm、IAM、APIはまだ作成していません。CLOUD-003Cのdeployment foundation bootstrapは完了していますが、application tableやdata resourceの作成許可を意味しません。
 
 ### MVP persistence scope
 
@@ -382,7 +384,7 @@ DawBridgeSourceは将来候補で、Companion App/Bridge Pluginの採用や実�
 - Membership変更、Proposal Decision、Song archive、Asset削除等に限定した`AuditEvent`
 - authentication subjectからUserを引くlookup recordと、二重送信を防ぐidempotency record
 
-`CreativeItem`（Memo / Idea / Task）、`ActivityStatus`、`NotificationPreference`、`QuietHours`、`Notification`、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification delivery、search projection、Presence / Call、DAW Bridgeは最初のsliceでは永続化をDEFERします。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
+CLOUD-DATA-001時点では`CreativeItem`（Memo / Idea / Task）、`ActivityStatus`、`NotificationPreference`、`QuietHours`、`Notification`、`SongMemo`、`Task`、`SongPart`、`SongTrack`の独立entity、`ReviewRequest` / `ReviewResponse`、formal invitation、notification delivery、search projection、Presence / Call、DAW Bridgeを最初のsliceからDEFERしました。CreativeItemだけは後続のCREATIVE-DATA-001 / DEC-025でsingle-table extensionを提案していますが、human approvalと実装は未着手です。Commentのpart / track文脈は当面optionalな安定codeとしてAnchorに保持し、独立SongTrackが必要になった時に専用migrationを行います。Stemは`Asset.kind`で表現可能にしますが、最初のupload workflow必須にはしません。
 
 ### Single-tableを選ぶ理由
 
@@ -549,6 +551,202 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 | delete | archive / tombstone first。Asset object cleanupは別state machine、automatic cascadeなし |
 | migration trigger | access pattern churn、relationship / reporting要求、transaction / item / hot-key limit、保守性または実測cost問題でPostgreSQLを再評価 |
 
+## CREATIVE-DATA-001: CreativeItem physical persistence contract
+
+### Status and selected model
+
+この章は、DEC-022のcreative workflowとDEC-024のauthorization contractを、CLOUD-DATA-001の既存single-tableへ追加する**提案中**のphysical contractです。設計日: 2026-09-14。DEC-025のhuman approval、runtime command / validation設計、resource変更は別gateであり、このtaskではDynamoDB table、GSI、migration、API routeを作成しません。
+
+Memo / Idea / Taskは別entityへ分割せず、1つの`CreativeItem` entityと`kind = MEMO | IDEA | TASK`で表現します。同じitemを相互変換してもopaque immutable IDを維持するため、Comment link、origin、history、notification sourceが別itemへ分散せず、Memo → Idea → Taskをmandatory workflowにも変えません。Separate entity方式はTask-only fieldの型を分けやすい一方、変換時にID・link・idempotencyを移送するtransactionが増え、同一itemとしての制作履歴が曖昧になるためMVPでは採用しません。
+
+### Canonical CreativeItem
+
+```text
+PK = CREATIVE#<creativeItemId>
+SK = META
+```
+
+| Field | Required / condition | Meaning |
+| --- | --- | --- |
+| `entityType` | required | `CreativeItem` |
+| `creativeItemId` | required / immutable | opaque stable ID |
+| `bandId` / `songId` | required / immutable | canonical ownership chain。Protected operationのserver-side authorizationに使用 |
+| `kind` | required | `MEMO | IDEA | TASK` |
+| `lifecycleState` | required | `ACTIVE | DELETED`。Taskのworkflow statusとは別 |
+| `title` / `body` | application ruleに応じてoptional | private creative content。Audit / logへ複製しない |
+| `createdBy` / `createdAt` | required / immutable | creator attribution。Authorizationそのものではない |
+| `updatedBy` / `updatedAt` | required | 最後に更新したactor / server time |
+| `revision` | required | integer optimistic revision。Mutationは`expectedRevision`を要求 |
+| `sourceCommentId` / `sourceCommentVersionId` / `sourceCommentCreatedAt` | Comment → Taskだけ | canonical source Commentのserver-managed locator。一般linkとは区別 |
+| `originAnchor` | optional | 作成時の位置履歴。別Versionへ自動remapしない |
+| `currentTargetAnchor` | optional | userが明示した現在target。Originとは別に更新可能 |
+| `hasExternalContribution` | required boolean | creator以外のstructural contributionが一度でも存在したかをserverがmonotonicに記録。Conditional self-delete guard |
+| `commentLinkCount` | required integer | active general Comment edge数。Edge transactionと同時更新しself-delete guardに使用 |
+| `deletedAt` / `deletedBy` | `DELETED`時 | logical deletion metadata。Private bodyをAuditへコピーしない |
+| `GSI1PK` / `GSI1SK` | `ACTIVE` itemだけ | Song Creative Board用sparse ScopeIndex keys |
+
+`kind = TASK`のときだけ、`status = OPEN | IN_PROGRESS | DONE | CANCELED`、optional `assigneeMembershipId`、internal locator候補`assigneeUserId`、`priority = NORMAL | IMPORTANT`、optional date-only `dueDate`（`YYYY-MM-DD`）、optional `completedBy / completedAt / completedVersionId`を保存します。DONE遷移でcompletion fieldsを設定し、reopenではcurrent METAから外しますが、actor / time / optional related Versionはstructural eventに残します。Memo / IdeaにはTask-only fieldをdefault値で埋めません。
+
+### Existing ScopeIndex reuse
+
+```text
+GSI1PK = SONG#<songId>
+GSI1SK = CREATIVE#<createdAt>#<creativeItemId>
+```
+
+既存のsparse `ScopeIndex`を`KEYS_ONLY`のまま再利用し、新しいtable / GSIは追加しません。Sort keyは変換や状態変更で動かないcreated orderとし、cursorの安定性を優先します。Boardの「すべて」はGSI Query後にcanonical itemを`BatchGetItem`し、kind filter、outstanding Task（`OPEN / IN_PROGRESS`）、priority、assignee、Anchor表示はapplication側で行います。Logical deleteではGSI key attributesを削除し、eventual consistencyで返った候補もcanonical `lifecycleState`を確認して除外します。
+
+Initial page candidateは50 index candidatesです。Filtered resultが不足する場合はopaque cursorを維持して最大5 index page / 250 candidatesまでbounded continuationし、それでも不足すれば次cursorを返します。Friend test規模でもpaginationを省略せず、application pathで`Scan`を使いません。Status / priority / assigneeだけのためにwrite amplificationとpermission surfaceを増やすindexは作りません。
+
+### Comment relationships and duplicate prevention
+
+Comment → Taskはclient operation IDとは独立したuniqueness guardを持ちます。
+
+```text
+PK = COMMENT#<commentId>
+SK = CREATIVE_TASK_LINK
+```
+
+Guard itemは`entityType = CommentCreativeTaskLink`、`bandId / songId / songVersionId / commentId / commentCreatedAt / creativeItemId`、`linkState = ACTIVE | TASK_DELETED`、`createdBy / createdAt / revision`を保持します。Commentのcanonical itemは既存の`VERSION#<versionId> / COMMENT#<createdAt>#<commentId>`なので、serverはCreativeItem / guardのserver-managed locatorからcanonical Commentを先に解決し、stored Version / Song / Band chainを検証します。Guard keyだけでCommentの存在やauthorizationを判断しません。
+
+Comment → Task commandは1回の`TransactWriteItems`で、actorのACTIVE Membershipとcanonical Commentの条件確認、CreativeItem Put、`attribute_not_exists(PK)`付きguard Put、Idempotency Put、structural event、safe AuditEventを処理します。同じoperation key + 同じcanonical inputは既存`creativeItemId`へ収束し、同じkey + 異なるinputは409、別operation IDによるdouble tapもguard conditionで重複Taskを作りません。
+
+Taskをlogical deleteしてもguardを消さず`TASK_DELETED`へ更新し、同じCommentから自動的に再変換可能にはしません。意図的な再作成は、過去linkの表示、authorization、Auditを含む別command / human reviewを必要とするfuture candidateです。
+
+一般的なComment linkはunbounded arrayをMETAへ埋めず、次のedge itemで表現します。
+
+```text
+PK = CREATIVE#<creativeItemId>
+SK = COMMENT_LINK#<commentId>
+```
+
+Edgeには`entityType = CreativeCommentLink`、`bandId / songId / songVersionId / commentId / commentCreatedAt / creativeItemId`、`createdBy / createdAt`を保持します。Creative itemからlinked Commentsをbase QueryできればMVP access patternを満たすため、general reverse edgeや新GSIは作りません。Comment → Task専用guardはreverse duplicate checkを担い、一般linkと混同しません。Unlink / reverse listがproduct requirementになった時点で、mirror edgeをtransactionで持つ必要性を再評価します。
+
+### Anchor representation
+
+`originAnchor`と`currentTargetAnchor`はCreativeItem META内のbounded mapとし、新しいitem / GSIを作りません。両方ともoptionalで、Song-level itemはAnchorなしで正常です。
+
+| Field candidate | Rule |
+| --- | --- |
+| `songVersionId` | 指定時はCreativeItemのcanonical Song / Bandへ属することを検証 |
+| `songTrackId`またはstable `trackCode` | optional。別SongのTrackを拒否 |
+| `anchorType` | `VERSION | TRACK | TIME_POINT | TIME_RANGE | MUSICAL_POINT | MUSICAL_RANGE` candidate |
+| `timeMs`または`startTimeMs / endTimeMs` | integer、0以上、rangeはstart < end |
+| `bar / beat / tick`とend counterparts | 1-based bar / beat、PPQ exact ruleはruntime validation gate |
+
+`originAnchor`は作成時のVersion位置をhistoryとして保持し、Version更新時に自動remapしません。`currentTargetAnchor`だけをuserの明示操作とexpected revisionで更新し、originは残します。Timeline markerはSong page分をpage取得後にfilterするMVP境界とし、time-window Queryの負荷が実測で問題になるまでは専用indexを追加しません。
+
+### Kind conversion identity and fields
+
+Memo ↔ Idea ↔ Taskは同じ`creativeItemId`を維持するconditional updateです。`createdBy / createdAt / originAnchor / sourceCommentId`を変更せず、`updatedBy / updatedAt / revision`とstructural eventを更新します。
+
+- Memo / Idea → Task: `OPEN / NORMAL`を初期化し、assignee、due date、completion fieldはcommandで明示された場合だけ追加する
+- Task → Memo / Idea: active METAからTask-only fieldsを`REMOVE`し、古いassignment / statusをcurrent DTOへ残さない
+- Memo ↔ Idea: Task fieldを生成しない
+- 再びTaskへ変換: 古いTask fieldを黙って復元せず、`OPEN / NORMAL`から開始する
+- 変換retry: Idempotency itemと`expectedRevision`で同一結果へ収束し、stale conversionは409にする
+
+構造履歴にはbefore / after kindとsafe state codeだけを残し、private title / bodyを複製しません。この設計は変換順序を要求せず、どのkindからでも作成・変更できるproduct ruleを維持します。
+
+### Assignee reference and removed Membership
+
+Current assignmentはBand-specificな`assigneeMembershipId`をidentityとし、既存Membership keyを取得するために`assigneeUserId`をinternal locatorとして併記する候補です。Serverは`BAND#<bandId> / MEMBERSHIP#<assigneeUserId>`をstrong readし、recordの`membershipId`が保存値と一致し`ACTIVE`であるときだけcurrent assigneeとして投影します。どちらのfieldもauthorizationを付与しません。
+
+Leave / remove時にSong内の全Taskをfan-out updateしません。Membershipがinactive、missing、またはmembershipId mismatchなら、remaining member向けcurrent UIでは即時に「未割当」と投影し、次mutationでconditional unassignできます。過去のassignment structural eventと元membershipIdはhistoryとして保持します。Rejoinでは新しいmembershipIdを発行するため、以前のassignmentが自動復活しません。Background cleanupはcorrectness条件ではなくfuture maintenance候補です。
+
+### Logical deletion and safe tombstone
+
+`lifecycleState = ACTIVE | DELETED`はTask statusと別です。Logical deleteは`expectedRevision`とauthorized capability / self-delete guardをconditionに、`DELETED`、`deletedAt / deletedBy`、新revisionを設定し、ScopeIndex key attributesを削除します。Canonical item、relationship guard、edge、structural eventはhistory / recoveryのため保持します。
+
+Authorized remaining memberがdirect Getした場合、repository layerはtombstone DTOとしてID、kind candidate、lifecycle、deletedAt、safe attributionだけを返し、title、body、Anchor、Task detailを返しません。Storage上のprivate contentをいつpurgeするか、restore API、retention、legal deletionは別Human Gateであり、TTLやautomatic hard purgeをこの提案へ追加しません。
+
+Editor / Commenterのconditional self-deleteは、actorがimmutable `createdBy`と一致し、`hasExternalContribution = false`、`commentLinkCount = 0`、`sourceCommentId`なし、`ACTIVE`、revision一致をすべて満たす場合だけ許可します。General Comment link作成やcreator以外のstructural mutationは同じtransactionでguard fieldsを更新します。Owner / AdminはDEC-024に従いshared itemをlogical deleteできます。Guardを完全に評価できない旧dataや不整合ではfail closedにします。
+
+### Structural history versus AuditEvent
+
+Product UXに必要な最小structural eventはCreativeItem partitionへappend-only child itemとして保存します。
+
+```text
+PK = CREATIVE#<creativeItemId>
+SK = EVENT#<occurredAt>#<eventId>
+```
+
+Event candidateは`KIND_CHANGED`、`TASK_STATUS_CHANGED`、`REOPENED`、`MARKED_UNNECESSARY`、`ASSIGNED`、`UNASSIGNED`、`COMMENT_LINKED`、`CREATED_FROM_COMMENT`、`DELETE_REQUESTED`です。`bandId / songId / creativeItemId / actorUserId / occurredAt / beforeCode / afterCode / optional relatedSongVersionId / resultingRevision`だけを必要最小限で持ち、title / body / Comment本文を保存しません。通常の本文editはMETAのupdated fields / revisionだけで扱い、全文edit snapshotを無制限に残しません。
+
+AuditEventはauthorization、destructive operation、incident review用のBand-scoped safe recordで、Creative historyはuserへ制作の構造的な歩みを示すrecordです。重要operationでは同じtransactionへ両方を含められますが、private contentを重複保存せず、個人の生産性scoreへ使いません。
+
+### Creative transaction matrix
+
+すべてのprotected mutationはcanonical CreativeItem / source entityとactor Membershipをstrong readし、transaction内でも可能な限りactor Membership `ACTIVE`、resource revision、relationship stateをConditionCheckして、read後のremoval raceを閉じます。Idempotency itemは既存`OP#<actorUserId>#<operation> / KEY#<clientOperationId>`を再利用します。
+
+| Operation | Atomic write / condition | Idempotency / history / Audit |
+| --- | --- | --- |
+| Create CreativeItem | Membership condition + `attribute_not_exists(Creative META)` + META Put | Idempotency Put + safe create Audit。Creator / Song chainはserver値 |
+| Convert kind | Membership + `revision = expectedRevision` + allowed lifecycle/kindでMETA Update | Idempotency + `KIND_CHANGED` + Audit |
+| Update Task status | Membership + revision + allowed current transition + `kind=TASK` | Idempotency + `TASK_STATUS_CHANGED` + Audit |
+| Reopen | Membership + revision + `status IN (DONE,CANCELED)`でMETA Update | Idempotency + `REOPENED` + Audit |
+| Mark unnecessary | Membership + revision + active Taskで`CANCELED`へUpdate | Idempotency + `MARKED_UNNECESSARY` + Audit |
+| Assign / unassign | Actor Membership + target Membership ID / `ACTIVE` condition + Creative revision Update | Idempotency + `ASSIGNED / UNASSIGNED` + Audit。Assigneeにcapabilityを付与しない |
+| Comment → Task | Actor Membership + source Comment condition + Creative Put + unique guard Put | Idempotency + `CREATED_FROM_COMMENT` + Audit。Guardがoperation IDを越えてduplicateを防止 |
+| Link Comment | Actor Membership + canonical Comment condition + Creative revision Update + edge Put | Idempotency + `COMMENT_LINKED` + Audit。Link count / external contribution guardも同時更新 |
+| Logical delete | Membership + capability / self-delete guard + revisionでMETA tombstone Update | Idempotency + `DELETE_REQUESTED` + Audit。Source guardがあれば`TASK_DELETED`へ同時更新 |
+
+各transactionはboundedな6〜9 item程度を想定し、DynamoDBの100 unique item / 4 MB制限内に保ちます。大量linkの一括mutationやSong全体fan-outは同じtransactionへ詰め込まず、実装時にcommand上限を設けます。Validation / permission / revision conflictは自動retryせず、throttle / retryable 5xxだけをbounded backoff対象にします。
+
+### Creative access-pattern matrix
+
+| # | Access pattern | Operation / key | consistency and authorization | count / pagination |
+| --- | --- | --- | --- | --- |
+| 1 | Get CreativeItem by ID | `GetItem(CREATIVE#id, META)` | protected readはstrong候補。Stored `bandId/songId` → strong ACTIVE Membership | 1 item |
+| 2 | List CreativeItems for Song | `Query ScopeIndex(SONG#id, begins_with(CREATIVE#))` → `BatchGet` canonical | GSIはeventual、先にMembership strong read。Canonical lifecycleを再確認 | 50 candidates/page + opaque cursor |
+| 3 | List / filter Creative Board | #2をkind / active Task fieldでapplication filter | authorizationはfilter/GSIへ依存しない | bounded 5 page / 250 candidates candidate |
+| 4 | Get source Comment relationship | Creative META `sourceCommentId` + canonical Comment locationをserverで解決 | same Song / Version / Bandを再検証 | 1 Creative + 1 Comment |
+| 5 | Comment → Task duplicate check | `GetItem(COMMENT#commentId, CREATIVE_TASK_LINK)`、create時はconditional Put | Read結果だけでauthorizeせずcanonical Comment + Membershipを検証 | 0 or 1 guard |
+| 6 | List linked Comments | base `Query(CREATIVE#id, begins_with(COMMENT_LINK#))` → canonical Comment reads | itemと各Comment chainを検証 | 50 edges/page |
+| 7 | Validate assignee | `GetItem(BAND#bandId, MEMBERSHIP#assigneeUserId)` + membershipId comparison | **strong必須**。ACTIVEでなければcurrent unassigned projection | 0 or 1 Membership |
+| 8 | Update with expectedRevision | strong Get + conditional Update / transaction | actor Membership strong + resource revision / state condition | 1 item + bounded side records |
+| 9 | Logical delete | conditional META tombstone update + GSI key removal | capability / self-delete guard / revisionをtransactionで確認 | 1 item + history / Audit / optional guard |
+| 10 | Read safe history / tombstone | base `Query(CREATIVE#id, begins_with(EVENT#))`またはMETA Get | Authorized remaining ACTIVE memberだけ。Private bodyをprojectionしない | 50 events/page / 1 tombstone |
+
+### Cost, scale, and reconsideration
+
+Principal cost driverはCreativeItem数、ScopeIndex key write / storage、Comment guard / edge、structural history、Audit / idempotency record、transaction write、canonical `BatchGet`、PITR、item size、paginationです。`KEYS_ONLY`でもindexed active itemのcreate / deleteでindex writeが生じ、transactionは通常writeより多くrequestを消費します。DynamoDB item上限400 KBを理由に、title / body / link数へruntime上限を設け、Comment listやevent listをMETAのarrayへ埋め込みません。Freeを保証せず、resource変更前にTokyo Regionのcurrent pricingを再確認します。
+
+新GSIを追加しない理由は、MVPの中心accessがSong-scoped Boardでpredictableであり、assignee / status / priority / timelineごとのindexはwrite amplification、migration、operational burdenを増やすためです。次の場合はdedicated index、derived projection、別read model、またはPostgreSQLを再評価します。
+
+- 1 Songのactive CreativeItemが約1,000件を継続して超える
+- Filtered pageを満たすため5 index page / 250 candidatesのbounded readを頻繁に使い切る
+- User / assignee横断Task list、全Band global search、complex reportingが承認要件になる
+- Timeline window queryがpage取得後filterではlatency / cost目標を満たさない
+- Edge / structural history growth、400 KB / transaction / hot-partition constraint、relational integrityの保守負担が実測問題になる
+
+### Privacy and security boundary
+
+- CreativeItem / edge / historyへAWS credential、Cognito token、session、presigned URL、S3 object keyを保存しない
+- Client supplied role、creator、assignee、Band / Song / Version relationshipをauthorityとして使わない
+- Title、body、Comment本文、filename、Anchor free textをCloudWatch、AuditEvent、idempotency logへ出さない
+- Idempotency recordはcanonical input hashを保持できるが、raw private inputを保存 / logせず、hashもclientへ返さない
+- ScopeIndex result、assignee reference、opaque ID knowledgeではauthorizeせず、canonical resource chainとstrong ACTIVE Membershipを毎protected operationで確認する
+- Cross-Band mismatch、REMOVED member、hidden sourceは外向き404候補とし、safe category / request IDだけをlogする
+
+### CREATIVE-DATA-001 physical summary
+
+| Item | Proposed decision |
+| --- | --- |
+| selected model | 1つの`CreativeItem` entity + `MEMO / IDEA / TASK` kind |
+| canonical key | `PK=CREATIVE#<creativeItemId>`, `SK=META` |
+| list index | existing `ScopeIndex`: `SONG#<songId>` / `CREATIVE#<createdAt>#<creativeItemId>`, sparse `KEYS_ONLY` |
+| new table / GSI | none |
+| Comment → Task | `COMMENT#<commentId> / CREATIVE_TASK_LINK` guard + transaction。Logical delete後もguard保持 |
+| general Comment link | `CREATIVE#<id> / COMMENT_LINK#<commentId>` edge。MVP reverse indexなし |
+| conversion | same CreativeItem ID、creator / origin保持、Task-only current fieldsをkindに応じてinitialize / remove |
+| Anchor | bounded `originAnchor` + `currentTargetAnchor` maps。Optional、no automatic remap、no index |
+| assignee | Band-specific membershipId + internal user locator。Inactive / replaced Membershipはread時にunassigned projection |
+| deletion | `ACTIVE / DELETED` logical tombstone、GSI keys remove、relationship / safe history保持。Hard purgeは別Human Gate |
+| history | `CREATIVE#id / EVENT#time#eventId` structural events + separate Band AuditEvent。Private text snapshotなし |
+| concurrency | integer revision + expectedRevision、conditional transaction、conflictは409 |
+| migration trigger | large per-Song count、cross-user/global queries、timeline-window load、reporting / relationship complexity、measured cost / limits |
+
 ### Current official references
 
 - [DynamoDB On-Demand capacity mode](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/on-demand-capacity-mode.html)
@@ -575,7 +773,7 @@ Private Alpha前にsynthetic dataでrestore drillを行い、new table作成 →
 - Auth provider、session、招待、capability policyの実装mapping
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
-- Memo / Idea / Taskをsingle physical CreativeItemにするか既存SongMemo / Taskへ分けるか、kind変換履歴、outstanding projection、origin / current target Anchor、Comment linkのkey / index / transaction
+- CreativeItem physical contractはCREATIVE-DATA-001 / DEC-025でsingle entity、既存ScopeIndex、relationship guard / edge、structural historyを提案中。Human approval、runtime schema / migration / resource実装は未着手
 - Activity Status、NotificationPreference、QuietHours、Notificationのphysical item / index / TTL、90日cleanup、source projection、digest / delivery、security retention
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ

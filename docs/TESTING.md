@@ -188,6 +188,36 @@ Creative item実装では、CREATIVE-AUTHZ-001のrole bundleをserver-side table
 
 Logical deletion / tombstone、link / history判定、removed assignee reconciliation、idempotencyのphysical integration testはCREATIVE-DATA-001でschemaを承認した後に追加します。
 
+### CREATIVE-DATA-001 future persistence contract
+
+DEC-025のhuman approval後に、DynamoDB Local / test repository等のAWS connectionを使わないfixtureから始め、次をphysical integration testへ追加します。このtaskではtable、runtime schema、test codeを追加しません。
+
+- Memo / Idea / Taskが1つのCreativeItem canonical keyを使い、kind変換でも`creativeItemId / createdBy / originAnchor`が変わらない
+- Memo / Idea itemへTask-only status、assignee、priority、due、completion fieldを不要に保存しない
+- Task → Memo / Ideaでcurrent Task-only fieldsが除去され、Taskへ再変換してもstale assignment / DONE stateを自動復元しない
+- Song Board Queryがexisting `ScopeIndex`だけを使い、`Scan`や新GSIへ依存しない
+- GSI list candidateをcanonical BatchGetし、DELETED / cross-Song itemを除外してから返す
+- Eventual GSI resultやclient supplied `bandId`だけではauthorizeせず、protected mutation前にcanonical itemとstrong ACTIVE Membershipを確認する
+- List / kind / status filterがopaque cursorでpaginateし、bounded continuation後もcursorを失わない
+- Comment → Taskの同一operation retry、double tap、異なるclientOperationIdが1つのguard / Taskへ収束する
+- 同じidempotency key + 異なるcanonical inputが409になり、raw title / bodyをlogしない
+- Comment → TaskのCreativeItem / uniqueness guard / relationship / history / Auditがtransaction failure時に部分作成されない
+- Linked Taskをlogical deleteしてもComment guardが残り、同じCommentから黙って再作成できない
+- General Comment linkがedge itemとしてpaginateされ、CreativeItem METAへunbounded arrayを作らない
+- Missing / tombstoned / cross-Band Commentとのlinkをdenyし、link作成とself-delete guard fieldをatomicに更新する
+- Optional origin / current target Anchorがcanonical Song / Version / Trackへ属し、old Version anchorを自動remapしない
+- AnchorなしSong-level itemが正常で、current targetだけを変更してもorigin historyが残る
+- Assignee MembershipがACTIVEかつ保存membershipIdと一致するときだけcurrent assigneeとして返る
+- Membership removal後に全Task fan-out updateなしでunassignedへ投影され、new Membershipでrejoinしてもold assignmentが復活しない
+- Assignee reference、creator、source Comment IDを知ることがrole capabilityを付与しない
+- `revision = expectedRevision`のconditionがkind / state / assignee / priority / due / Anchor / deleteのstale writeを409にする
+- Logical deleteでGSI keysを外し、direct Getはprivate title / body / Anchorを含まないsafe tombstoneを返す
+- Editor / Commenterのself-delete guardがcreator以外のhistory、Comment link、source Comment relationshipを検出してfail closedにする
+- Owner / Adminのshared logical deleteでもhard purge、relationship cascade、restoreを暗黙に実行しない
+- Structural eventとAuditEventがsafe code / opaque IDだけを持ち、creative本文、Comment本文、signed URL、object key、tokenを複製しない
+- Transactionが100 unique item / 4 MBを超えるunbounded batchを受け付けず、large collectionsをpaginateする
+- Unfinished / DONE / CANCELED Creative itemがSongVersion作成をblockせず、history eventをproductivity scoreへ利用しない
+
 ### COLLAB-001-DESIGN future membership / notification contract
 
 Membership lifecycleとNotificationを実装する場合は、sessionやclient表示ではなくstrong Membership / canonical sourceを正として次を検証します。現在はtest code、provider、AWS resourceを追加しません。

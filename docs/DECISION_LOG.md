@@ -37,6 +37,7 @@
 | DEC-022 | 2026-09-11 | 創作を管理せず支えるCreative workflowを定める | 承認済み | Creative UX / Version history / Memo・Idea・Task / Anchor | - |
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
 | DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
+| DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 提案中 | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
 
 ---
 
@@ -413,9 +414,30 @@
 - Assignee: optionalなsame-Band ACTIVE member 1人で、permissionを付与しない。REMOVED後は本人のaccessを即denyし、Task / historyを残したままcurrent assignmentを未割当に扱う
 - Error / concurrency: 未認証401、same-Band capability不足403、hidden / cross-Band / inactive Membership 404、stale revision / invalid current transition / duplicate conflict 409、input validation 422。Mutable fieldは`expectedRevision`でsilent overwriteを防ぐ
 - Audit: create、convert、status、reopen、unnecessary、assign / unassign、delete request、Comment → Task / linkとsensitive destructive denialをsafe event候補にする。本文やtitleを複製せず、個人の生産性評価へ使わない
-- 実装状態: docs-only proposal。Runtime、UI、API route、Cognito、DynamoDB physical key / GSI、migration、AWS、infra、workflow、packageは変更していない
+- 実装状態: human-approved docs-only design。Runtime、UI、API route、Cognito、DynamoDB physical key / GSI、migration、AWS、infra、workflow、packageは変更していない
 - Human review: PR #41のhuman reviewでDEC-024のmatrixを承認済み。Role permissionを実装時のad hoc例外で広げず、変更は別authorization reviewへ戻す
 - 関連: CREATIVE-AUTHZ-001、AUTHZ-001、CREATIVE-001-DESIGN、COLLAB-001-DESIGN、DEC-018、DEC-022、DEC-023、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-025: CreativeItemのsingle-table physical persistence contractを定める
+
+- 日付: 2026-09-14
+- ステータス: 提案中
+- 提案者: Codex（CREATIVE-DATA-001）
+- 背景: DEC-022のMemo / Idea / TaskとDEC-024のcapabilityを実装する前に、identityを失わないkind変換、Comment → Task duplicate防止、optional Anchor、removed assignee、logical deletion、safe historyをCLOUD-DATA-001のsingle-table上で一貫して扱う必要がある
+- 提案: Memo / Idea / Taskを`PK=CREATIVE#<creativeItemId> / SK=META`の1つのCreativeItem + kindで扱い、相互変換でもID、creator、originを維持する。Task-only fieldはTask時だけcurrent METAへ保存する
+- ScopeIndex: active itemだけをexisting sparse `ScopeIndex`へ`GSI1PK=SONG#<songId> / GSI1SK=CREATIVE#<createdAt>#<creativeItemId>`で載せ、`KEYS_ONLY`を維持する。Status / assignee / Timeline用の新GSI、table、Scanは追加しない
+- Comment relationship: Comment → Taskは`COMMENT#<commentId> / CREATIVE_TASK_LINK` uniqueness guardとIdempotency itemをtransactionに含め、operation IDが違うdouble actionもduplicate Taskにしない。General linkは`CREATIVE#<itemId> / COMMENT_LINK#<commentId>` edgeとし、unbounded array / speculative reverse indexを避ける
+- Conversion / Anchor: Kind conversionはexpected revision付きsame-item updateとsafe structural eventで記録する。`originAnchor`は自動remapせず、optional `currentTargetAnchor`だけを明示更新する。Anchor用GSIは作らない
+- Assignee: Current assigneeはBand-specific membershipIdを保存し、internal user locatorからMembershipをstrong readする。Inactive / replaced Membershipはfan-out updateなしでunassignedへ投影し、rejoin時のnew membershipIdでold assignmentを復活させない。Assigneeはauthorizationを付与しない
+- Deletion: `ACTIVE / DELETED` lifecycle tombstoneを使い、delete時にScopeIndex keysを外す。Relationship / safe structural historyを残し、direct Getはprivate title / body / Anchorを返さない。Hard purge、retention、restore APIは別Human Gate
+- History / Audit: Kind、Task state、reopen、unnecessary、assign、Comment link、delete requestは`CREATIVE#id / EVENT#time#eventId`のminimal structural event候補とし、Band AuditEventとは目的を分ける。いずれもprivate bodyを複製せず、個人の生産性評価へ使わない
+- Concurrency / transaction: Mutable fieldは`revision + expectedRevision`、protected mutationはcanonical resourceとstrong ACTIVE Membershipを再確認し、relationship / idempotency / history / Auditをbounded transactionに含める。GSI、creator、assignee、client roleだけではauthorizeしない
+- Cost: 新GSIを避けてもCreative item、ScopeIndex key、edge / guard / history / Audit / idempotency、transaction、BatchGet、PITR、item sizeがbilling driverになる。Freeは保証せず、resource変更直前にcurrent priceを確認する
+- 見直し条件: Per-Song item数が約1,000件を継続超過、filtered listが5 page / 250 candidatesを頻繁に使い切る、assignee横断 / global search / reporting / Timeline window queryが必要、またはitem / transaction / hot-key / relational保守性が実測問題になった場合
+- Privacy: Credential、token、presigned URL、S3 keyをCreativeItemへ保存せず、title / body / Comment本文をCloudWatch、Audit、idempotency logへ複製しない
+- 実装状態: docs-only proposal。DynamoDB table / GSI、CDK、migration、runtime schema、API route、UI、AWS、workflow、dependencyは変更していない
+- Human review: 未実施。DEC-025は承認前であり、実装 / migration / resource変更へ進めない
+- 関連: CREATIVE-DATA-001、CLOUD-DATA-001、CREATIVE-001-DESIGN、CREATIVE-AUTHZ-001、DEC-017、DEC-022、DEC-024、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

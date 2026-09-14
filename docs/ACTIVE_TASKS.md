@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-AUTHZ-001 | Creative item authorization design | Codex | レビュー待ち | `docs/creative-authz-001` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #41 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityをCREATIVE-001とAUTHZ-001へ統合 |
+| CREATIVE-DATA-001 | Creative item DynamoDB physical design | Codex | レビュー待ち | `docs/creative-data-001` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | 未作成 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加する提案。AWS resource / runtime変更なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CREATIVE-AUTHZ-001 | 完了 | Codex | `docs/creative-authz-001` / #41 | 2026-09-14 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityを定義し、DEC-024承認後にmainへマージ済み。Runtime / DB physical schema変更なし |
 | SURFACE-016 | 完了 | Codex | `ui/surface-016-long-song-title-boundary` / #40 | 2026-09-14 | 主要Song card、detail見出し、breadcrumbの長文境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eをmainへマージ済み |
 | SURFACE-015C | 完了 | Codex | `ui/surface-015c-custom-404` / #39 | 2026-09-14 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加してmainへマージ済み |
 | CLOUD-OIDC-001-PREP | 完了 | Codex | `chore/cloud-oidc-001-prep` / #38 | 2026-09-14 | Parameterized immutable subject、exact `main` / `nonprod` trust、bootstrap role delegationをoffline test / synthしmainへマージ済み。AWS / GitHub適用なし |
