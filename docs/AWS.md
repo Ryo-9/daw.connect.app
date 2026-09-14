@@ -1836,7 +1836,7 @@ Normal PR Quality checks remain credential-free and must not receive `id-token: 
 | --- | --- |
 | Stack status | `CREATE_COMPLETE` |
 | Resource types | `AWS::IAM::OIDCProvider`、`AWS::IAM::Role`、`AWS::IAM::Policy`の3種類だけ。Unexpected resourceなし |
-| Provider | URLは`https://token.actions.githubusercontent.com`、audienceは`sts.amazonaws.com` |
+| Provider | AWS APIの`Url`値は`token.actions.githubusercontent.com`（issuer: `https://token.actions.githubusercontent.com`）、audienceは`sts.amazonaws.com` |
 | Entry role | `streamband-nonprod-github-deploy`、`MaxSessionDuration = 3600`、managed attached policiesは0 |
 | Trust | Actionは`sts:AssumeRoleWithWebIdentity`。Immutable owner / repository identityを含むexact subject、Environment `nonprod`、branch `refs/heads/main`を完全一致で要求 |
 | Trust exclusions | Wildcard trust、`StringLike` wildcard、`pull_request` subjectはなし |
