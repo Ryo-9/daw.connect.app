@@ -12,17 +12,15 @@
 
 ## 現在の状態と次候補
 
-2026-09-14 時点で、CREATIVE-SURFACE-001 / PR #44までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はNOTIFY-001-DESIGNで、DEC-023をevent / channel delivery levelへ具体化しています。Provider、runtime、physical DB、AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-15 時点で、NOTIFY-001-DESIGN / PR #45までがmainへマージ済みです。Human-operated CLOUD-003CでnonprodのCDK deployment foundationをbootstrapし、続くHuman Gate A–Dで`StreamBandNonprodDeploymentTrust`の作成、read-only検証、一時human privilege撤去まで完了しました。GitHub Actions credential test、verification workflow、EnvironmentへのAWS参照値設定、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。DEC-026は引き続き提案中 / Human review待ちです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | NOTIFY-001-DESIGN | Notification event / channel delivery matrix | レビュー待ち（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS変更なし |
-| 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | ACTIVATION-REVIEW / PR #43完了後の別Human Gate。Trust Stack 1件の作成とread-only verificationだけを扱い、Application deployと分離 |
-| 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
-| 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
-| 5 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
+| 1 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Activationとtemporary privilege撤去の完了後に行う別task / branch / PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
+| 2 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC credential verification等の必要gate後、Cognito / session runtimeを別taskで実装 |
+| 3 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
 
 ## Data Design Lane
 
@@ -55,7 +53,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
 | CLOUD-OIDC-001-PREP | P0 | GitHub Actions OIDC deployment trust IaC preparation | 完了（PR #38）。Immutable owner / repository IDをparameter化し、`main` + `nonprod` exact trustとdeploy / file / lookup role delegationだけをoffline検証。AWS / GitHub適用なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | P0 | OIDC trust activation permission / execution review | 完了（PR #43）。Fixed CDK CLIのdeploy / file / lookup role利用、一時human permission、effective privilege、Human Gate、verification / rollback / costをdocs化。AWS / GitHub適用なし |
-| CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust activation | PREPのreview後の別Human Gate。GitHub Environment保護とdeployment-trust Stack適用を分離確認し、application resourceをdeployしない |
+| CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust activation | 完了（2026-09-15 human-operated）。Gate A–Dでtrust Stackだけを作成・read-only検証し、temporary human permissionを撤去済み。Workflow / credential test / application resourceは未実装 |
 | CLOUD-OIDC-001-VERIFY | P0 | Manual OIDC credential verification workflow | Activation後の別PR。通常CIへ`id-token`を付けず、manual jobでshort-lived credential acquisitionだけを検証 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
 | AUTH-001-DESIGN | P0 | Cognito authentication and web session contract | 完了（PR #34）。email sign-in、invitation-gated signup、branded Managed Login、confidential BFF、7-day session、Passkey / device / account lifecycleを設計。Cognito resource / runtime実装なし |
@@ -98,7 +96,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 | --- | --- | --- | --- |
 | COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
 | COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
-| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | レビュー待ち（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。Provider / physical DB / runtime / resourceは未実装 |
+| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | 完了（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。DEC-026は提案中。Provider / physical DB / runtime / resourceは未実装 |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
 
 ## Core Lane
@@ -184,6 +182,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| NOTIFY-001-DESIGN | #45 | 2026-09-15 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。DEC-026は提案中。Provider / runtime / physical DB / AWS / workflow変更なし |
 | CREATIVE-SURFACE-001 | #44 | 2026-09-14 | Memo / Idea / Taskの統合Creative Board、filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。API / DB / AWS変更なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub適用なし |
 | CREATIVE-DATA-001 | #42 | 2026-09-14 | 1つのCreativeItem entity、既存ScopeIndex、Comment relationship / idempotency、Anchor、tombstone、structural historyのDEC-025を承認。AWS resource / runtime変更なし |
