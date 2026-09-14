@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-14 時点で、CLOUD-OIDC-001-ACTIVATION-REVIEW / PR #43までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCREATIVE-SURFACE-001で、承認済みCreative designを非永続のSong Detail prototypeとして検証しています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-14 時点で、CREATIVE-SURFACE-001 / PR #44までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はNOTIFY-001-DESIGNで、DEC-023をevent / channel delivery levelへ具体化しています。Provider、runtime、physical DB、AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | レビュー待ち（PR #44）。Memo / Idea / Task、filter、Anchor marker、presentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
+| 1 | NOTIFY-001-DESIGN | Notification event / channel delivery matrix | レビュー待ち。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS変更なし |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | ACTIVATION-REVIEW / PR #43完了後の別Human Gate。Trust Stack 1件の作成とread-only verificationだけを扱い、Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -88,7 +88,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | 完了（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更なし |
 | CREATIVE-DATA-001 | P1 | Creative item persistence extension | 完了（PR #42）。1つのCreativeItem entity、既存ScopeIndex、relationship / idempotency / transaction / tombstone / structural historyをDEC-025として承認。新table / GSI、resource、runtime変更なし |
 | CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | 完了（PR #41）。Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingし、DEC-024を承認済み。Runtime / DB physical schema変更なし |
-| CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | レビュー待ち（PR #44）。Song DetailにMemo / Idea / Taskの統合surface、種類filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。既存memo / TODOは残し、playback / Version作成をblockしない |
+| CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | 完了（PR #44）。Song DetailにMemo / Idea / Taskの統合surface、種類filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。既存memo / TODOは残し、playback / Version作成をblockしない |
 
 ## Collaboration Experience Lane
 
@@ -98,7 +98,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 | --- | --- | --- | --- |
 | COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
 | COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
-| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | Security / direct / ordinary category、preset、digest、retry、provider比較を設計。Email / push provider採用とresource作成は別Human Gate |
+| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | レビュー待ち。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。Provider / physical DB / runtime / resourceは未実装 |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
 
 ## Core Lane
@@ -184,6 +184,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| CREATIVE-SURFACE-001 | #44 | 2026-09-14 | Memo / Idea / Taskの統合Creative Board、filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。API / DB / AWS変更なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub適用なし |
 | CREATIVE-DATA-001 | #42 | 2026-09-14 | 1つのCreativeItem entity、既存ScopeIndex、Comment relationship / idempotency、Anchor、tombstone、structural historyのDEC-025を承認。AWS resource / runtime変更なし |
 | SURFACE-016 | #40 | 2026-09-14 | 長い日本語・英数字混在titleの主要card / detail / breadcrumb境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eを追加 |

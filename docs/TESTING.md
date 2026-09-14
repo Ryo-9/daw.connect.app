@@ -260,6 +260,32 @@ Membership lifecycleとNotificationを実装する場合は、sessionやclient�
 
 Email / push provider、digest scheduler、physical TTL / index、delivery retryのintegration testは、それぞれの実装方式とisolated environmentが承認された後に追加します。
 
+### NOTIFY-001-DESIGN future delivery contract
+
+DEC-026はhuman review待ちのdocs-only proposalです。Provider / physical persistence / runtimeが別taskで承認された場合、table-driven event matrixとfake providerで最低限次を検証します。
+
+- `SECURITY / DIRECT / ORDINARY`をcanonical eventとrecipient relationからserverが決め、client categoryを信用しない
+- `集中 / 標準 / すべて`ごとのexternal defaultがmatrixどおりで、preset変更がauthorizationやActivity Statusを変えない
+- `REALTIME / HOURLY_DIGEST / DAILY_DIGEST / OFF`がexternal channelへだけ作用し、eligibleなin-app Center itemを失わない
+- Quiet HoursでDIRECT / ORDINARY external deliveryをholdし、SECURITYだけがbypassする
+- Direct mention / assignmentをQuiet Hours終了後のcatch-upで失わず、ordinary eventが無制限realtimeにならない
+- IANA timezone、overnight range、DST / timezone変更境界で同じdigest windowを二重送信しない
+- Hourly / daily digestをrecipient + channel + Band + Song / threadでgroupし、0件なら送らない
+- 同じsource event retryがduplicate Center itemを作らず、provider retryもduplicate external deliveryを作らない
+- Transient failureをbounded exponential backoffでretryし、permanent failureや最大attempt到達をsafe categoryで停止する
+- Same threadのordinary collapse後もlogical source targetを保ち、mention / invitation / assignment / Securityをcollapseで失わない
+- REMOVED / left MembershipへのBand DIRECT / ORDINARY deliveryを次回評価から停止する
+- Removed memberの保存済みBand notificationをCenterへ表示せず、old deep linkをstrong ACTIVE Membership再確認でdenyする
+- Pending invitation userへBand collaboration notificationを送らず、invitation-specific noticeだけを扱う
+- Suspended / deletion-pending accountのcollaboration deliveryを止め、許可されたaccount SECURITYだけを分離する
+- Deep linkごとにcanonical source → Band → strong ACTIVE Membership → capabilityを再実行する
+- Inaccessible / deleted sourceをgeneric fallbackへ戻し、存在やprivate contentを漏らさない
+- External subject / lock-screen copyへSong title、Comment / Creative本文、歌詞、filename、object key、tokenを含めない
+- Notification READ / expiry / retryがTask、Proposal、Invitation、Version等のsource stateを変更しない
+- Ordinary Notificationの90日expirationがsource entity、Security notification、AuditEventへcascadeしない
+
+Provider-specific bounce / complaint、webhook、queue / dead-letter、push token、security retention、physical TTL / indexのtestはprovider / COLLAB-DATA-001のHuman Gate後に追加します。実在email、未公開曲、token、private URLをfixture / logへ使いません。
+
 ## Level 3 — 一般公開前
 
 - 本番相当環境で主要ユーザーフローを E2E 確認する

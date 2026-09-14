@@ -38,6 +38,7 @@
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
 | DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
 | DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 承認済み | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
+| DEC-026 | 2026-09-14 | Notification category / delivery matrix contractを定める | 提案中 | Notification / channel / digest / retry / privacy | - |
 
 ---
 
@@ -438,6 +439,27 @@
 - 実装状態: human-approved docs-only design。DynamoDB table / GSI、CDK、migration、runtime schema、API route、UI、AWS、workflow、dependencyは変更していない
 - Human review: PR #42のhuman reviewで承認済み。承認対象はphysical designであり、実装 / migration / resource変更は別task / Human Gateを必要とする
 - 関連: CREATIVE-DATA-001、CLOUD-DATA-001、CREATIVE-001-DESIGN、CREATIVE-AUTHZ-001、DEC-017、DEC-022、DEC-024、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
+
+## DEC-026: Notification category / delivery matrix contractを定める
+
+- 日付: 2026-09-14
+- ステータス: 提案中
+- 提案者: Codex（NOTIFY-001-DESIGN）
+- 背景: DEC-023で承認したNotification UXを実装する前に、event category、recipient、Center / external channel、preset、frequency、Quiet Hours、digest、retry、privacy、membership lifecycleの一貫したdelivery contractが必要
+- Category: `SECURITY / DIRECT / ORDINARY`をserver-side canonical eventとrecipient relationから決定する。SECURITYはordinary preferenceでOFF不可・即時・Quiet Hours bypass、DIRECTは本人設定を尊重する明示宛event、ORDINARYはCenter / digest中心とする
+- Preset: `集中 / 標準 / すべて`はexternal deliveryのinitial bundleで、authorization Role / Activity Status / Membership / assigneeを変更しない。In-app Centerはexternal frequencyと独立する
+- Frequency / digest: External channelは`REALTIME / HOURLY_DIGEST / DAILY_DIGEST / OFF`。Dailyはuser timezoneの09:00候補、0件では送らず、same Song / threadのordinary eventをgroupする。Mention / invitation / assignment / Securityのlogical targetはcollapseで失わない
+- Quiet Hours: IANA timezoneとovernight rangeを扱い、DIRECT / ORDINARY external deliveryを保留して終了後catch-upへまとめる。SECURITYだけをbypassし、Task priority、Role、Activity Statusで自動昇格しない
+- Event matrix: Invitation、membership、Song / Version、Comment / mention、Creative item / Task、Proposal、account / device security eventについてrecipient、actor除外、Center、external default、deep link、dedup keyを定義する
+- Center / authorization: `要対応 / 未読 / すべて`と`UNREAD / READ`を維持し、READをsource完了にしない。Deep linkではcanonical source → Band → strong ACTIVE Membership → capabilityを毎回再実行し、Notification ownershipをaccess proofにしない
+- Recipient lifecycle: REMOVED / left memberへのBand DIRECT / ORDINARYを停止し、保存済みprivate Band notificationもcurrent Membershipなしでは表示しない。Pending invitation、SUSPENDED、DELETION_PENDINGはaccount / invitation notificationとBand collaboration deliveryを分離する
+- Privacy: External subject / lock screenへSong title、Comment / Creative本文、歌詞、filenameを既定で出さない。Payload / logへpresigned URL、S3 key、Cognito token、session ID、credential、不要なemailを保存しない
+- Dedup / retry: Centerは`sourceEventId + recipientKey + relation`、externalは`notificationId + channel`をidempotency候補とする。Recipient keyはinternal User IDまたはinvitation-scoped opaque referenceで、raw emailをkeyにしない。Transient failureはjitter付きexponential backoffを最大5attempt候補、permanent failureはchannel単位で停止し、privacy確認なしの自動fallbackをしない
+- Retention: Ordinary Center itemは90日候補。Delivery attempt metadata、Security notification、AuditEventのretentionを混同せず、physical TTL / key / indexはCOLLAB-DATA-001へ分離する
+- Provider / cost: Providerは採用せず、privacy、Region / data handling、cost、bounce / complaint、retry / webhook、development ergonomicsを別Human Gateで比較する。このdocs-only taskのAWS増分料金は0で、将来はsend数、queue / event、DB、log / retentionがcost driver
+- 実装状態: proposal-only documentation。Notification runtime、email / push、provider契約、API、physical DB、AWS resource、Cognito、infra、workflow、dependency、UIは変更していない
+- Human review: 未実施。PRのhuman review前に承認済みにせず、event matrix、Quiet Hours、external privacy、retry上限を確認する
+- 関連: NOTIFY-001-DESIGN、COLLAB-001-DESIGN、DEC-023、AUTH-001-DESIGN、AUTHZ-001、CREATIVE-001-DESIGN、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
 

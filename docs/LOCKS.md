@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-044 | CREATIVE-SURFACE-001 | Codex | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `ui/creative-surface-001` | 2026-09-14 | Draft PRのマージまたは作業中止 | Creative Board / Focus Modeの非永続UI prototype。API / DB / AWS / infra / workflow変更なし |
+| LOCK-045 | NOTIFY-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/notify-001-delivery-matrix` | 2026-09-14 | Draft PRのマージまたは作業中止 | Notification delivery matrixのdocs-only design。Provider / runtime / AWS / physical DB / workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-044 | CREATIVE-SURFACE-001 | Codex | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #44。mainへのマージを確認して解除。API / DB / AWS / infra / workflow変更なし |
 | LOCK-043 | CLOUD-OIDC-001-ACTIVATION-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #43。mainへのマージを確認して解除。AWS / GitHub / infra / workflow変更なし |
 | LOCK-042 | CREATIVE-DATA-001 | Codex | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #42。DEC-025の承認とmainへのマージを確認して解除。DynamoDB resource、runtime、AWS、infra、workflow変更なし |
 | LOCK-041 | CREATIVE-AUTHZ-001 | Codex | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #41。DEC-024の承認とmainへのマージを確認して解除。Runtime、DB physical schema、AWS、infra、workflow変更なし |

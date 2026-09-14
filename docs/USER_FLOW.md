@@ -282,6 +282,31 @@ Deep link先ではsource resourceのauthorizationを再検証します。Removed
 
 Ordinary notificationは90日保持後にcleanup可能ですが、source Comment / Creative item / Version / Proposal / Invitation / Membership eventは削除しません。Security notificationとAuditの保持は別contractです。
 
+### Delivery flow candidate（NOTIFY-001-DESIGN）
+
+NOTIFY-001-DESIGNはDEC-023を`SECURITY / DIRECT / ORDINARY`へ具体化するhuman review待ちのproposalです。
+
+```text
+canonical source event
+→ eligible recipientをserverで解決
+→ categoryとrecipient relationを決定
+→ idempotentなNotification Center item
+→ preset / channel / frequency / Quiet Hoursを評価
+→ realtimeまたはdigestへ安全なsummaryだけを配送
+→ deep link先でsource authorizationを再実行
+```
+
+- `SECURITY`はordinary preferenceでOFFにできず即時、Quiet Hoursをbypassする
+- `DIRECT`はinvitation / mention / assignment等。Centerには即時記録し、external deliveryは本人設定を尊重する。Quiet Hours中は保留し、終了後catch-upへまとめる
+- `ORDINARY`はComment / Version / Creative activity等。`集中`ではCenter中心、`標準`では主要eventのdaily候補、`すべて`でも高頻度eventはhourly / dailyへまとめる
+- External通知にはSong title、Comment / Creative本文、歌詞、filenameを既定で載せず、generic summaryを使う
+- Hourly / daily digestは同じBand / Song / threadをまとめても、Invitation、mention、assignment、Securityのlogical targetを失わない。0件なら送らない
+- Quiet HoursはIANA timezoneとovernight rangeを扱い、DIRECTも保留する。SECURITY以外をTask priorityやRoleで勝手にbypassさせない
+- Leave / remove後はBandのDIRECT / ORDINARY deliveryを停止し、保存済み通知やdeep linkもcurrent ACTIVE Membershipとcapabilityを再確認する
+- Sourceが削除・失効・閲覧不能ならgenericなunavailable画面へ戻し、stale notificationから復活やmutationを行わない
+
+Centerの`READ`はsource action完了ではなく、`要対応`はcurrent source stateとsafe presentation stateからderiveします。Ordinary itemは90日候補、Security / Audit retentionは別contractです。Provider、physical persistence、retry infrastructure、UIは未実装です。
+
 ## 5. 楽曲作成
 
 目的: 制作単位となる楽曲を登録する。

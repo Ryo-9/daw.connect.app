@@ -1232,3 +1232,138 @@ Deep linkを開くたびにcanonical sourceを取得し、derived Bandとstrong 
 - Deep-link logical target / route mapping、source unavailable UX、Universal Link / App Link
 
 これらを実装するまでNotificationはfuture contractです。Role / Activity Statusからの自動preset変更、Task productivity coercion、playback interruption、source cascade delete、Notificationを根拠にしたauthorizationは導入しません。
+
+## NOTIFY-001-DESIGN: Notification event / channel delivery matrix
+
+### Status and scope
+
+この章はDEC-023のNotification UXをdelivery levelへ具体化する**提案中のdocs-only contract**です。設計日: 2026-09-14。Notification runtime、API route、provider、queue / scheduler、physical DB、Cognito、AWS resource、workflow、UIは実装しません。通知は制作を急かす仕組みではなく、重要事項を見逃さず元の制作contextへ戻る補助です。
+
+### Category contract
+
+| Category | Purpose | In-app | External delivery | Preference / Quiet Hours |
+| --- | --- | --- | --- | --- |
+| `SECURITY` | account、credential、trusted device、ownership等のsecurity-sensitive event | account security history候補へ即時記録 | 利用可能な安全なchannelへ即時候補 | ordinary presetでOFF不可。Quiet Hoursをbypass |
+| `DIRECT` | invitation、mention、assignment等、特定userへ明示的に向けたevent | eligible recipientのCenterへ即時記録 | event defaultはrealtime。Userはevent / channel単位でhourly / daily / offへ変更可能 | Quiet Hours中は保留し、終了後catch-up。Securityへ自動昇格しない |
+| `ORDINARY` | Comment、Version、Creative item、membership activity等の一般制作event | accessible recipientのCenterへ記録可能 | presetによりcenter-only / hourly / daily / off | Quiet Hoursとuser preferenceを強く尊重 |
+
+Categoryはauthorization role、Activity Status、priority、Task completion scoreではありません。Clientが送ったcategoryを信用せず、server側のcanonical event typeとrecipient relationから決めます。
+
+### Preset and channel defaults
+
+Presetはexternal channelのinitial bundleで、individual override後の値を勝手にresetしません。In-app Centerへのeligible event記録はexternal frequencyと独立します。
+
+| Preset | `SECURITY` | `DIRECT` | `ORDINARY` external default |
+| --- | --- | --- | --- |
+| `集中` | 即時・OFF不可 | realtime候補。個別にdigest / offへ変更可 | 原則OFF。Centerで確認 |
+| `標準` | 即時・OFF不可 | realtime候補。個別にdigest / offへ変更可 | Version / review等の主要eventはdaily、その他はCenter-only |
+| `すべて` | 即時・OFF不可 | realtime候補。個別にdigest / offへ変更可 | 広いeventをhourlyまたはdaily。高頻度eventを無制限realtimeにしない |
+
+Channel候補は`IN_APP / EMAIL / PUSH`です。`IN_APP`はCenter presentation、`EMAIL / PUSH`はexternal delivery abstractionであり、providerは未選定です。SECURITYはverified EMAILをprimary候補、future PUSHをsupplementalとし、PUSHだけをaccount recovery経路にしません。DIRECTは本人が有効にしたEMAIL / future PUSH、ORDINARYはEMAIL digestを初期候補とし、PUSHは既定OFFです。Preset、frequency、channelはRole / Membership capability / Activity Statusを変更しません。
+
+### Event delivery matrix
+
+`Actor`列の`No`はactor自身へ同じcollaboration通知を返さない意味です。Security confirmationやactor本人がaffected userでもある場合は明記した例外を優先します。External copyはprivate Song titleや本文を含まないsafe summaryを既定にします。
+
+| Event | Category | Default recipient | Actor | Center | External default / preset | Quiet Hours | Deep link | Dedup key candidate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Band invitation created | `DIRECT` | verified invitation target | No | mapped internal Userのみ | realtime / 全preset | hold | invitation confirmation | `INVITATION_CREATED#invitationId#recipientKey` |
+| invitation accepted / declined / expired / revoked | `DIRECT` | inviter。Inviteeには他者revoke / expiryだけsafe notice | No | Yes | hourly / 全preset | hold | current invitation state | `INVITATION_STATE#invitationId#state#recipientKey` |
+| role changed | `DIRECT` | affected member | No | Yes | realtime / 全preset | hold | Band Members | `MEMBERSHIP_ROLE#membershipId#revision#recipientKey` |
+| member removed | `DIRECT` | removed memberへgeneric access-change notice。Owner / Admin observerは`ORDINARY` | No | removed memberにはaccount-safe itemだけ | realtime / 全preset。ObserverはCenter-only | hold | removed memberはBand deep linkなし | `MEMBERSHIP_REMOVED#membershipId#recipientKey` |
+| self leave | `ORDINARY` | remaining Owner / Admin | No | Yes | daily / `すべて`だけ | hold | Band Members | `MEMBERSHIP_LEFT#membershipId#recipientKey` |
+| Owner transfer | `SECURITY` | previous Ownerとnew Owner | Yes | Yes | immediate / OFF不可 | bypass | Band security / Members | `OWNER_TRANSFER#transferId#recipientKey` |
+| Song created / archived | `ORDINARY` | ACTIVE Band members excluding actor | No | Yes | daily / `すべて`だけ | hold | canonical Song or safe unavailable | `SONG_STATE#songId#revision#recipientKey` |
+| Version created | `ORDINARY` | ACTIVE Band members excluding actor | No | Yes | daily in `標準`、hourly in `すべて` | hold | exact SongVersion | `VERSION_CREATED#versionId#recipientKey` |
+| Comment created | `ORDINARY` | sourceをviewできるACTIVE Band members excluding actor | No | Yes | daily in `標準`、hourly in `すべて` | hold | exact Comment / Version / Anchor | `COMMENT_CREATED#commentId#recipientKey` |
+| direct mention | `DIRECT` | mentioned ACTIVE member excluding actor | No | Yes | realtime / 全preset | hold | exact Comment / Creative context | `MENTION#sourceEventId#recipientKey` |
+| Comment → Task | `DIRECT` | new assigneeとsource Comment author excluding actor。該当者がいなければ通知なし | No | Yes | realtime / 全preset | hold | exact Task / source Comment | `COMMENT_TASK#creativeItemId#recipientKey` |
+| Task assigned / unassigned | `DIRECT` | new assignee / former assignee excluding actor | No | Yes | realtime / 全preset | hold | exact Task | `TASK_ASSIGNMENT#creativeItemId#revision#recipientKey` |
+| Task status changed | `DIRECT` | current assigneeとcreator excluding actor | No | Yes | hourly / 全preset | hold | exact Task | `TASK_STATUS#creativeItemId#revision#recipientKey` |
+| Creative item created | `ORDINARY` | sourceをviewできるACTIVE Band members excluding actor | No | Yes | daily / `すべて`だけ | hold | exact Creative item | `CREATIVE_CREATED#creativeItemId#recipientKey` |
+| Proposal submitted | `DIRECT` | proposal review capabilityを持つACTIVE members excluding actor | No | Yes | realtime / 全preset | hold | exact MIDI Proposal | `PROPOSAL_SUBMITTED#proposalId#recipientKey` |
+| Proposal decision | `DIRECT` | proposer excluding actor | No | Yes | realtime / 全preset | hold | exact Proposal / Decision | `PROPOSAL_DECISION#decisionId#recipientKey` |
+| password / email changed、account recovery | `SECURITY` | affected account | Yes | Yes | immediate / OFF不可 | bypass | Settings > Security | `ACCOUNT_SECURITY#sourceEventId#userId` |
+| new trusted device、device protect、Passkey change | `SECURITY` | affected account | Yes when action confirmation | Yes | immediate / OFF不可 | bypass | Settings > Logged-in devices / Security | `DEVICE_SECURITY#sourceEventId#userId` |
+| account suspension / deletion security action | `SECURITY` | affected account where delivery remains safe | Yes | Yes | immediate / OFF不可 | bypass | account recovery / safe support entry | `ACCOUNT_STATE#sourceEventId#userId` |
+
+`Comment created`と`direct mention`のように同じsource operationが複数recipient relationを持つ場合、mentioned userには`DIRECT`だけを生成し、同じeventの`ORDINARY` copyを重ねません。Comment → Taskでは同じoperationのgeneric Creative-item-created notificationも重ねません。ProposalのHold / ReviewingはDecisionを作らない既存contractを維持し、state change通知が必要なら別eventとして実装前にreviewします。
+
+### Frequency, digest, and timezone
+
+- `REALTIME / HOURLY_DIGEST / DAILY_DIGEST / OFF`はexternal channel単位。`OFF`でもeligibleなin-app Center itemは残せる
+- Hourly digestは次のlocal hour boundary以降、daily digestはuser timezoneの09:00候補。0件なら送らない
+- TimezoneはIANA zoneを保存する候補。初期値はbrowser検出後にuserが確認でき、未設定時はvisibleな`UTC` fallbackを使う
+- DST / timezone変更時はdigest windowをUTCのimmutable window IDで識別し、同じwindowを二重送信しない。未送信itemは新timezoneの次回windowへ移す
+- Digestはrecipient + channel + Band + Song / threadを基本groupとし、最大10件のsafe summaryと残件数を示す候補。各itemのlogical targetは失わない
+- Same Song / threadの`ORDINARY` eventは同一digest window内でcollapseできる。Invitation、mention、assignment、SECURITYは別eventを失う形でcollapseしない
+- Realtimeの高頻度ordinary eventは5分windowで一つのsafe summaryへcoalesceする候補だが、source event IDとCenter itemのidempotencyは保持する
+
+### Quiet Hours
+
+Quiet Hoursはuser timezone基準のstart / endを持ち、日付をまたぐrangeを許可します。`SECURITY`以外のexternal deliveryを保留し、in-app Centerは通常どおり記録します。
+
+- `DIRECT` mention / assignmentもQuiet Hoursを尊重し、userがexplicit bypassを選ぶ機能はMVP既定にしない
+- 終了時はchannelごとにcatch-upを1通へまとめ、DIRECT itemを先に最大10件、その後にordinary summaryと残件数を示す候補。0件なら送らない
+- Quiet Hoursで保留したDIRECT eventをordinary collapseで消さず、個別のlogical targetを保持する
+- `SECURITY`だけはbypassする。Task priority、Role、Activity Statusを理由にbypassへ昇格しない
+- Quiet Hoursはauthorization、Membership state、Activity Status、assigneeを変更しない
+
+### Notification Center lifecycle
+
+- Primary viewsは`要対応 / 未読 / すべて`。Presentation stateは`UNREAD / READ`だけをMVP contractとする
+- `要対応`はvalid pending invitation、active review request、OPEN / IN_PROGRESSのimportant assignment、unread direct mention、responseが必要なsecurity event等をcanonical source stateとsafe presentation stateからderiveする
+- READはsourceをaccept / complete / reviewしない。Sourceが完了・失効した場合はREADに関係なく`要対応`から外れる
+- User archiveはMVP外。`EXPIRED`は90日cleanupの結果であり、source business stateではない
+- Notification本文へprivate contentを複製せず、in-app表示時もsource authorization後に必要最小限をresolveする
+- Sourceがdeleted / inaccessible / cross-Bandなら外向き404または「この内容は現在表示できません」のsafe fallbackへ戻し、存在や内容を漏らさない
+- Notification cleanupでsource objectをdeleteせず、Notificationを持っていることをresource access proofにしない
+
+### Recipient lifecycle and deep-link authorization
+
+- Membershipが`REMOVED`またはleave済みになった後は、そのBandのDIRECT / ORDINARY deliveryを次のdelivery evaluationから停止する。Removal targetへのgeneric access-change noticeだけはBand private contentなしで配送可能
+- 保存済みBand NotificationはCenter list時にもcurrent Membershipを確認して非表示にし、old deep linkはcanonical source → Band → strong ACTIVE Membership → capabilityを再実行して404候補でdenyする
+- Pending invitation recipientはinvitation-specific noticeだけを受け、accept前にBand collaboration notificationを受けない
+- `SUSPENDED` accountはBand collaboration deliveryを停止し、account recovery / SECURITYだけをsafe channelへ送る候補
+- `DELETION_PENDING`はDIRECT / ORDINARYを停止し、recovery / finalizationに必要なSECURITYだけを許可する
+- Account security notificationはBandMembershipとは独立する。Former member historyやstale notificationからBand accessを復活させない
+
+### Privacy boundary
+
+External subject / lock-screen copyは「Bandで新しいコメントがあります」のようなgeneric summaryを既定とし、**Song titleは外部通知へ出さない**方針を選びます。Band nameもprovider / device privacy reviewまでは既定で省略します。Exact source detailはauthenticated in-app routeで再認可後に表示します。
+
+Payload / log / provider metadataへComment / Creative body全文、歌詞、Song title、filename、presigned URL、S3 key、Cognito token、session ID、credential、不要なemail複製、client roleを保存しません。Safe field候補はnotification ID、source event ID、opaque recipient ID、event type、channel、result、attempt number、safe error categoryです。
+
+### Idempotency, deduplication, and retry
+
+- Center itemのidempotency key候補は`sourceEventId + recipientKey + recipientRelation`。`recipientKey`はinternal User ID、またはUser未作成のinvitationに限るserver-side opaque recipient referenceで、raw emailではない。同じsource retryでduplicate itemを作らない
+- External delivery key候補は`notificationId + channel`。`deliveryAttempt`は別record / log dimensionとし、retryで新Notificationを作らない
+- Client supplied event IDやcategoryだけを信用せず、canonical mutationからserver-generated immutable `sourceEventId`を発行する
+- Transient provider failureはexponential backoff + jitterで最大5attempt候補。Success / accepted receipt後は再送しない
+- Permanent failureはそのchannelを停止し、safe failure categoryを記録する。別channelへの自動fallbackはprivacy / consent確認なしに行わない
+- 全attempt失敗後のdead-letter / operator review、bounce / complaint handling、delivery receipt retentionはprovider / physical implementation gate
+- Direct mentionをordinary thread collapseへ吸収せず、同じrecipientへordinary + directの二重通知も作らない
+
+### Provider, cost, and implementation gates
+
+Providerはこのtaskで選びません。次の候補をresource作成直前の別Human Gateで比較します。
+
+| Candidate | Suitable scope | Privacy / operations review | Cost shape | Deferred reason |
+| --- | --- | --- | --- | --- |
+| Cognito built-in email candidate | verification、recovery等のauthentication message | Cognito設定、message customization、delivery limit / failure handling | Cognito / email機能のcurrent pricingとquota | collaboration通知のgeneral providerとして扱えるとは限らない |
+| SES candidate | account / collaboration email | sender domain、DNS、production sending、bounce / complaint、Region / data handling | send数、data、関連service usage | AWS resource、sender identity、運用責任のHuman Gateが必要 |
+| Generic email provider | account / collaboration email | vendor data handling、DPA / contract、webhook、bounce / complaint、secret管理 | plan、send数、retention / webhook | Vendor採用とprivate metadata取扱いを未review |
+| Web / mobile push | device向け補助channel | permission、device token、platform service、lost-device / revoke | platform / provider / delivery規模 | Native timingとtoken physical designが未決定。Recoveryの唯一channelにしない |
+
+Selection criteriaはprivacy、Region / data handling、cost model、bounce / complaint、retry / webhook、development ergonomicsです。Sender domain、DNS、production sending、push certificate / token storage、contractは未着手です。
+
+このdocs-only taskのAWS増分料金は0です。将来はemail / push送信数、queue / event invocation、DB write / storage、delivery log、retentionがcost driverです。無料を保証せず、provider / resource作成直前にcurrent pricingを確認します。
+
+次を別taskへ残します。
+
+- `Notification / Preference / QuietHours / delivery attempt`のPK / SK / GSI / TTL、pagination、transaction、90日cleanup（COLLAB-DATA-001）
+- Exact provider、sender identity、DNS、bounce / complaint、webhook、queue / scheduler、dead-letter、security retention
+- API route、runtime authorization、UI、mobile deep link、push token、rate / quota、observability
+- Event-specific override UI、timezone migration、digest size / retry countの実測調整
+
+DEC-026のhuman approval前にこのmatrixをruntimeへ実装せず、実装後もNotificationをproductivity evaluation、playback interruption、Version / creative workflow blockへ使いません。
