@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-DATA-001 | Creative item DynamoDB physical design | Codex | レビュー待ち | `docs/creative-data-001` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #42 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加する提案。AWS resource / runtime変更なし |
+| CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | Codex | レビュー待ち | `docs/cloud-oidc-001-activation-review` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 未作成 | Fixed CDK CLIのbootstrap role利用、temporary human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CREATIVE-DATA-001 | 完了 | Codex | `docs/creative-data-001` / #42 | 2026-09-14 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加するDEC-025を承認しmainへマージ済み。AWS resource / runtime変更なし |
 | CREATIVE-AUTHZ-001 | 完了 | Codex | `docs/creative-authz-001` / #41 | 2026-09-14 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityを定義し、DEC-024承認後にmainへマージ済み。Runtime / DB physical schema変更なし |
 | SURFACE-016 | 完了 | Codex | `ui/surface-016-long-song-title-boundary` / #40 | 2026-09-14 | 主要Song card、detail見出し、breadcrumbの長文境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eをmainへマージ済み |
 | SURFACE-015C | 完了 | Codex | `ui/surface-015c-custom-404` / #39 | 2026-09-14 | App Router標準のcustom not-foundと既存visual languageを使い、日本語案内とホームへの復帰導線を追加してmainへマージ済み |
