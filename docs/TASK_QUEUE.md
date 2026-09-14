@@ -12,13 +12,13 @@
 
 ## 現在の状態と次候補
 
-2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38とSURFACE-016 / PR #40までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCREATIVE-AUTHZ-001でCreative itemの5 role authorization contractをreviewしています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
+2026-09-14 時点で、CLOUD-OIDC-001-PREP / PR #38、SURFACE-016 / PR #40、CREATIVE-AUTHZ-001 / PR #41までがmainへマージ済みです。Human-operated CLOUD-003CによりnonprodのCDK deployment foundationはbootstrap済みですが、OIDC trust Stackは未deployで、DB、API、認証、notification delivery、application AWS resource、hosting deploymentも未実装です。現在はCREATIVE-DATA-001でCreative itemのsingle-table physical contractをreviewしています。AWS / GitHubへの適用は別taskとHuman Gateが必要です。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CREATIVE-AUTHZ-001 | Creative item authorization design | レビュー待ち。Memo / Idea / Task、Comment→Task、assignee、state、deleteを5 role capabilityへ統合。Runtime / DB physical schema変更なし |
+| 1 | CREATIVE-DATA-001 | Creative item DynamoDB physical design | PR #42のhuman reviewでDEC-025を承認済み。CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyのdocs-only designで、resource / runtime実装は未着手 |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | PREP / PR #38のsynthesized template、GitHub Environment保護、exact identity parameterをhuman review後に別Human Gateで実施。Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -85,8 +85,8 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | CREATIVE-001-DESIGN | P0 | Creative workflow and lightweight production tracking | 完了（PR #35）。Memo / Idea / Task、Comment → Task、Version履歴 / outstanding、Anchor、Timeline、Focus Mode、非強制progressを定義。CLOUD-DATA-001 physical designは変更なし |
-| CREATIVE-DATA-001 | P1 | Creative item persistence extension | CREATIVE-001承認後の候補。Physical item / index / transaction / retention / Auditをreviewし、既存single-tableを変更する場合は専用Decisionとmigration planを要求 |
-| CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | レビュー待ち。Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmapping。Runtime / DB physical schema変更なし |
+| CREATIVE-DATA-001 | P1 | Creative item persistence extension | レビュー待ち。1つのCreativeItem entity、既存ScopeIndex、relationship / idempotency / transaction / tombstone / structural historyを提案。新table / GSI、resource、runtime変更なし |
+| CREATIVE-AUTHZ-001 | P1 | Creative item capability extension | 完了（PR #41）。Memo / Idea / Taskのcreate / edit / convert / unnecessary / delete、Comment link、assigneeを5 roleへmappingし、DEC-024を承認済み。Runtime / DB physical schema変更なし |
 | CREATIVE-SURFACE-001 | P1 | Creative Board and Focus Mode prototype | Data / Authz contract後の小規模surface候補。Timeline marker、cluster、Focusを非永続mockから検証し、playback / Version作成をblockしない |
 
 ## Collaboration Experience Lane
