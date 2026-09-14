@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | Codex | レビュー待ち | `ui/creative-surface-001` | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、作業状態文書 | 2026-09-14 | #44 | Memo / Idea / Taskの統合surfaceとpresentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
+| NOTIFY-001-DESIGN | Notification event / channel delivery matrix | Codex | レビュー待ち | `docs/notify-001-delivery-matrix` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #45 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS / physical DB未実装 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CREATIVE-SURFACE-001 | 完了 | Codex | `ui/creative-surface-001` / #44 | 2026-09-14 | Memo / Idea / TaskのCreative Board、種類filter、presentation-only Focus Modeを非永続mockとしてmainへマージ済み。API / DB / AWS変更なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | 完了 | Codex | `docs/cloud-oidc-001-activation-review` / #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定しmainへマージ済み。AWS / GitHub変更なし |
 | CREATIVE-DATA-001 | 完了 | Codex | `docs/creative-data-001` / #42 | 2026-09-14 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加するDEC-025を承認しmainへマージ済み。AWS resource / runtime変更なし |
 | CREATIVE-AUTHZ-001 | 完了 | Codex | `docs/creative-authz-001` / #41 | 2026-09-14 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityを定義し、DEC-024承認後にmainへマージ済み。Runtime / DB physical schema変更なし |

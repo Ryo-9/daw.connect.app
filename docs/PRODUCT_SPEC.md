@@ -114,7 +114,9 @@ Notificationは制作を急かす仕組みではなく、見逃したくない�
 - ordinary notification retentionは初期90日。Security notification / Audit retentionは別contractとする
 - deep link先では毎回canonical sourceとstrong ACTIVE BandMembershipを再検証し、notification所有をBand access proofにしない
 
-Delivery channel / provider、event matrix、digest、physical persistence、mobile push、security retentionは実装前の専用gateで決めます。
+NOTIFY-001-DESIGNでは、DEC-023を置き換えずdelivery levelへ具体化する提案として、eventを`SECURITY / DIRECT / ORDINARY`へ分けます。SECURITYは即時かつQuiet Hours対象外、DIRECTは本人のpreferenceを尊重しつつ明示的なmention / invitation / assignment等を届け、ORDINARYはNotification Centerとdigestを中心にnoiseを抑えます。外部通知にはSong titleや制作本文を既定で載せず、safe summaryと再認可されるdeep linkだけを使います。
+
+このmatrixはhuman review待ちです。Provider、channel実装、physical persistence、mobile push、security retention、AWS resourceは別task / Human Gateで決めます。通知は未完了Taskの催促、production score、Version作成blockには使いません。
 
 ## 主要機能
 
