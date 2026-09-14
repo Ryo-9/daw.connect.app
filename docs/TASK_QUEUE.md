@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | NOTIFY-001-DESIGN | Notification event / channel delivery matrix | レビュー待ち。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS変更なし |
+| 1 | NOTIFY-001-DESIGN | Notification event / channel delivery matrix | レビュー待ち（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS変更なし |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | ACTIVATION-REVIEW / PR #43完了後の別Human Gate。Trust Stack 1件の作成とread-only verificationだけを扱い、Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -98,7 +98,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 | --- | --- | --- | --- |
 | COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
 | COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
-| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | レビュー待ち。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。Provider / physical DB / runtime / resourceは未実装 |
+| NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | レビュー待ち（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。Provider / physical DB / runtime / resourceは未実装 |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
 
 ## Core Lane

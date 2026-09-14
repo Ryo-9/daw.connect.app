@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| NOTIFY-001-DESIGN | Notification event / channel delivery matrix | Codex | レビュー待ち | `docs/notify-001-delivery-matrix` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | 未作成 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS / physical DB未実装 |
+| NOTIFY-001-DESIGN | Notification event / channel delivery matrix | Codex | レビュー待ち | `docs/notify-001-delivery-matrix` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #45 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS / physical DB未実装 |
 
 ## 完了・中止履歴
 
