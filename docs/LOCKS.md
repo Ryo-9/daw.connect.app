@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-046 | CLOUD-OIDC-001-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-oidc-001-execution-record` | 2026-09-15 | Draft PRのマージまたは作業中止 | Human-operated OIDC trust activationとtemporary privilege撤去のdocs-only記録。AWS / GitHub / workflow / infra変更なし |
+| LOCK-047 | COLLAB-DATA-001 | Codex | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/collab-data-001-notification-persistence` | 2026-09-15 | Draft PRのマージまたは作業中止 | Activity Status / Notification persistenceのdocs-only physical design。DynamoDB resource / runtime / AWS / workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-046 | CLOUD-OIDC-001-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #46。mainへのマージとQuality checks成功を確認して解除。Credential verification / workflow / application deployは未実施 |
 | LOCK-045 | NOTIFY-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #45。mainへのマージを確認して解除。DEC-026は提案中のまま。Provider / runtime / physical DB / AWS / workflow変更なし |
 | LOCK-044 | CREATIVE-SURFACE-001 | Codex | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #44。mainへのマージを確認して解除。API / DB / AWS / infra / workflow変更なし |
 | LOCK-043 | CLOUD-OIDC-001-ACTIVATION-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #43。mainへのマージを確認して解除。AWS / GitHub / infra / workflow変更なし |

@@ -12,15 +12,16 @@
 
 ## 現在の状態と次候補
 
-2026-09-15 時点で、NOTIFY-001-DESIGN / PR #45までがmainへマージ済みです。Human-operated CLOUD-003CでnonprodのCDK deployment foundationをbootstrapし、続くHuman Gate A–Dで`StreamBandNonprodDeploymentTrust`の作成、read-only検証、一時human privilege撤去まで完了しました。GitHub Actions credential test、verification workflow、EnvironmentへのAWS参照値設定、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。DEC-026は引き続き提案中 / Human review待ちです。
+2026-09-15 時点で、CLOUD-OIDC-001-EXECUTION-RECORD / PR #46までがmainへマージ済みです。Human-operated CLOUD-003CでnonprodのCDK deployment foundationをbootstrapし、続くHuman Gate A–Dで`StreamBandNonprodDeploymentTrust`の作成、read-only検証、一時human privilege撤去まで完了しました。GitHub Actions credential test、verification workflow、EnvironmentへのAWS参照値設定、DB、API、認証、notification delivery、application AWS resource、hosting deploymentは未実装です。現在はCOLLAB-DATA-001でnotification physical persistenceをdocs-only設計しており、DEC-026と新規DEC-027は引き続き提案中 / Human review待ちです。
 
 次に検討する候補は以下です。順序や着手日は確定事項ではなく、担当と変更範囲を確認してから選びます。
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Activationとtemporary privilege撤去の完了後に行う別task / branch / PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
-| 2 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC credential verification等の必要gate後、Cognito / session runtimeを別taskで実装 |
-| 3 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
+| 1 | COLLAB-DATA-001 | Membership activity and notification persistence | レビュー待ち（PR #47）。Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification / delivery trackingをDEC-027候補としてdocs-only設計。Resource / runtime変更なし |
+| 2 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Activationとtemporary privilege撤去の完了後に行う別task / branch / PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
+| 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC credential verification等の必要gate後、Cognito / session runtimeを別taskで実装 |
+| 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
 
 ## Data Design Lane
 
@@ -95,7 +96,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
-| COLLAB-DATA-001 | P1 | Membership activity and notification persistence | COLLAB-001承認後の候補。Activity / Preference / QuietHours / Notificationのaccess pattern、TTL / retention、source reference、Auditをreview。CLOUD-DATA-001変更は専用Decisionが必要 |
+| COLLAB-DATA-001 | P1 | Membership activity and notification persistence | レビュー待ち（PR #47）。Existing single-table / ScopeIndexを維持し、Activity / Preference / QuietHours / Notification / delivery tracking、TTL、dedup、Membership removal境界をDEC-027候補として設計。Resource / runtime未実装 |
 | NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | 完了（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。DEC-026は提案中。Provider / physical DB / runtime / resourceは未実装 |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
 
@@ -182,6 +183,7 @@ UI、画面、フォーム、レスポンシブ対応を扱うレーンです。
 
 | ID | PR | 完了日 | メモ |
 | --- | --- | --- | --- |
+| CLOUD-OIDC-001-EXECUTION-RECORD | #46 | 2026-09-15 | Human-operated OIDC trust activation、live read-only verification、temporary privilege撤去を機密識別子なしで記録。Credential verification / workflow / application deployは未実施 |
 | NOTIFY-001-DESIGN | #45 | 2026-09-15 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。DEC-026は提案中。Provider / runtime / physical DB / AWS / workflow変更なし |
 | CREATIVE-SURFACE-001 | #44 | 2026-09-14 | Memo / Idea / Taskの統合Creative Board、filter、Anchor marker、presentation-only Focus Modeを非永続mockで追加。API / DB / AWS変更なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub適用なし |

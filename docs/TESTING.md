@@ -286,6 +286,44 @@ DEC-026はhuman review待ちのdocs-only proposalです。Provider / physical pe
 
 Provider-specific bounce / complaint、webhook、queue / dead-letter、push token、security retention、physical TTL / indexのtestはprovider / COLLAB-DATA-001のHuman Gate後に追加します。実在email、未公開曲、token、private URLをfixture / logへ使いません。
 
+### COLLAB-DATA-001 future physical persistence contract
+
+DEC-027はHuman review待ちのdocs-only proposalです。Runtime / DynamoDB resource / provider / queueが別taskで承認された場合、synthetic IDsとprivate contentを含まないfixtureで最低限次を検証します。
+
+- Activity Status record absent時は`REGULAR`を返し、default readだけでrecordを自動作成しない
+- Activity Status変更はseparate member profile itemだけを更新し、BandMembership Role / status / revision、Task assignee、NotificationPreferenceを変更しない
+- Removed membershipIdのActivity Status historyをnew membershipIdへ自動復活させず、authorizationへ使わない
+- NotificationPreference absent時はversioned `STANDARD` + overrideなしを適用し、巨大なdefault recordを作らない
+- Preset変更とexplicit overrideをround-tripし、unknown / unbounded overrideを拒否する
+- `expectedRevision`が古いPreference / Quiet Hours updateを409にし、current settingを上書きしない
+- Quiet Hoursのsame-day / overnight range、IANA timezone、DST boundary、timezone変更後のnext boundaryをlocal-time contractどおり評価する
+- Quiet Hours中のDIRECT / ORDINARY external deliveryをholdし、SECURITYだけをbypassする
+- Quiet Hours終了後のcatch-upがcurrent preference / Membership / expiryを再確認し、0件digestを送らない
+- Same server `sourceEventId + recipientKey + recipientRelation`のduplicate生成が1 Notificationへ収束する
+- Canonical command retry / same resulting revisionが同じopaque sourceEventIdへ収束し、private inputをevent IDへ含めない
+- Retention後にdedup guardがphysical deleteされても、old source event replayがexpired Notificationを再生成しない
+- Client supplied sourceEventId / category / recipientをdedupやauthorizationの正にしない
+- Notification Putとdedup guardの片方だけを残さない
+- Same `notificationId + channel`のprovider retryが新しいNotification / delivery recordを作らない
+- Transient delivery failureを同じrecordで最大5回候補まで進め、accepted / permanent / canceled stateからblind retryしない
+- Notification Centerをnewest-firstでpageし、opaque cursorで続行できる
+- UNREAD bounded filterが最大candidate数を守り、結果不足時も`Scan`やunbounded readを行わない
+- Mark READがsource、action-required business state、delivery stateを変更しない
+- Expired non-security NotificationをTTL physical delete前からlist / send対象外にする
+- TTL lagやPITR restore後も`expiresAt`を再評価し、expired Notificationがsource / accessを復活させない
+- Notification expiry / deleteがComment、CreativeItem、Version、Proposal、Invitation、Membership historyを削除しない
+- Membership remove / leave後は新しいBand DIRECT / ORDINARY Notificationを生成せず、queued deliveryもsend前checkで停止する
+- Membership remove transactionがNotification一括cleanup失敗によってblockされない
+- Stored Notificationの`recipientMembershipId`がold / REMOVEDならCenterから隠し、rejoin後のnew membershipIdで再表示しない
+- Stale Notification、GSI result、Notification ownershipだけでprivate source accessを許可しない
+- Cross-Band source reference、forged `bandId` / membership relation、inaccessible sourceを404 / generic fallbackでdenyする
+- Source deleted / inaccessible時もNotificationからprivate title / body / existence detailを漏らさない
+- Comment / Creative body、lyrics、Song title、filename、presigned URL、S3 key、token、session、credential、raw email、provider payloadをNotification / delivery / logへ複製しない
+- Canonical Comment / Version / Creative mutationはDIRECT / ORDINARY Notification生成失敗でrollbackされない
+- ScopeIndexはexisting `KEYS_ONLY`のままで、新table / GSI / application `Scan`へ依存しない
+
+Security eventのdurable handoff / fail-closed behavior、provider receipt / bounce / complaint、queue / scheduler / DLQ、security retention、actual TTL / PITR integrationは、それぞれのHuman Gate後に追加します。DEC-026 / DEC-027承認前にruntime testを実装しません。
+
 ## Level 3 — 一般公開前
 
 - 本番相当環境で主要ユーザーフローを E2E 確認する
