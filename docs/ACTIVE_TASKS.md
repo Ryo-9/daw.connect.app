@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| COLLAB-DATA-001 | Membership activity and notification persistence | Codex | レビュー待ち | `docs/collab-data-001-notification-persistence` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-15 | 未作成 | Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification、delivery trackingをdocs-only設計。DEC-027は提案中 |
+| COLLAB-DATA-001 | Membership activity and notification persistence | Codex | レビュー待ち | `docs/collab-data-001-notification-persistence` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-15 | #47 | Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification、delivery trackingをdocs-only設計。DEC-027は提案中 |
 
 ## 完了・中止履歴
 

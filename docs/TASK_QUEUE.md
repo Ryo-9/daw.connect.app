@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | COLLAB-DATA-001 | Membership activity and notification persistence | 作業中。Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification / delivery trackingをDEC-027候補としてdocs-only設計。Resource / runtime変更なし |
+| 1 | COLLAB-DATA-001 | Membership activity and notification persistence | レビュー待ち（PR #47）。Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification / delivery trackingをDEC-027候補としてdocs-only設計。Resource / runtime変更なし |
 | 2 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Activationとtemporary privilege撤去の完了後に行う別task / branch / PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC credential verification等の必要gate後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -96,7 +96,7 @@ Band参加状態と通知を、authorizationや創作の強制へ混同せず設
 | ID | 優先度 | タスク候補 | 完了イメージ / 注意 |
 | --- | --- | --- | --- |
 | COLLAB-001-DESIGN | P0 | Membership lifecycle / Activity Status / Notification UX | 完了（PR #36）。Self-leave、member remove、last Owner、informational Activity Status、preset / frequency / Quiet Hours / Center / deep link / 90-day retentionを定義。実装なし |
-| COLLAB-DATA-001 | P1 | Membership activity and notification persistence | レビュー待ち。Existing single-table / ScopeIndexを維持し、Activity / Preference / QuietHours / Notification / delivery tracking、TTL、dedup、Membership removal境界をDEC-027候補として設計。Resource / runtime未実装 |
+| COLLAB-DATA-001 | P1 | Membership activity and notification persistence | レビュー待ち（PR #47）。Existing single-table / ScopeIndexを維持し、Activity / Preference / QuietHours / Notification / delivery tracking、TTL、dedup、Membership removal境界をDEC-027候補として設計。Resource / runtime未実装 |
 | NOTIFY-001-DESIGN | P1 | Notification event / channel delivery matrix | 完了（PR #45）。SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / dedup、privacy / recipient lifecycleをDEC-026候補として設計。DEC-026は提案中。Provider / physical DB / runtime / resourceは未実装 |
 | COLLAB-SURFACE-001 | P1 | Members and Notification Center prototype | Role / Activity Status、leave / remove confirmation、Notification Center / Settingsを非永続surfaceから検証する候補 |
 
