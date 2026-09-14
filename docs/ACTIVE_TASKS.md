@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-DATA-001 | Creative item DynamoDB physical design | Codex | レビュー待ち | `docs/creative-data-001` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | 未作成 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加する提案。AWS resource / runtime変更なし |
+| CREATIVE-DATA-001 | Creative item DynamoDB physical design | Codex | レビュー待ち | `docs/creative-data-001` | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #42 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加する提案。AWS resource / runtime変更なし |
 
 ## 完了・中止履歴
 
