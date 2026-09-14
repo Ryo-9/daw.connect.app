@@ -59,6 +59,34 @@ export type SongComment = {
   timestamp?: string;
 };
 
+export type CreativeItemKind = "MEMO" | "IDEA" | "TASK";
+
+export type CreativeTaskStatus =
+  | "OPEN"
+  | "IN_PROGRESS"
+  | "DONE"
+  | "CANCELED";
+
+export type CreativeItem = {
+  id: string;
+  songId: string;
+  kind: CreativeItemKind;
+  title: string;
+  body: string;
+  creatorId: string;
+  createdAt: string;
+  anchor?: {
+    version: string;
+    location: string;
+  };
+  task?: {
+    status: CreativeTaskStatus;
+    priority: "NORMAL" | "IMPORTANT";
+    assigneeId?: string;
+    dueDate?: string;
+  };
+};
+
 export type SharedFile = {
   id: string;
   songId: string;
@@ -322,6 +350,93 @@ export const songComments: SongComment[] = [
   },
 ];
 
+export const creativeItems: CreativeItem[] = [
+  {
+    id: "creative-1",
+    songId: "afterglow",
+    kind: "MEMO",
+    title: "ラスサビ前に一瞬だけ余白があると面白そう",
+    body: "まだ具体案ではないので、次のリハで曲の流れを聴きながら考えたい。",
+    creatorId: "sora",
+    createdAt: "今日 17:32",
+    anchor: { version: "v0.8", location: "03:02" },
+  },
+  {
+    id: "creative-2",
+    songId: "afterglow",
+    kind: "MEMO",
+    title: "イントロの空気感をもう少し暗くする候補",
+    body: "音を足すより、今あるパッドの余韻を整える方向も試してみる。",
+    creatorId: "ryo",
+    createdAt: "昨日 21:10",
+  },
+  {
+    id: "creative-3",
+    songId: "afterglow",
+    kind: "IDEA",
+    title: "2番AメロだけBassを抜く案",
+    body: "前半の密度を落として、サビへ戻ったときの広がりを強くする。",
+    creatorId: "mei",
+    createdAt: "今日 16:48",
+    anchor: { version: "v0.8", location: "Bass / 01:42–02:05" },
+  },
+  {
+    id: "creative-4",
+    songId: "afterglow",
+    kind: "IDEA",
+    title: "Chorus harmonyを最後だけ3度上へ広げる",
+    body: "全編ではなく最後の2小節だけにすると、今の静かな温度を残せそう。",
+    creatorId: "sora",
+    createdAt: "昨日 19:24",
+  },
+  {
+    id: "creative-5",
+    songId: "afterglow",
+    kind: "TASK",
+    title: "Guitar Soloを少し後ろへ録り直す",
+    body: "v0.8のタイミングを基準に、入りだけ少し溜めたtakeを試す。",
+    creatorId: "ryo",
+    createdAt: "今日 15:06",
+    anchor: { version: "v0.8", location: "Guitar / 02:14–02:21" },
+    task: {
+      status: "OPEN",
+      priority: "IMPORTANT",
+      assigneeId: "ryo",
+      dueDate: "8/16",
+    },
+  },
+  {
+    id: "creative-6",
+    songId: "afterglow",
+    kind: "TASK",
+    title: "コーラスの重なりを2案聴き比べる",
+    body: "メンバーで聴いてから、どちらを残すか決める。",
+    creatorId: "sora",
+    createdAt: "今日 13:40",
+    task: { status: "IN_PROGRESS", priority: "NORMAL" },
+  },
+  {
+    id: "creative-7",
+    songId: "afterglow",
+    kind: "TASK",
+    title: "イントロの仮パッドを書き出す",
+    body: "レビュー用の音を共有済み。",
+    creatorId: "ryo",
+    createdAt: "昨日 18:03",
+    task: { status: "DONE", priority: "NORMAL", assigneeId: "ryo" },
+  },
+  {
+    id: "creative-8",
+    songId: "afterglow",
+    kind: "TASK",
+    title: "クリックを強くした別mixを作る",
+    body: "今のPreviewで確認できるため、この案は不要にする。",
+    creatorId: "haru",
+    createdAt: "8月10日 20:12",
+    task: { status: "CANCELED", priority: "NORMAL" },
+  },
+];
+
 export const sharedFiles: SharedFile[] = [
   {
     id: "file-1",
@@ -388,6 +503,10 @@ export function getSongTasks(songId: string) {
 
 export function getSongComments(songId: string) {
   return songComments.filter((comment) => comment.songId === songId);
+}
+
+export function getSongCreativeItems(songId: string) {
+  return creativeItems.filter((item) => item.songId === songId);
 }
 
 export function getSongFiles(songId: string) {

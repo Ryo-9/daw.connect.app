@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | Codex | レビュー待ち | `docs/cloud-oidc-001-activation-review` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | #43 | Fixed CDK CLIのbootstrap role利用、temporary human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
+| CREATIVE-SURFACE-001 | Creative Board / Focus Mode prototype | Codex | レビュー待ち | `ui/creative-surface-001` | Song Detail、Creative mock data、Component / E2E test、`docs/SCREEN_LIST.md`、`docs/TESTING.md`、作業状態文書 | 2026-09-14 | 未作成 | Memo / Idea / Taskの統合surfaceとpresentation-only Focus Modeを非永続mockで検証。API / DB / AWS変更なし |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| CLOUD-OIDC-001-ACTIVATION-REVIEW | 完了 | Codex | `docs/cloud-oidc-001-activation-review` / #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定しmainへマージ済み。AWS / GitHub変更なし |
 | CREATIVE-DATA-001 | 完了 | Codex | `docs/creative-data-001` / #42 | 2026-09-14 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加するDEC-025を承認しmainへマージ済み。AWS resource / runtime変更なし |
 | CREATIVE-AUTHZ-001 | 完了 | Codex | `docs/creative-authz-001` / #41 | 2026-09-14 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityを定義し、DEC-024承認後にmainへマージ済み。Runtime / DB physical schema変更なし |
 | SURFACE-016 | 完了 | Codex | `ui/surface-016-long-song-title-boundary` / #40 | 2026-09-14 | 主要Song card、detail見出し、breadcrumbの長文境界を5 viewportで検証し、最小のshrink / wrap修正とE2Eをmainへマージ済み |

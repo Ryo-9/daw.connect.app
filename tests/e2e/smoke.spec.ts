@@ -65,12 +65,48 @@ test("320pxで楽曲詳細セクションナビが横スクロールなしで収
     name: "楽曲詳細セクション",
   });
   await expect(sectionNavigation).toBeVisible();
-  await expect(sectionNavigation.getByRole("link")).toHaveCount(4);
+  await expect(sectionNavigation.getByRole("link")).toHaveCount(5);
 
   const fitsWithoutHorizontalScroll = await sectionNavigation.evaluate(
     (element) => element.scrollWidth <= element.clientWidth,
   );
   expect(fitsWithoutHorizontalScroll).toBe(true);
+});
+
+test("Creative BoardのfilterとFocus Modeを操作でき、各viewportで横overflowしない", async ({
+  page,
+}) => {
+  for (const width of [320, 375, 390, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/songs/afterglow");
+
+    const board = page.getByRole("region", { name: "Creative Board" });
+    await expect(board).toBeVisible();
+    await expect(board.getByText(/Prototype \/ non-persistent/)).toBeVisible();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+
+    if (width === 320) {
+      await board.getByRole("button", { name: "Idea" }).click();
+      await expect(board.getByText("2件を表示")).toBeVisible();
+      await expect(board.locator('[data-kind="IDEA"]')).toHaveCount(2);
+      await expect(board.locator('[data-kind="TASK"]')).toHaveCount(0);
+
+      const focusToggle = board.getByRole("switch", { name: "Focus Mode" });
+      await focusToggle.click();
+      await expect(focusToggle).toHaveAttribute("aria-checked", "true");
+      await expect(board.getByText("音と画面に集中する表示")).toBeVisible();
+      await expect(page.getByTestId("creative-anchor-marker")).toHaveCount(0);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth,
+        ),
+      ).toBe(true);
+    }
+  }
 });
 
 test("長い楽曲名が主要surfaceでpage overflowを起こさない", async ({ page }) => {
