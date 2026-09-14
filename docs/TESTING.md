@@ -164,6 +164,19 @@ Creative workflowの実装時は、制作をblockしないこととVersion histo
 
 Integration testは将来承認されたAUTHZ capabilityとphysical modelを使い、private content、実user、未公開曲をfixture / logへ入れません。
 
+### CREATIVE-SURFACE-001 current prototype coverage
+
+Song Detailの非永続prototypeは、Component testとChromium E2Eで次を確認します。これはruntime authorization、API、DynamoDB persistenceのtestではありません。
+
+- Memo / Idea / Taskを同じCreative Boardに表示し、Task-only metadataをMemo / Ideaへ表示しない
+- `すべて / Memo / Idea / Task` filterがbrowser local stateだけで表示を切り替える
+- Focus ModeがCreative itemとTimeline markerの表示だけを隠し、OFFへ戻すと同じitemが復元される
+- 追加入口とComment → Task候補が、保存・通信・変換未実装であることを明示する
+- Song DetailからCreative Boardへ到達でき、320 / 375 / 390 / 768 / 1280pxでpage-level horizontal overflowを起こさない
+- Focus Modeがplayback、Task state、notification、authorization、Version作成へ影響しない境界をUI copyで示す
+
+既存の楽曲メモ / TODOは比較用に残します。統合方針、server-side Comment → Task、role enforcement、persistent filter / Focus stateは後続taskです。
+
 ### CREATIVE-AUTHZ-001 future authorization contract
 
 Creative item実装では、CREATIVE-AUTHZ-001のrole bundleをserver-side table-driven testにし、UI表示やcreator / assignee fieldだけではpermissionが増えないことを検証します。現在はdocs-onlyで、runtime test / fixture / DB schemaを追加しません。

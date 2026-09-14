@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import {
+  CommentToTaskPrototype,
   MockCommentComposer,
   TaskChecklist,
 } from "@/components/song-detail-interactions";
@@ -31,6 +32,21 @@ describe("TaskChecklist", () => {
       }),
     ).toHaveAttribute("aria-checked", "true");
     expect(screen.getByText("2件 未完了")).toBeInTheDocument();
+  });
+});
+
+describe("CommentToTaskPrototype", () => {
+  it("元Commentを変更せず未保存の境界を案内する", async () => {
+    const user = userEvent.setup();
+    render(<CommentToTaskPrototype />);
+
+    await user.click(screen.getByRole("button", { name: "タスク化（未実装）" }));
+
+    expect(
+      screen.getByText(
+        "保存・変換は未実装です。元コメントは残り、Taskも作成されていません。",
+      ),
+    ).toBeInTheDocument();
   });
 });
 

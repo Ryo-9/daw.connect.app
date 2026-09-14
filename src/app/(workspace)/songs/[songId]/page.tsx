@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  CommentToTaskPrototype,
   MockCommentComposer,
   TaskChecklist,
 } from "@/components/song-detail-interactions";
+import { CreativeWorkspacePrototype } from "@/components/creative-board";
 import {
   MemberAvatar,
   ProgressBar,
@@ -12,7 +14,6 @@ import {
 import {
   MidiProposalSurface,
   MockCallBar,
-  WaveformPreviewSurface,
 } from "@/components/song-production-surfaces";
 import {
   CollaborationReviewFlow,
@@ -24,6 +25,7 @@ import {
   getMember,
   getSong,
   getSongComments,
+  getSongCreativeItems,
   getSongFiles,
   getSongTasks,
   members,
@@ -47,6 +49,7 @@ export default async function SongDetailPage({
 
   const tasks = getSongTasks(song.id);
   const comments = getSongComments(song.id);
+  const creativeItems = getSongCreativeItems(song.id);
   const files = getSongFiles(song.id);
 
   return (
@@ -140,10 +143,15 @@ export default async function SongDetailPage({
 
       <CollaborationReviewFlow version={song.version} />
 
-      <WaveformPreviewSurface song={song} />
+      <CreativeWorkspacePrototype
+        song={song}
+        items={creativeItems}
+        members={members}
+      />
 
       <nav className="mt-5 flex flex-wrap gap-1 pb-2 sm:gap-2" aria-label="楽曲詳細セクション">
         {[
+          { href: "#creative", label: `Creative ${creativeItems.length}` },
           { href: "#memo", label: "メモ" },
           { href: "#tasks", label: `TODO ${tasks.length}` },
           { href: "#comments", label: `コメント ${comments.length}` },
@@ -275,6 +283,7 @@ export default async function SongDetailPage({
                         )}
                         {comment.body}
                       </p>
+                      {comment.id === "comment-1" && <CommentToTaskPrototype />}
                     </div>
                   </article>
                 );

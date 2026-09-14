@@ -251,3 +251,28 @@ export function MockCommentComposer({ currentUser }: { currentUser: Member }) {
     </div>
   );
 }
+
+export function CommentToTaskPrototype() {
+  const [message, setMessage] = useState("");
+
+  return (
+    <div className="mt-3 border-t border-line pt-3">
+      <button
+        type="button"
+        onClick={() =>
+          setMessage(
+            "保存・変換は未実装です。元コメントは残り、Taskも作成されていません。",
+          )
+        }
+        className="hardware-key min-h-11 rounded-lg border border-line-strong bg-panel px-3 text-[10px] font-bold text-muted transition hover:border-accent/55 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel"
+      >
+        タスク化（未実装）
+      </button>
+      {message && (
+        <p className="mt-2 text-[10px] leading-5 text-subtle" role="status">
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}

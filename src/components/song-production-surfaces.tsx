@@ -16,7 +16,13 @@ const pianoRollRows = [
   { key: "C4", notes: [{ left: 2, width: 11 }, { left: 66, width: 22 }] },
 ];
 
-export function WaveformPreviewSurface({ song }: { song: Song }) {
+export function WaveformPreviewSurface({
+  song,
+  showCreativeAnnotations = true,
+}: {
+  song: Song;
+  showCreativeAnnotations?: boolean;
+}) {
   return (
     <section
       id="preview"
@@ -85,9 +91,20 @@ export function WaveformPreviewSurface({ song }: { song: Song }) {
             <div className="absolute inset-y-0 left-[37%] w-px bg-warning shadow-[0_0_10px_rgba(251,191,36,0.65)]" aria-hidden>
               <span className="absolute -left-1.5 top-0 h-2 w-3 rounded-b-sm bg-warning" />
             </div>
-            <div className="absolute bottom-2 left-[calc(37%+8px)] rounded border border-warning/25 bg-canvas/90 px-1.5 py-1 font-mono text-[9px] font-bold text-warning">
-              CMT 01:24
-            </div>
+            {showCreativeAnnotations && (
+              <>
+                <div className="absolute bottom-2 left-[calc(37%+8px)] rounded border border-warning/25 bg-canvas/90 px-1.5 py-1 font-mono text-[9px] font-bold text-warning">
+                  CMT 01:24
+                </div>
+                <div
+                  className="absolute right-[12%] top-2 rounded border border-accent/30 bg-canvas/90 px-1.5 py-1 font-mono text-[9px] font-bold text-accent"
+                  data-testid="creative-anchor-marker"
+                  aria-hidden
+                >
+                  IDEA 02:14 · 2
+                </div>
+              </>
+            )}
           </div>
 
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -105,7 +122,7 @@ export function WaveformPreviewSurface({ song }: { song: Song }) {
             </div>
           </div>
           <p id="waveform-preview-note" className="mt-3 text-[10px] leading-5 text-subtle">
-            音声解析・再生・再生位置連動は未実装です。波形と目盛りは制作レビュー画面のvisual mockです。
+            音声解析・再生・再生位置連動は未実装です。波形、目盛り、Creative markerは制作レビュー画面のvisual mockです。
           </p>
         </div>
       </div>
