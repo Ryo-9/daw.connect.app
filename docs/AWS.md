@@ -1059,7 +1059,7 @@ human performs one approved bootstrap
 → first reviewed nonprod application deployment
 ```
 
-初回bootstrapにGitHub OIDCは技術的な必須条件ではありません。bootstrap permission、OIDC trust、継続deploy permissionを同時に作ると、失敗原因とprivilege boundaryが混ざるため分離します。このPR後もOIDCは未実装です。
+初回bootstrapにGitHub OIDCは技術的な必須条件ではありません。bootstrap permission、OIDC trust、継続deploy permissionを同時に作ると、失敗原因とprivilege boundaryが混ざるため分離します。この段階ではOIDCは未実装でした。その後、2026-09-15のHuman-operated activationでdeployment trust Stackだけを作成・検証し、credential verificationとapplication deploymentは引き続き分離しています。
 
 ### CLOUD-003C-EXECUTION-RECORD: Human-operated nonprod bootstrap
 
@@ -1108,14 +1108,14 @@ Human local authenticationはlong-lived access keyではなくtemporary authenti
 
 CLOUD-003C / CLOUD-003のnonprod CDK deployment foundationは完了です。ただし、次は未実装・未作成です。
 
-- GitHub OIDC provider、nonprod deployment role、GitHub Environment / deployment workflow
+- GitHub Actions credential verification、deployment workflow、EnvironmentのAWS参照値
 - Cognito User Pool、BFF session、authentication runtime
 - DynamoDB application metadata table
 - private application Asset S3 bucket
 - API Gateway、Lambda、notification delivery infrastructure
 - Vercel / Amplify hosting deployment、Private Alpha environment、application deployment pipeline
 
-`CDKToolkit`はapplication runtime resourceではありません。次候補のCLOUD-OIDC-001はOIDC provider、nonprod deploy role、CDK bootstrap role delegation、GitHub Environment `nonprod`、protected `main`からのmanual deployment workflowを別task / Human Gateで扱い、最初のapplication resource deploymentとは分離します。
+`CDKToolkit`はapplication runtime resourceではありません。CLOUD-OIDC-001のdeployment trust activationは2026-09-15に完了しましたが、次候補のCLOUD-OIDC-001-VERIFYはprotected `main`とGitHub Environment `nonprod`からshort-lived credential取得だけを別task / Human Gateで検証し、最初のapplication resource deploymentとは分離します。
 
 #### Official references（2026-09-11再確認）
 
@@ -1411,7 +1411,7 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 11. Environment protection / reviewer / bypass設定
 12. rollback、trust removal、session revocation、provider removalの手順
 
-このreview後、CLOUD-OIDC-001-PREPではprovider / role候補をreview可能なrepository IaCとして追加しましたが、AWSへは未適用です。Environment / workflowも未実装で、実行は引き続き未承認です。CLOUD-003C actual bootstrapは2026-09-13に完了し、temporary human privilegeも撤去済みです。
+このreview後、CLOUD-OIDC-001-PREPではprovider / role候補をreview可能なrepository IaCとして追加しました。この設計時点ではAWSへ未適用でしたが、2026-09-15のHuman-operated activationでtrust Stackだけを作成・検証しました。Credential verification / workflow / application deploymentは未実装です。CLOUD-003C actual bootstrapは2026-09-13に完了し、temporary human privilegeも撤去済みです。
 
 ### Official references（2026-09-11確認）
 
@@ -1429,7 +1429,7 @@ OIDC implementation前に、次の実値と設定案をrepositoryへcommitせず
 
 ### Status and implementation boundary
 
-確認日: 2026-09-13。CLOUD-OIDC-001-DESIGN / DEC-020を、AWSへ接続しないCDK source、unit test、`--no-lookups` offline synthへ具体化しました。`StreamBandNonprodDeploymentTrust`は**proposed infrastructure only**であり、AWSへdeployされていません。GitHub Environment、repository settings、workflow、secret / variable、`id-token: write`も変更していません。
+確認日: 2026-09-13。CLOUD-OIDC-001-DESIGN / DEC-020を、AWSへ接続しないCDK source、unit test、`--no-lookups` offline synthへ具体化しました。このPREP task時点で`StreamBandNonprodDeploymentTrust`は**proposed infrastructure only**であり、AWSへdeployされていませんでした。その後の2026-09-15 Human-operated activationは下のexecution recordに分離して記録します。PREP taskではGitHub Environment、repository settings、workflow、secret / variable、`id-token: write`を変更していません。
 
 このStackはapplication resourceを含みません。Cognito、DynamoDB application table、application S3 bucket、Lambda、API Gateway、CloudWatch、hosting、application deployは対象外です。実在のGitHub numeric identity、AWS account ID、ARN、credentialもsource / test / docsへ保存しません。
 
@@ -1539,7 +1539,7 @@ AWS適用前に、少なくとも次を実値込みでrepository外の安全なr
 
 ### Status and non-execution boundary
 
-Review date: 2026-09-14. This is a docs-only review of a future human-operated activation. No AWS command, AWS API call, CDK deployment, GitHub setting change, workflow change, or infrastructure source change was made in this task. `StreamBandNonprodDeploymentTrust` remains undeployed, and each mutation below still requires its own explicit Human Gate.
+Review date: 2026-09-14. This is a docs-only review of a future human-operated activation. No AWS command, AWS API call, CDK deployment, GitHub setting change, workflow change, or infrastructure source change was made in this task. At review time, `StreamBandNonprodDeploymentTrust` was undeployed and each mutation below still required its own explicit Human Gate. Those gates were later completed by the human on 2026-09-15; the result is recorded separately below.
 
 The fixed repository versions reviewed here are AWS CDK CLI `2.1141.0` and `aws-cdk-lib` `2.268.0`. The target remains StreamBand `nonprod` in `ap-northeast-1`; `CDKToolkit` is already `CREATE_COMPLETE` with termination protection. The bootstrap execution role's existing `AdministratorAccess` is not changed by this review. No application resource is in scope.
 
@@ -1810,6 +1810,64 @@ Normal PR Quality checks remain credential-free and must not receive `id-token: 
 - [AWS CloudFormation pricing](https://aws.amazon.com/cloudformation/pricing/)
 - [AWS CDK pricing FAQ](https://aws.amazon.com/cdk/faqs/)
 - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
+
+## CLOUD-OIDC-001-EXECUTION-RECORD: Human-operated deployment trust activation
+
+実行日: 2026-09-15
+
+この節は、人間が明示Human Gateのもとで行ったdeployment trust activationの結果を記録します。このdocs-only taskではCodexはAWSへ接続せず、AWS / CDK command、GitHub setting変更、workflow変更、AWS resource変更を行っていません。AWS account ID、full ARN、GitHub immutable numeric ID、credential、token、command outputは記録しません。
+
+### Target and Gate A–D outcome
+
+- Region: `ap-northeast-1`
+- OIDC trust Stack: `StreamBandNonprodDeploymentTrust`
+- GitHub deployment entry role: `streamband-nonprod-github-deploy`
+
+| Gate | Human-confirmed result |
+| --- | --- |
+| A — temporary grant | 明示承認後、`streamband-dev-admin`へactivation専用temporary inline policyを付与した。Rootはpermission追加だけに使用してlogoutし、root access keyは作成していない |
+| B — create | `StreamBandNonprodDeploymentTrust`だけをdeployし、commandは成功した。Application workload / resourceはdeployしていない |
+| C — read-only verify | Live Stack、resource type、provider、audience、role、trust condition、delegation policyをread-onlyで確認し、review済み構成と一致した |
+| D — remove | Root consoleを一時使用し、human IAM userからtemporary inline policy `StreamBandOidcActivationTemporary`を削除してlogoutした。Non-root human identityで同policyが許可していたCloudFormation / IAM read operationが`AccessDenied`へ戻ったことをread-only確認し、一時escalation撤去を検証した |
+
+### Gate C verified live state
+
+| Item | Human-confirmed result |
+| --- | --- |
+| Stack status | `CREATE_COMPLETE` |
+| Resource types | `AWS::IAM::OIDCProvider`、`AWS::IAM::Role`、`AWS::IAM::Policy`の3種類だけ。Unexpected resourceなし |
+| Provider | AWS APIの`Url`値は`token.actions.githubusercontent.com`（issuer: `https://token.actions.githubusercontent.com`）、audienceは`sts.amazonaws.com` |
+| Entry role | `streamband-nonprod-github-deploy`、`MaxSessionDuration = 3600`、managed attached policiesは0 |
+| Trust | Actionは`sts:AssumeRoleWithWebIdentity`。Immutable owner / repository identityを含むexact subject、Environment `nonprod`、branch `refs/heads/main`を完全一致で要求 |
+| Trust exclusions | Wildcard trust、`StringLike` wildcard、`pull_request` subjectはなし |
+| Inline permission | Actionは`sts:AssumeRole`だけ。既存CDK bootstrapのdeploy、file-publishing、lookup roleに限定し、`iam:ResourceTag/aws-cdk:bootstrap-role` conditionを確認 |
+| Permission exclusions | Entry roleへのdirect `AdministratorAccess`、`iam:*`、`cloudformation:*`、image-publishing role delegation、CloudFormation execution role direct delegationはなし |
+
+実在のimmutable numeric IDとAWS識別子はlive verification時だけ人間が照合し、repositoryへ保存していません。
+
+### Direct and effective privilege boundary
+
+GitHub entry role自体のdirect permissionは、review済みCDK bootstrap roleへの`sts:AssumeRole`に限定されています。ただし、実効的なdeployment pathは次のとおりで強い権限へ到達できます。
+
+```text
+GitHub OIDC entry role
+→ CDK deploy role
+→ existing CloudFormation execution role
+```
+
+Existing CloudFormation execution roleの`AdministratorAccess`は今回変更、削除、弱体化していません。したがって「entry roleが狭い」ことは「deploymentの実効権限が狭い」ことを意味しません。Workflow trigger、Environment gate、review済みtemplate、Stack指定、credential verification、将来のexecution-policy reviewは引き続き重要なsecurity boundaryです。このexecution record taskではpermission設計を変更しません。
+
+### Completion and remaining boundary
+
+CLOUD-OIDC-001の**deployment trust activation**は完了しました。Temporary human privilegeも撤去済みです。一方、次は未実施です。
+
+- CLOUD-OIDC-001-VERIFYとGitHub Actions credential test
+- `workflow_dispatch` verification workflowとGitHubからAWSへのshort-lived credential取得
+- GitHub EnvironmentへのAWS role / account参照値の追加
+- Long-lived AWS credentialの追加（今後も禁止）
+- Application deploy、Cognito / Auth、DynamoDB application resource、S3 application storage、backend / API runtime、hosting deployment
+
+次のP0候補は別task / branch / PRのCLOUD-OIDC-001-VERIFYです。通常CIへ`id-token: write`を追加せず、credential取得確認とapplication deploymentを同じtaskへ含めません。
 
 ## AUTH-001-DESIGN: Cognito authentication and Web session contract
 

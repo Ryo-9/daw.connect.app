@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| NOTIFY-001-DESIGN | Notification event / channel delivery matrix | Codex | レビュー待ち | `docs/notify-001-delivery-matrix` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #45 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化。Provider / runtime / AWS / physical DB未実装 |
+| CLOUD-OIDC-001-EXECUTION-RECORD | GitHub Actions OIDC deployment trust activation record | Codex | レビュー待ち | `docs/cloud-oidc-001-execution-record` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | #46 | Human-operated Gate A–Dとtemporary privilege撤去を機密識別子なしで記録するdocs-only task。Credential verification / workflow / application deployは対象外 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| NOTIFY-001-DESIGN | 完了 | Codex | `docs/notify-001-delivery-matrix` / #45 | 2026-09-15 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化しmainへマージ済み。DEC-026は提案中のまま。Provider / runtime / physical DB / AWS / workflow未実装 |
 | CREATIVE-SURFACE-001 | 完了 | Codex | `ui/creative-surface-001` / #44 | 2026-09-14 | Memo / Idea / TaskのCreative Board、種類filter、presentation-only Focus Modeを非永続mockとしてmainへマージ済み。API / DB / AWS変更なし |
 | CLOUD-OIDC-001-ACTIVATION-REVIEW | 完了 | Codex | `docs/cloud-oidc-001-activation-review` / #43 | 2026-09-14 | Fixed CDK CLIのbootstrap role利用、一時human permission、Human Gate、verification / rollback / costをdocs-onlyで確定しmainへマージ済み。AWS / GitHub変更なし |
 | CREATIVE-DATA-001 | 完了 | Codex | `docs/creative-data-001` / #42 | 2026-09-14 | CreativeItem、Comment relationship、idempotency、Anchor、tombstone、structural historyを既存single-tableへ追加するDEC-025を承認しmainへマージ済み。AWS resource / runtime変更なし |
