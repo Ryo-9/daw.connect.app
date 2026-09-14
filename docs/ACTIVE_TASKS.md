@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | Codex | レビュー待ち | `docs/cloud-oidc-001-activation-review` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 未作成 | Fixed CDK CLIのbootstrap role利用、temporary human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
+| CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | Codex | レビュー待ち | `docs/cloud-oidc-001-activation-review` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | #43 | Fixed CDK CLIのbootstrap role利用、temporary human permission、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
 
 ## 完了・中止履歴
 

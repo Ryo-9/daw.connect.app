@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | 作業中。CDK CLI `2.1141.0`のbootstrap role利用、一時権限、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
+| 1 | CLOUD-OIDC-001-ACTIVATION-REVIEW | OIDC trust activation permission / execution review | レビュー待ち（PR #43）。CDK CLI `2.1141.0`のbootstrap role利用、一時権限、Human Gate、verification / rollback / costをdocs-onlyで確定。AWS / GitHub変更なし |
 | 2 | CLOUD-OIDC-001 | GitHub Actions OIDC deployment trust activation | ACTIVATION-REVIEW承認後の別Human Gate。Trust Stack 1件の作成とread-only verificationだけを扱い、Application deployと分離 |
 | 3 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Provider / role activation後の別PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 4 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC / deployment foundationの必要gate後、Cognito / session runtimeを別taskで実装 |
@@ -54,7 +54,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | CLOUD-003C | P0 | Nonprod AWS Foundation Bootstrap | 完了（2026-09-13 human-operated）。`CDKToolkit`は`CREATE_COMPLETE`、termination protection有効。Temporary bootstrap policyはdetach / delete済み。Application deployなし |
 | CLOUD-OIDC-001-DESIGN | P0 | GitHub Actions OIDC deployment trust design | 完了（PR #33）。nonprod Environment限定trust、CDK role delegation、session、PR safety、revocationを設計。OIDC / IAM / workflow実装なし |
 | CLOUD-OIDC-001-PREP | P0 | GitHub Actions OIDC deployment trust IaC preparation | 完了（PR #38）。Immutable owner / repository IDをparameter化し、`main` + `nonprod` exact trustとdeploy / file / lookup role delegationだけをoffline検証。AWS / GitHub適用なし |
-| CLOUD-OIDC-001-ACTIVATION-REVIEW | P0 | OIDC trust activation permission / execution review | レビュー待ち。Fixed CDK CLIのdeploy / file / lookup role利用、一時human permission、effective privilege、Human Gate、verification / rollback / costをdocs化。AWS / GitHub適用なし |
+| CLOUD-OIDC-001-ACTIVATION-REVIEW | P0 | OIDC trust activation permission / execution review | レビュー待ち（PR #43）。Fixed CDK CLIのdeploy / file / lookup role利用、一時human permission、effective privilege、Human Gate、verification / rollback / costをdocs化。AWS / GitHub適用なし |
 | CLOUD-OIDC-001 | P0 | GitHub Actions OIDC deployment trust activation | PREPのreview後の別Human Gate。GitHub Environment保護とdeployment-trust Stack適用を分離確認し、application resourceをdeployしない |
 | CLOUD-OIDC-001-VERIFY | P0 | Manual OIDC credential verification workflow | Activation後の別PR。通常CIへ`id-token`を付けず、manual jobでshort-lived credential acquisitionだけを検証 |
 | HOST-DEPLOY-001 | P0 | Nonprod hosting proof of concept | HOST-001承認後のhosting接続task候補。synthetic dataだけでNext.js 16、protected Preview、manual promotion、rollbackを検証 |
