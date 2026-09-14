@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CLOUD-OIDC-001-EXECUTION-RECORD | GitHub Actions OIDC deployment trust activation record | Codex | レビュー待ち | `docs/cloud-oidc-001-execution-record` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 未作成 | Human-operated Gate A–Dとtemporary privilege撤去を機密識別子なしで記録するdocs-only task。Credential verification / workflow / application deployは対象外 |
+| CLOUD-OIDC-001-EXECUTION-RECORD | GitHub Actions OIDC deployment trust activation record | Codex | レビュー待ち | `docs/cloud-oidc-001-execution-record` | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | #46 | Human-operated Gate A–Dとtemporary privilege撤去を機密識別子なしで記録するdocs-only task。Credential verification / workflow / application deployは対象外 |
 
 ## 完了・中止履歴
 
