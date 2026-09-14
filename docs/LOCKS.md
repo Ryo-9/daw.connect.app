@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-042 | CREATIVE-DATA-001 | Codex | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/creative-data-001` | 2026-09-14 | Draft PRのマージまたは作業中止 | CreativeItem physical contractのdocs-only提案。DynamoDB resource、runtime、AWS、infra、workflow変更なし |
+| LOCK-043 | CLOUD-OIDC-001-ACTIVATION-REVIEW | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/cloud-oidc-001-activation-review` | 2026-09-14 | Draft PRのマージまたは作業中止 | OIDC trust activationのpermission / execution / rollbackをdocs-only review。AWS / GitHub / infra / workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-042 | CREATIVE-DATA-001 | Codex | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #42。DEC-025の承認とmainへのマージを確認して解除。DynamoDB resource、runtime、AWS、infra、workflow変更なし |
 | LOCK-041 | CREATIVE-AUTHZ-001 | Codex | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #41。DEC-024の承認とmainへのマージを確認して解除。Runtime、DB physical schema、AWS、infra、workflow変更なし |
 | LOCK-040 | SURFACE-016 | Codex | `src/components/song-card.tsx`、`src/app/(workspace)/songs/[songId]/page.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #40。mainへのマージを確認して解除。Cloud、Auth、Data、infra、workflow変更なし |
 | LOCK-039 | SURFACE-015C | Codex | `src/app/not-found.tsx`、`tests/component/not-found.test.tsx`、`tests/e2e/smoke.spec.ts`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-14 | 完了・PR #39。mainへのマージを確認して解除。Cloud、Auth、Data、infra、workflow変更なし |

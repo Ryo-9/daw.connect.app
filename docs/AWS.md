@@ -1535,6 +1535,282 @@ AWS適用前に、少なくとも次を実値込みでrepository外の安全なr
 - [AWS CDK: Bootstrap an environment](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
 - [AWS-maintained GitHub Action: configure-aws-credentials changelog](https://github.com/aws-actions/configure-aws-credentials/blob/main/CHANGELOG.md)
 
+## CLOUD-OIDC-001-ACTIVATION-REVIEW: deployment trust activation plan
+
+### Status and non-execution boundary
+
+Review date: 2026-09-14. This is a docs-only review of a future human-operated activation. No AWS command, AWS API call, CDK deployment, GitHub setting change, workflow change, or infrastructure source change was made in this task. `StreamBandNonprodDeploymentTrust` remains undeployed, and each mutation below still requires its own explicit Human Gate.
+
+The fixed repository versions reviewed here are AWS CDK CLI `2.1141.0` and `aws-cdk-lib` `2.268.0`. The target remains StreamBand `nonprod` in `ap-northeast-1`; `CDKToolkit` is already `CREATE_COMPLETE` with termination protection. The bootstrap execution role's existing `AdministratorAccess` is not changed by this review. No application resource is in scope.
+
+The human-confirmed GitHub Environment state at review time is recorded without changing GitHub:
+
+- Environment: `nonprod`
+- Required reviewers: on; reviewer `Ryo-9`
+- Prevent self-review: off
+- Administrator bypass of protection rules: off
+- Deployment branches / tags: `main` only
+- Environment secrets: 0
+- Environment variables: 0
+
+This configuration must be checked again by the human immediately before activation. Recording it here does not prove that AWS OIDC resources exist or that a workflow can obtain credentials.
+
+### Fixed CLI and cloud assembly findings
+
+The repository-local `cdk synth --no-lookups` cloud assembly and the bundled CLI implementation were inspected offline. The trust Stack template contains exactly one `AWS::IAM::OIDCProvider`, one `AWS::IAM::Role`, and one `AWS::IAM::Policy`. Its asset manifest has no container image, but it does contain the synthesized CloudFormation template as one **file asset**. The stack artifact also records the deploy role, file-publishing role, lookup role metadata, CloudFormation execution role, and bootstrap version parameter.
+
+| bootstrap role | activation judgment | fixed-version evidence and boundary |
+| --- | --- | --- |
+| deploy role | **Required** | The stack artifact's `assumeRoleArn` is the default deploy role. CLI `deployStack` assumes it for bootstrap-version validation, change-set / CloudFormation operations, and passing the existing CloudFormation execution role. |
+| file-publishing role | **Required** | `StreamBandNonprodDeploymentTrust.assets.json` contains the Stack template itself as a file asset and names this role for upload to the existing bootstrap S3 bucket. “No application asset” does not mean “no CDK file publication.” |
+| lookup role | **Conditional; not granted for this activation** | There is no CDK context lookup. CLI `2.1141.0` uses `accessStackForLookupBestEffort` when reading the current template for approval / diagnostics, so it may attempt this role; on failure it deliberately falls back to the deploy role. It is therefore not necessary for a successful deployment of this exact pre-synthesized assembly. An expected lookup-role warning may occur. If the fallback does not work or a real context lookup appears, stop rather than add permission ad hoc. |
+| image-publishing role | **Not required** | The asset manifest has no container image and the Stack has no ECR image asset. Any image-publishing request is a STOP condition. |
+| CloudFormation execution role | **Not assumed directly by the human** | The deploy role passes the bootstrap-created execution role to CloudFormation. The caller must not receive direct `sts:AssumeRole` to this role. |
+
+The human identity does not need direct `ssm:GetParameter`: CLI bootstrap-version validation runs through the assumed deploy role, whose current bootstrap contract includes the required SSM read. The temporary policy below does not add direct SSM access. This conclusion is version-specific and must be revisited if the assembly, CLI, bootstrap template, or Stack content changes.
+
+### Direct permission versus effective permission
+
+The selected identity policy is short, but it is **not low impact**.
+
+| view | actual authority during the temporary window |
+| --- | --- |
+| Direct identity permission | Assume exactly the deploy and file-publishing bootstrap roles, plus read only the one trust Stack / provider / role for verification. It has no direct `iam:*`, `cloudformation:*`, `AdministratorAccess`, lookup role, image-publishing role, or execution-role assumption. |
+| Effective deploy permission | The deploy role can operate CloudFormation and pass the bootstrap CloudFormation execution role. That execution role currently has AWS managed `AdministratorAccess`; consequently, a malicious or mistaken template could cause broad same-account changes. The narrow `sts:AssumeRole` statement is an entry boundary, not a narrow effective deployment boundary. |
+| Effective file permission | The file-publishing role can write to the bootstrap S3 asset bucket under its role policy. This plan uses it only for the reviewed Stack template file. |
+
+The human must compare the exact reviewed assembly with the intended three resources before approving Gate B. The existing execution policy is not changed here; reviewing or reducing it is a separate security task.
+
+### Selected temporary permission method
+
+For this one-time activation, use a **temporary inline policy on the existing dedicated human IAM user** `streamband-dev-admin`, named `StreamBandOidcActivationTemporary`.
+
+- An inline policy has a one-to-one relationship with this user and cannot be accidentally attached to another identity.
+- A customer-managed policy would add a reusable policy resource and require attach, detach, and policy deletion steps; that is unnecessary here.
+- Creating another temporary role would add trust-policy and assume-role configuration that has not been designed or tested for this one-time path.
+- The current documented human permission does not include IAM policy administration. Under the known account posture, MFA-authenticated root is therefore the only known authority for adding and later deleting this inline policy. If a separately authorized IAM administrator is confirmed, stop and review that substitution instead of improvising.
+
+Root use is limited to two console operations: add the reviewed inline policy, then later delete it. Root must never run the deployment, must log out immediately after each operation, and must never create an access key. The deploy is performed only by the non-root human profile using temporary `aws login` authentication.
+
+#### Review candidate — not applied
+
+The following candidate is for human review and local substitution only. It has no real account identifier. The wildcard suffix on the CloudFormation Stack ARN is limited to the service-generated Stack ID beneath the exact Stack name; there is no wildcard role, provider, action family, or OIDC trust.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AssumeRequiredCdkBootstrapRoles",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": [
+        "arn:aws:iam::<ACCOUNT_ID>:role/cdk-hnb659fds-deploy-role-<ACCOUNT_ID>-ap-northeast-1",
+        "arn:aws:iam::<ACCOUNT_ID>:role/cdk-hnb659fds-file-publishing-role-<ACCOUNT_ID>-ap-northeast-1"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/aws-cdk:bootstrap-role": [
+            "deploy",
+            "file-publishing"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadOnlyTrustStack",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:GetTemplate"
+      ],
+      "Resource": "arn:aws:cloudformation:ap-northeast-1:<ACCOUNT_ID>:stack/StreamBandNonprodDeploymentTrust/*"
+    },
+    {
+      "Sid": "ReadOnlyGitHubOidcProvider",
+      "Effect": "Allow",
+      "Action": "iam:GetOpenIDConnectProvider",
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:oidc-provider/token.actions.githubusercontent.com"
+    },
+    {
+      "Sid": "ReadOnlyGitHubDeploymentRole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies"
+      ],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/streamband-nonprod-github-deploy"
+    }
+  ]
+}
+```
+
+The CloudFormation reads verify Stack status / resources / template. The IAM reads verify the provider, role trust, inline delegation, and absence of attached `AdministratorAccess`. They do not mutate resources. No direct SSM action is included.
+
+### Four separate Human Gates
+
+Approval never carries automatically from one gate to the next.
+
+| gate | proposed action after explicit approval | information shown before approval |
+| --- | --- | --- |
+| **A — grant** | Root adds only `StreamBandOidcActivationTemporary` to the dedicated human user, confirms the effective privilege warning, and logs out. | Exact policy, two assumable bootstrap roles, verification reads, duration, root boundary, removal plan, no AWS resource deployment yet. |
+| **B — create** | The non-root human runs the one reviewed command for `StreamBandNonprodDeploymentTrust` only. | Three expected resources, template file publication, effective `AdministratorAccess` path through CloudFormation, approval prompt, cost, rollback behavior, STOP conditions, and explicitly excluded application resources. |
+| **C — verify** | The non-root human performs only the documented read-only checks. No GitHub OIDC credential test. | Expected Stack status, provider, exact trust claims, role session, inline permission, prohibited permissions, and mismatch response. |
+| **D — remove** | Root deletes the inline policy, verifies its absence and the human user's prior limited posture, then logs out. | Exact policy being removed, consequence of leaving it attached, failure response, no application deployment. |
+
+Before every gate, the human must receive the action, reason, direct and effective permission, security impact, possible cost, failure impact, rollback boundary, and unchanged systems, then provide explicit approval. A failed or declined gate ends the sequence safely.
+
+### Proposed future execution commands
+
+**PROPOSED ONLY — HUMAN APPROVAL REQUIRED — DO NOT EXECUTE IN THIS REVIEW.** These commands are for a later activation task on a trusted local machine. Do not enable shell tracing. Do not print, paste, or save identity values. Replace only `<REVIEWED_MERGE_COMMIT>` after this plan and the IaC are merged and reviewed.
+
+```bash
+set -o errexit
+set -o nounset
+set -o pipefail
+set +o xtrace
+
+cd /path/to/daw-connect-app
+test "$(git branch --show-current)" = "main"
+test -z "$(git status --porcelain)"
+EXPECTED_REVIEWED_COMMIT="<REVIEWED_MERGE_COMMIT>"
+test "$(git rev-parse HEAD)" = "$EXPECTED_REVIEWED_COMMIT"
+
+npm ci
+npm run lint
+npm run test:run
+npm run build -- --webpack
+
+cd infra
+npm ci --no-audit --no-fund
+npm run build
+npm run test
+npm run synth
+
+aws login --profile streamband-nonprod
+ACCOUNT_ID="$(aws sts get-caller-identity --profile streamband-nonprod --query Account --output text)"
+CALLER_ARN="$(aws sts get-caller-identity --profile streamband-nonprod --query Arn --output text)"
+case "$ACCOUNT_ID" in ''|*[!0-9]*) exit 1 ;; esac
+test "${#ACCOUNT_ID}" -eq 12
+case "$CALLER_ARN" in *:root) exit 1 ;; esac
+
+OWNER_ID="$(gh api users/Ryo-9 --jq '.id | tostring')"
+REPOSITORY_ID="$(gh api repos/Ryo-9/daw.connect.app --jq '.id | tostring')"
+case "$OWNER_ID" in ''|*[!0-9]*) exit 1 ;; esac
+case "$REPOSITORY_ID" in ''|*[!0-9]*) exit 1 ;; esac
+
+./node_modules/.bin/cdk deploy StreamBandNonprodDeploymentTrust \
+  --app cdk.out \
+  --exclusively \
+  --profile streamband-nonprod \
+  --region ap-northeast-1 \
+  --parameters "StreamBandNonprodDeploymentTrust:GitHubOwnerId=${OWNER_ID}" \
+  --parameters "StreamBandNonprodDeploymentTrust:GitHubRepositoryId=${REPOSITORY_ID}" \
+  --previous-parameters false \
+  --require-approval broadening \
+  --rollback true
+
+unset ACCOUNT_ID CALLER_ARN OWNER_ID REPOSITORY_ID EXPECTED_REVIEWED_COMMIT
+```
+
+Before Gate B, the human separately compares the locally held `ACCOUNT_ID` against the expected StreamBand nonprod account without echoing it, and confirms `ap-northeast-1`. The preflight also confirms that the Stack name does not already exist; if it does, this is an unexpected update and execution stops. `--app cdk.out` deploys the assembly just built and reviewed, `--exclusively` prevents deployment of another Stack dependency, and `--require-approval broadening` preserves CDK's security-change prompt. `--all`, `--force`, and approval suppression are prohibited.
+
+NoEcho protects the CloudFormation parameter display but does not make the GitHub numeric IDs secret. They still must not enter shell tracing, command transcripts, repository files, or chat. The shell variables are unset immediately after the command.
+
+### Preflight and STOP conditions
+
+The future operator must complete all preflight checks before Gate B:
+
+- Clean `main` at the exact reviewed merge commit; root and infra checks pass.
+- Offline assembly selects only `StreamBandNonprodDeploymentTrust`, contains only the OIDC provider, deployment role, and inline role policy, and has no image asset.
+- Profile authentication is fresh, account is StreamBand nonprod, Region is exactly `ap-northeast-1`, and caller is not root.
+- `StreamBandNonprodDeploymentTrust` does not already exist.
+- GitHub `nonprod` Environment still has the human-confirmed reviewer, no administrator bypass, and `main`-only deployment rule.
+- The temporary inline policy exactly matches the approved candidate after local account substitution; no real ID appears in `git diff`.
+
+Stop without deployment if any of the following occurs:
+
+- Account, Region, caller type, branch, commit, Stack name, or Environment protection differs.
+- The Stack already exists, so the operation would be an update rather than the approved creation.
+- The assembly adds an unexpected CloudFormation resource, application resource, context lookup, container image, or additional asset.
+- The GitHub role gains wildcard trust, missing exact audience / subject / environment / branch conditions, direct `AdministratorAccess`, broad IAM / CloudFormation permission, image-publishing access, or direct execution-role access.
+- CDK needs a bootstrap role other than deploy / file-publishing, cannot use its documented lookup fallback, or asks to re-bootstrap.
+- A parameter is unresolved, an actual identity value appears in a tracked diff, cost impact is unclear, or the security approval differs from the reviewed change.
+- Any step asks for a long-lived access key, application deployment, unreleased music, or Private Alpha data.
+
+Do not “fix” a STOP by broadening permission, adding wildcard trust, choosing `--all`, suppressing approval, or retrying blindly.
+
+### Gate C read-only verification
+
+After a successful create, inspect live state locally without saving or pasting command output. The temporary policy's read actions are limited to these checks:
+
+1. CloudFormation Stack is `CREATE_COMPLETE`; Stack resources are exactly the expected OIDC provider, role, and inline policy.
+2. Provider URL is `token.actions.githubusercontent.com`; its only client ID / audience is `sts.amazonaws.com`.
+3. Role name is `streamband-nonprod-github-deploy`; maximum session duration is 3,600 seconds.
+4. Trust uses `sts:AssumeRoleWithWebIdentity` and exact `aud`, immutable `sub`, `environment = nonprod`, and `ref = refs/heads/main` conditions.
+5. The role's inline permission permits only the reviewed deploy / file-publishing / lookup bootstrap roles; this verifies the deployed GitHub role design and is separate from the narrower temporary human policy.
+6. There is no wildcard trust, image-publishing role, direct execution-role assumption, attached `AdministratorAccess`, direct broad IAM / CloudFormation / SSM permission, or access key.
+7. The only deployment artifact is the Stack template file in the existing bootstrap S3 asset path; no application asset or resource exists.
+
+This gate does **not** run `AssumeRoleWithWebIdentity`, edit the GitHub Environment, add variables, or execute a workflow. A mismatch blocks credential verification and moves directly to Gate D after the human records only a safe mismatch category.
+
+### Failure and rollback runbook
+
+| outcome | required response |
+| --- | --- |
+| Problem after Gate A but before deploy | Do not deploy. Proceed to separately approved Gate D and delete the inline policy. |
+| CloudFormation create fails and rollback completes | Inspect status without blind retry, remove temporary permission, and open a separate cause review. Do not suppress rollback or run destroy automatically. |
+| Create succeeds but live trust / permission differs | Do not test GitHub credentials. Remove temporary human permission. Any Stack update or deletion requires a new Human Gate; never run `cdk destroy` automatically. |
+| Create and verification both succeed | Remove temporary human permission at Gate D. OIDC credential verification remains the separate CLOUD-OIDC-001-VERIFY task. |
+| Inline policy removal or absence check fails | Do not mark activation complete and do not deploy an application. Confirm the exact state while root is still available, choose a human-approved recovery action, verify removal, then log out. |
+
+CloudFormation's normal rollback remains enabled. Rollback is not equivalent to deletion of a successfully created but incorrectly configured Stack, and any further AWS mutation requires explicit approval.
+
+### Cost boundary
+
+Official pricing was rechecked on 2026-09-14.
+
+| component / operation | current pricing boundary for this activation |
+| --- | --- |
+| IAM OIDC provider, role, inline policies; IAM / STS | IAM and STS are account features offered at no additional charge. Later STS credentials can call billable services, but this task does not request them. |
+| AWS CloudFormation | No additional CloudFormation charge applies to AWS namespace resource providers; charges come from resources operated through it or chargeable extensions. This Stack uses AWS IAM resources only. |
+| AWS CDK | CDK has no additional charge; AWS resource usage remains billable. |
+| Existing bootstrap S3 bucket | CDK publishes the synthesized Stack template as a file asset, so a small storage / PUT / read usage charge is possible under S3 pricing. This is not an application asset. |
+| Existing bootstrap ECR repository | No image asset is present, so activation does not publish a container image. Existing repository storage remains a separate bootstrap cost boundary. |
+
+The trust Stack creates no always-running compute, NAT gateway, database, application bucket, Lambda, API, or Cognito resource. Its **incremental recurring cost is expected to be effectively USD 0/month**, but this is not a free-use guarantee; pricing, requests, storage, taxes, and existing account usage can change. The existing USD 10 Budget remains monitoring only, not a hard cap.
+
+### Gate D cleanup and next task boundary
+
+After Gate C, root returns only to delete `StreamBandOidcActivationTemporary`, verify it is absent and the human user is back to its previous limited permission state, then immediately logs out. Root does not verify GitHub credentials, deploy, or create an access key. Activation is incomplete until this cleanup is confirmed.
+
+Only after Stack creation, exact read-only verification, and temporary privilege removal succeed may a separate task consider:
+
+- non-sensitive GitHub Environment variables for deployment role reference and Region
+- a manual `workflow_dispatch` verification job with `environment: nonprod`
+- job-scoped `contents: read` and `id-token: write`
+- short-lived credential acquisition only
+
+Normal PR Quality checks remain credential-free and must not receive `id-token: write`. Long-lived AWS access keys must never be stored in GitHub. Application deployment remains another later Human Gate.
+
+### Official references（2026-09-14確認）
+
+- [AWS CDK: Bootstrap an environment and default roles](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html)
+- [AWS CDK: Customize bootstrapping and the synthesizer role contract](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-customizing.html)
+- [AWS CDK CLI: `cdk deploy` options and security approval](https://docs.aws.amazon.com/cdk/v2/guide/ref-cli-cmd-deploy.html)
+- [AWS CDK: Deploy applications](https://docs.aws.amazon.com/cdk/v2/guide/deploy.html)
+- [AWS IAM / STS: `AssumeRole` resources and condition keys](https://docs.aws.amazon.com/service-authorization/latest/reference/list_sts.html)
+- [AWS IAM: Managed and inline policy comparison](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html)
+- [AWS IAM: GitHub OIDC provider trust restrictions](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-idp_oidc.html)
+- [GitHub: Configure OIDC in AWS and immutable subject claims](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws)
+- [AWS IAM User Guide: IAM and STS cost boundary](https://docs.aws.amazon.com/IAM/latest/UserGuide/iam-ug.pdf)
+- [AWS CloudFormation pricing](https://aws.amazon.com/cloudformation/pricing/)
+- [AWS CDK pricing FAQ](https://aws.amazon.com/cdk/faqs/)
+- [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
+
 ## AUTH-001-DESIGN: Cognito authentication and Web session contract
 
 ### Status and boundary
