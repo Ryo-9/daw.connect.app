@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CREATIVE-AUTHZ-001 | Creative item authorization design | Codex | レビュー待ち | `docs/creative-authz-001` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | 未作成 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityをCREATIVE-001とAUTHZ-001へ統合 |
+| CREATIVE-AUTHZ-001 | Creative item authorization design | Codex | レビュー待ち | `docs/creative-authz-001` | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、作業状態文書 | 2026-09-14 | #41 | Memo / Idea / Task、Comment→Task、assignee、state、deleteの5 role capabilityをCREATIVE-001とAUTHZ-001へ統合 |
 
 ## 完了・中止履歴
 
