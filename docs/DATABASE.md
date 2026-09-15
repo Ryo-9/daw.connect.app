@@ -766,7 +766,7 @@ Principal cost driverはCreativeItem数、ScopeIndex key write / storage、Comme
 
 ### Status and scope
 
-設計日: 2026-09-15。これはDEC-023と、提案中のDEC-026をCLOUD-DATA-001の既存On-Demand single-tableへ追加する**提案中のdocs-only physical design**です。新table / GSI、DynamoDB resource、runtime、API route、provider、queue / scheduler、AWS、infra、workflow、migrationは作成・変更しません。Human review前のDecision candidateはDEC-027です。
+設計日: 2026-09-15。これはDEC-023と承認済みDEC-026をCLOUD-DATA-001の既存On-Demand single-tableへ追加する**2026-09-15承認済みのdocs-only physical design**です。新table / GSI、DynamoDB resource、runtime、API route、provider、queue / scheduler、AWS、infra、workflow、migrationは作成・変更していません。承認済みDecisionはDEC-027であり、実装には別task / Human Gateが必要です。
 
 Notificationは制作を促進・評価するworkflowではなく、重要事項と制作contextへ戻るための補助です。Notification生成失敗でComment、Version、CreativeItem等のcanonical mutationを巻き戻さず、READ / expiry / delivery stateでsourceを変更しません。
 
@@ -970,7 +970,7 @@ On-Demand single-tableを維持します。追加billing driverはActivity / Pre
 - opaque stable IDの具体形式、slug変更/redirect
 - Song status、Review status、Proposal status、Decision statusの正式な遷移
 - CreativeItem physical contractはCREATIVE-DATA-001 / DEC-025でsingle entity、既存ScopeIndex、relationship guard / edge、structural historyをdocs-only designとして承認済み。Runtime schema / migration / resource実装は未着手
-- Activity Status、NotificationPreference、QuietHours、Notification / delivery trackingのphysical contractはCOLLAB-DATA-001 / DEC-027で提案中。Runtime schema、resource、migration、provider / queue、security retentionは未着手
+- Activity Status、NotificationPreference、QuietHours、Notification / delivery trackingのphysical contractはCOLLAB-DATA-001 / DEC-027で承認済み。これはdocs-only designであり、Runtime schema、resource、migration、provider / queue、security retentionは未着手
 - Version label unique、branch/派生versionの扱い
 - Comment anchorのPPQ、拍子変更、timeとの同期、version間引き継ぎ
 - Track/Partの自由入力、複数担当、DAW trackとの対応範囲

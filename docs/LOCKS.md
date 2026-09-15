@@ -16,12 +16,13 @@
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | ブランチ | 開始日 | 解除予定 / 条件 | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| LOCK-048 | COLLAB-DATA-001-APPROVAL-RECORD | Codex | `docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/collab-data-001-approval-record` | 2026-09-15 | Draft PRのマージまたは作業中止 | PR #47 merge後のDEC-026 / DEC-027 Human approvalと完了状態をdocs-only同期。実装変更なし |
+| LOCK-049 | FRIEND-TEST-001-DESIGN | Codex | `docs/FRIEND_TEST.md`、`docs/ROADMAP.md`、`docs/TESTING.md`、`docs/PRODUCT_SPEC.md`、`docs/USER_FLOW.md`、`docs/API.md`、`docs/DATABASE.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | `docs/friend-test-001-acceptance` | 2026-09-15 | Draft PRのマージまたは作業中止 | Friend Test acceptance contractとPR #48後のstatus-only同期。AWS / runtime / resource / workflow変更なし |
 
 ## 解除済みロック
 
 | Lock ID | Task ID | 担当者 | ファイル / 領域 | 解除日 | 結果 / PR |
 | --- | --- | --- | --- | --- | --- |
+| LOCK-048 | COLLAB-DATA-001-APPROVAL-RECORD | Codex | `docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #48。mainへのマージとQuality checks成功を確認して解除。DEC-026 / DEC-027は承認済み、実装未承認 |
 | LOCK-047 | COLLAB-DATA-001 | Codex | `docs/DATABASE.md`、`docs/API.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #47。mainへのマージとDEC-026 / DEC-027のHuman approval確認により解除。Provider / runtime / DynamoDB resource / AWS / workflow未実装 |
 | LOCK-046 | CLOUD-OIDC-001-EXECUTION-RECORD | Codex | `docs/AWS.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #46。mainへのマージとQuality checks成功を確認して解除。Credential verification / workflow / application deployは未実施 |
 | LOCK-045 | NOTIFY-001-DESIGN | Codex | `docs/PRODUCT_SPEC.md`、`docs/API.md`、`docs/USER_FLOW.md`、`docs/TESTING.md`、`docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 完了・PR #45。mainへのマージを確認して解除。DEC-026はHuman reviewで承認済み。Provider / runtime / physical DB / AWS / workflow変更なし |

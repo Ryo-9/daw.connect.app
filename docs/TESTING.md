@@ -262,7 +262,7 @@ Email / push provider、digest scheduler、physical TTL / index、delivery retry
 
 ### NOTIFY-001-DESIGN future delivery contract
 
-DEC-026はhuman review待ちのdocs-only proposalです。Provider / physical persistence / runtimeが別taskで承認された場合、table-driven event matrixとfake providerで最低限次を検証します。
+DEC-026は2026-09-15のHuman reviewで承認済みのdocs-only contractです。承認は実装承認ではなく、Provider / physical persistence / runtimeが別taskで承認された場合、table-driven event matrixとfake providerで最低限次を検証します。
 
 - `SECURITY / DIRECT / ORDINARY`をcanonical eventとrecipient relationからserverが決め、client categoryを信用しない
 - `集中 / 標準 / すべて`ごとのexternal defaultがmatrixどおりで、preset変更がauthorizationやActivity Statusを変えない
@@ -288,7 +288,7 @@ Provider-specific bounce / complaint、webhook、queue / dead-letter、push toke
 
 ### COLLAB-DATA-001 future physical persistence contract
 
-DEC-027はHuman review待ちのdocs-only proposalです。Runtime / DynamoDB resource / provider / queueが別taskで承認された場合、synthetic IDsとprivate contentを含まないfixtureで最低限次を検証します。
+DEC-027は2026-09-15のHuman reviewで承認済みのdocs-only physical designです。承認は実装承認ではなく、Runtime / DynamoDB resource / provider / queueが別taskで承認された場合、synthetic IDsとprivate contentを含まないfixtureで最低限次を検証します。
 
 - Activity Status record absent時は`REGULAR`を返し、default readだけでrecordを自動作成しない
 - Activity Status変更はseparate member profile itemだけを更新し、BandMembership Role / status / revision、Task assignee、NotificationPreferenceを変更しない
@@ -322,7 +322,21 @@ DEC-027はHuman review待ちのdocs-only proposalです。Runtime / DynamoDB res
 - Canonical Comment / Version / Creative mutationはDIRECT / ORDINARY Notification生成失敗でrollbackされない
 - ScopeIndexはexisting `KEYS_ONLY`のままで、新table / GSI / application `Scan`へ依存しない
 
-Security eventのdurable handoff / fail-closed behavior、provider receipt / bounce / complaint、queue / scheduler / DLQ、security retention、actual TTL / PITR integrationは、それぞれのHuman Gate後に追加します。DEC-026 / DEC-027承認前にruntime testを実装しません。
+Security eventのdurable handoff / fail-closed behavior、provider receipt / bounce / complaint、queue / scheduler / DLQ、security retention、actual TTL / PITR integrationは、それぞれのHuman Gate後に追加します。DEC-026 / DEC-027のdocs承認だけではruntime testを実装せず、別task / implementation approvalを必要とします。
+
+### FRIEND-TEST-001-DESIGN acceptance contract
+
+[FRIEND_TEST.md](FRIEND_TEST.md)を最初の実利用検証の正とし、実行taskでは次の3段階を別結果として記録します。このdocs-only taskではruntime test、fixture、account、deploymentを追加しません。
+
+- Level A: 開発者1人がsynthetic / disposable dataでlogin、invitation、authorization、Song / Version、private Preview、Version Comment、reload / re-login、deny、failure / recoveryを確認する
+- Level B: 2人が別account / sessionで`Preview → Version-scoped Comment → DAW manual反映 → New Version → old history確認`を通す
+- Level C: 別Songまたは次Versionで同じcore loopを繰り返し、偶然の1回成功をPASSにしない
+- MIDI Proposal / Decisionは初回開始をblockしない追加scenarioだが、未検証ならPrivate Alpha全体をcomplete扱いにしない
+- Unauthenticated、cross-Band、REMOVED Membership、public Asset、wrong Version relation、upload mismatch、secret / private content leakageはnegative acceptanceとして必須にする
+- BLOCKER / HIGHが残る場合はPASSにせず、BLOCKERはtestを中止してLevel Aからretestする
+- UX observationはnavigation、Version理解、timestamp Comment、DAW往復、smartphone friction、制作中断を対象にし、Task消化数やproductivity scoreを評価しない
+
+Friend Test execution recordへactual email、account ID、token、signed URL、private object key、Song title、filename、Comment本文を保存しません。
 
 ## Level 3 — 一般公開前
 
