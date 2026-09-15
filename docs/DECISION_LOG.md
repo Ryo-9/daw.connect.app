@@ -38,8 +38,8 @@
 | DEC-023 | 2026-09-11 | Band参加状態とNotification experienceを分離して定める | 承認済み | Membership lifecycle / Activity Status / Notification UX | - |
 | DEC-024 | 2026-09-14 | Creative itemのrole capabilityとdestructive境界を定める | 承認済み | Creative authorization / Comment→Task / assignee / Audit | - |
 | DEC-025 | 2026-09-14 | CreativeItemのsingle-table physical persistence contractを定める | 承認済み | DynamoDB / CreativeItem / relationship / idempotency / tombstone | - |
-| DEC-026 | 2026-09-14 | Notification category / delivery matrix contractを定める | 提案中 | Notification / channel / digest / retry / privacy | - |
-| DEC-027 | 2026-09-15 | Activity StatusとNotificationのsingle-table physical persistence contractを定める | 提案中 | Membership profile / preference / Notification / delivery tracking | - |
+| DEC-026 | 2026-09-14 | Notification category / delivery matrix contractを定める | 承認済み | Notification / channel / digest / retry / privacy | - |
+| DEC-027 | 2026-09-15 | Activity StatusとNotificationのsingle-table physical persistence contractを定める | 承認済み | Membership profile / preference / Notification / delivery tracking | - |
 
 ---
 
@@ -444,7 +444,7 @@
 ## DEC-026: Notification category / delivery matrix contractを定める
 
 - 日付: 2026-09-14
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（NOTIFY-001-DESIGN）
 - 背景: DEC-023で承認したNotification UXを実装する前に、event category、recipient、Center / external channel、preset、frequency、Quiet Hours、digest、retry、privacy、membership lifecycleの一貫したdelivery contractが必要
 - Category: `SECURITY / DIRECT / ORDINARY`をserver-side canonical eventとrecipient relationから決定する。SECURITYはordinary preferenceでOFF不可・即時・Quiet Hours bypass、DIRECTは本人設定を尊重する明示宛event、ORDINARYはCenter / digest中心とする
@@ -458,16 +458,16 @@
 - Dedup / retry: Centerは`sourceEventId + recipientKey + relation`、externalは`notificationId + channel`をidempotency候補とする。Recipient keyはinternal User IDまたはinvitation-scoped opaque referenceで、raw emailをkeyにしない。Transient failureはjitter付きexponential backoffを最大5attempt候補、permanent failureはchannel単位で停止し、privacy確認なしの自動fallbackをしない
 - Retention: Ordinary Center itemは90日候補。Delivery attempt metadata、Security notification、AuditEventのretentionを混同せず、physical TTL / key / indexはCOLLAB-DATA-001へ分離する
 - Provider / cost: Providerは採用せず、privacy、Region / data handling、cost、bounce / complaint、retry / webhook、development ergonomicsを別Human Gateで比較する。このdocs-only taskのAWS増分料金は0で、将来はsend数、queue / event、DB、log / retentionがcost driver
-- 実装状態: proposal-only documentation。Notification runtime、email / push、provider契約、API、physical DB、AWS resource、Cognito、infra、workflow、dependency、UIは変更していない
-- Human review: 未実施。PRのhuman review前に承認済みにせず、event matrix、Quiet Hours、external privacy、retry上限を確認する
+- 実装状態: human-approved docs-only design。Notification runtime、email / push、provider契約、API、physical DB、AWS resource、Cognito、infra、workflow、dependency、UIは変更していない
+- Human review: 2026-09-15のHuman reviewで承認済み。承認対象はdelivery contractであり、provider / runtime / physical DB / AWS resource / workflowの実装承認ではない
 - 関連: NOTIFY-001-DESIGN、COLLAB-001-DESIGN、DEC-023、AUTH-001-DESIGN、AUTHZ-001、CREATIVE-001-DESIGN、[PRODUCT_SPEC.md](PRODUCT_SPEC.md)、[USER_FLOW.md](USER_FLOW.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ## DEC-027: Activity StatusとNotificationのsingle-table physical persistence contractを定める
 
 - 日付: 2026-09-15
-- ステータス: 提案中
+- ステータス: 承認済み
 - 提案者: Codex（COLLAB-DATA-001）
-- 背景: DEC-023の承認済みMembership / Notification UXと、提案中DEC-026のdelivery matrixを実装する前に、authorization recordとの分離、User feed、dedup、delivery retry、90日retention、Membership removalをCLOUD-DATA-001のsingle-table上で安全に扱う必要がある
+- 背景: DEC-023の承認済みMembership / Notification UXと、承認済みDEC-026のdelivery matrixを実装する前に、authorization recordとの分離、User feed、dedup、delivery retry、90日retention、Membership removalをCLOUD-DATA-001のsingle-table上で安全に扱う必要がある
 - Activity Status: `BAND#<bandId> / MEMBER_PROFILE#<membershipId>`のseparate itemを使い、BandMembership itemへ埋め込まない。Absentは`REGULAR`、informational updateはRole / Membership / assignee / preferenceを変更せず、removed / replaced membershipIdのhistoryをnew lifecycleへ自動復活させない
 - Preference: `USER#<userId> / NOTIFICATION_PREFERENCE`へpreset、defaultとの差分だけのbounded override、policy / schema version、revisionを保存する。Absentはversioned `STANDARD` + overrideなしで、default readだけではitemを作らない
 - Quiet Hours: `USER#<userId> / QUIET_HOURS`へenabled、local start / end、IANA timezone、revisionを保存する。UTC固定時刻だけを正にせず、overnight / DSTをtimezone ruleで評価する。SECURITYだけbypassし、authorizationやActivity Statusを変更しない
@@ -480,8 +480,8 @@
 - Retention: Non-security `DIRECT / ORDINARY` Notification / deliveryは90日logical expiry + DynamoDB TTL候補。TTL lagを前提にapplicationが`expiresAt`を評価し、source、SECURITY、AuditEvent、Membership historyへcascadeしない。SECURITY retentionは別Human Gate
 - Reliability: DIRECT / ORDINARY Notification failureでComment / Version / CreativeItem等のcanonical mutationをrollbackしない。Stable event handoff / outbox / repair、SECURITY fail-closed要件、queue / scheduler / DLQはruntime reliability taskで確定する
 - Cost / scale: On-Demand single-tableとexisting ScopeIndexを維持する。Item / delivery channel / retry / transaction / BatchGet / TTL lag / PITRと、NotificationごとのScopeIndex keyがbilling driver。Userあたり5 page / 250 candidate filterを常時使い切る、delivery due query、large fan-out / digest、hot partition等が実測問題になった場合だけ新projection / GSI / queue index / PostgreSQLを再reviewする
-- 実装状態: proposal-only documentation。DynamoDB table / GSI / TTL resource、migration、runtime、API route、provider、queue、AWS、infra、workflow、dependency、UIは変更していない
-- Human review: 未実施。DEC-026も提案中のままであり、どちらも承認済みとしてruntimeへ実装しない
+- 実装状態: human-approved docs-only design。DynamoDB table / GSI / TTL resource、migration、runtime、API route、provider、queue、AWS、infra、workflow、dependency、UIは変更していない
+- Human review: 2026-09-15のHuman reviewで承認済み。承認対象はphysical persistence contractであり、DynamoDB resource / runtime / migration / provider / AWS / workflowの実装承認ではない
 - 関連: COLLAB-DATA-001、CLOUD-DATA-001、COLLAB-001-DESIGN、NOTIFY-001-DESIGN、DEC-017、DEC-023、DEC-026、[DATABASE.md](DATABASE.md)、[API.md](API.md)、[TESTING.md](TESTING.md)
 
 ---
