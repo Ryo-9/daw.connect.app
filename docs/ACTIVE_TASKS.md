@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| COLLAB-DATA-001-APPROVAL-RECORD | Notification design approval record | Codex | レビュー待ち | `docs/collab-data-001-approval-record` | `docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | 未作成 | PR #47 merge後に確認されたDEC-026 / DEC-027のHuman approvalと完了状態をdocs-only同期。実装変更なし |
+| COLLAB-DATA-001-APPROVAL-RECORD | Notification design approval record | Codex | レビュー待ち | `docs/collab-data-001-approval-record` | `docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | #48 | PR #47 merge後に確認されたDEC-026 / DEC-027のHuman approvalと完了状態をdocs-only同期。実装変更なし |
 
 ## 完了・中止履歴
 
