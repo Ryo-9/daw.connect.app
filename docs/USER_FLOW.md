@@ -284,7 +284,7 @@ Ordinary notificationは90日保持後にcleanup可能ですが、source Comment
 
 ### Delivery flow candidate（NOTIFY-001-DESIGN）
 
-NOTIFY-001-DESIGNはDEC-023を`SECURITY / DIRECT / ORDINARY`へ具体化するhuman review待ちのproposalです。
+NOTIFY-001-DESIGNはDEC-023を`SECURITY / DIRECT / ORDINARY`へ具体化する2026-09-15承認済みのdocs-only contractです。承認はprovider / runtime / physical DB / AWS / workflowの実装承認ではありません。
 
 ```text
 canonical source event

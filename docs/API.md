@@ -1237,7 +1237,7 @@ Deep linkを開くたびにcanonical sourceを取得し、derived Bandとstrong 
 
 ### Status and scope
 
-この章はDEC-023のNotification UXをdelivery levelへ具体化する**提案中のdocs-only contract**です。設計日: 2026-09-14。Notification runtime、API route、provider、queue / scheduler、physical DB、Cognito、AWS resource、workflow、UIは実装しません。通知は制作を急かす仕組みではなく、重要事項を見逃さず元の制作contextへ戻る補助です。
+この章はDEC-023のNotification UXをdelivery levelへ具体化する**2026-09-15承認済みのdocs-only contract**です。設計日: 2026-09-14。承認は実装承認ではなく、Notification runtime、API route、provider、queue / scheduler、physical DB、Cognito、AWS resource、workflow、UIは実装していません。通知は制作を急かす仕組みではなく、重要事項を見逃さず元の制作contextへ戻る補助です。
 
 ### Category contract
 
@@ -1366,13 +1366,13 @@ Selection criteriaはprivacy、Region / data handling、cost model、bounce / co
 - API route、runtime authorization、UI、mobile deep link、push token、rate / quota、observability
 - Event-specific override UI、timezone migration、digest size / retry countの実測調整
 
-DEC-026のhuman approval前にこのmatrixをruntimeへ実装せず、実装後もNotificationをproductivity evaluation、playback interruption、Version / creative workflow blockへ使いません。
+承認済みDEC-026はdelivery contractのdocs-only承認であり、runtime実装の承認ではありません。実装後もNotificationをproductivity evaluation、playback interruption、Version / creative workflow blockへ使いません。
 
 ## COLLAB-DATA-001: persistence-facing collaboration contract
 
 ### Status and boundary
 
-この章は、DEC-023と提案中のDEC-026をexisting CLOUD-DATA-001 single-tableへ配置するDEC-027候補のAPI-facing behaviorです。Docs-onlyであり、endpoint、runtime validation、DynamoDB resource、provider、queue、workflow、AWS変更はありません。DEC-026 / DEC-027のHuman approval前に実装しません。
+この章は、DEC-023と承認済みDEC-026をexisting CLOUD-DATA-001 single-tableへ配置する承認済みDEC-027のAPI-facing behaviorです。Docs-onlyであり、endpoint、runtime validation、DynamoDB resource、provider、queue、workflow、AWS変更はありません。DEC-026 / DEC-027の承認は実装承認ではなく、実装には別task / Human Gateが必要です。
 
 ### Activity Status and personal settings
 

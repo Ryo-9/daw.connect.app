@@ -16,12 +16,13 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| COLLAB-DATA-001-APPROVAL-RECORD | Notification design approval record | Codex | レビュー待ち | `docs/collab-data-001-approval-record` | `docs/DECISION_LOG.md`、`docs/TASK_QUEUE.md`、`docs/ACTIVE_TASKS.md`、`docs/LOCKS.md` | 2026-09-15 | #48 | PR #47 merge後に確認されたDEC-026 / DEC-027のHuman approvalと完了状態をdocs-only同期。実装変更なし |
+| FRIEND-TEST-001-DESIGN | Friend Test acceptance contract | Codex | レビュー待ち | `docs/friend-test-001-acceptance` | `docs/FRIEND_TEST.md`、`docs/ROADMAP.md`、`docs/TESTING.md`、status-only同期、作業状態文書 | 2026-09-15 | 未作成 | 2 users / 1 private BandのStart Gate、Level A / B / C、合否、security / privacy blockerをdocs-only定義。Friend Test未実施 |
 
 ## 完了・中止履歴
 
 | Task ID | 結果 | 担当者 | ブランチ / PR | 終了日 | メモ |
 | --- | --- | --- | --- | --- | --- |
+| COLLAB-DATA-001-APPROVAL-RECORD | 完了 | Codex | `docs/collab-data-001-approval-record` / #48 | 2026-09-15 | PR #47 merge後のDEC-026 / DEC-027 Human approvalとCOLLAB-DATA-001完了状態をdocs-only同期しmainへマージ済み。Provider / runtime / DynamoDB resource / AWS / workflow未実装 |
 | COLLAB-DATA-001 | 完了 | Codex | `docs/collab-data-001-notification-persistence` / #47 | 2026-09-15 | Existing single-table / ScopeIndexを前提にActivity Status、Preference、Quiet Hours、Notification、delivery trackingをdocs-only設計しmainへマージ済み。DEC-026 / DEC-027はHuman reviewで承認済み。Provider / runtime / DynamoDB resource / AWS / workflow未実装 |
 | CLOUD-OIDC-001-EXECUTION-RECORD | 完了 | Codex | `docs/cloud-oidc-001-execution-record` / #46 | 2026-09-15 | Human-operated OIDC trust activation、live read-only verification、temporary privilege撤去を機密識別子なしで記録しmainへマージ済み。Credential verification / workflow / application deployは未実施 |
 | NOTIFY-001-DESIGN | 完了 | Codex | `docs/notify-001-delivery-matrix` / #45 | 2026-09-15 | SECURITY / DIRECT / ORDINARY、preset、Quiet Hours、digest / retry / privacyをdocs-onlyで具体化しmainへマージ済み。DEC-026はHuman reviewで承認済み。Provider / runtime / physical DB / AWS / workflow未実装 |

@@ -34,6 +34,8 @@
 
 2026年末のPrivate Alphaでは、開発者本人と友人の2人・1 private Bandに範囲を限定し、Studio Oneからmanual exportしたPreview / MIDIを安全に共有して、Version Comment、MIDI Proposal、Decision、DAW反映後のNew Versionまでを成立させます。
 
+最初の実利用検証は[FRIEND_TEST.md](FRIEND_TEST.md)のStart GateとLevel A / B / Cを正とします。初回core Friend Testは`Preview → Version-scoped Comment → DAWでmanual反映 → New Version → old history確認`を必須とし、MIDI Proposal / Decisionは開始をblockしない追加scenarioへ分けます。ただしMIDI add-on未検証のままPrivate Alpha全体をcomplete扱いにはしません。
+
 - DB、認証、権限方式の比較と採用判断
 - バンド、メンバー、楽曲、メモ、コメント、TODO の永続化
 - 最小限の招待とアクセス制御
