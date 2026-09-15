@@ -16,7 +16,7 @@
 
 | Task ID | タスク名 | 担当者 | 状態 | ブランチ | 対象ファイル / 領域 | 開始日 | PR | メモ |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| FRIEND-TEST-001-DESIGN | Friend Test acceptance contract | Codex | レビュー待ち | `docs/friend-test-001-acceptance` | `docs/FRIEND_TEST.md`、`docs/ROADMAP.md`、`docs/TESTING.md`、status-only同期、作業状態文書 | 2026-09-15 | 未作成 | 2 users / 1 private BandのStart Gate、Level A / B / C、合否、security / privacy blockerをdocs-only定義。Friend Test未実施 |
+| FRIEND-TEST-001-DESIGN | Friend Test acceptance contract | Codex | レビュー待ち | `docs/friend-test-001-acceptance` | `docs/FRIEND_TEST.md`、`docs/ROADMAP.md`、`docs/TESTING.md`、status-only同期、作業状態文書 | 2026-09-15 | #49 | 2 users / 1 private BandのStart Gate、Level A / B / C、合否、security / privacy blockerをdocs-only定義。Friend Test未実施 |
 
 ## 完了・中止履歴
 

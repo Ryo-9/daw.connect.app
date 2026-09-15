@@ -18,7 +18,7 @@
 
 | 候補 | ID | 内容 | 依存・注意 |
 | --- | --- | --- | --- |
-| 1 | FRIEND-TEST-001-DESIGN | Friend Test acceptance contract | 作業中。Start Gate、developer integration、two-person core loop、repeat、合否 / severity / privacyをdocs化。Friend Test実施やresource変更なし |
+| 1 | FRIEND-TEST-001-DESIGN | Friend Test acceptance contract | レビュー待ち（PR #49）。Start Gate、developer integration、two-person core loop、repeat、合否 / severity / privacyをdocs化。Friend Test実施やresource変更なし |
 | 2 | CLOUD-OIDC-001-VERIFY | Manual OIDC credential verification workflow | Activationとtemporary privilege撤去の完了後に行う別task / branch / PR。`workflow_dispatch` + protected `main` + `nonprod` Environmentでshort-lived credential取得だけを検証 |
 | 3 | AUTH-001 | Private Alpha authentication prototype | AUTH-001-DESIGN / PR #34は完了。OIDC credential verification等の必要gate後、Cognito / session runtimeを別taskで実装 |
 | 4 | HOST-DEPLOY-001 | Nonprod hosting proof of concept | HOST-001のprovider / cost承認後だけ開始。account接続、Next.js 16 compatibility、protected Preview、rollbackをsynthetic dataで検証 |
@@ -69,7 +69,7 @@ Phase 1のmockと将来の永続化境界を整理するレーンです。DB、A
 | PROPOSAL-001 | P1 | Persisted MIDI Proposal + Decision | SOURCE_MIDIを上書きしない別Asset / entityとDecision履歴 |
 | OBS-001 | P0 | Private Alpha operations baseline | finite logs、alarms、Budgets、backup / restore drill、incident / cost runbook |
 | DEPLOY-001 | P0 | Isolated Private Alpha deployment | required checksとyear-end acceptance criteriaを満たす2 user環境 |
-| FRIEND-TEST-001-DESIGN | P0 | Friend Test acceptance contract | 作業中。2 users / 1 private BandのStart Gate、Level A / B / C、core loop、合否、security / privacy blockerをdocs化。実施はruntime完成後の別task |
+| FRIEND-TEST-001-DESIGN | P0 | Friend Test acceptance contract | レビュー待ち（PR #49）。2 users / 1 private BandのStart Gate、Level A / B / C、core loop、合否、security / privacy blockerをdocs化。実施はruntime完成後の別task |
 
 ## Flow Lane
 
